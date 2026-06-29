@@ -1,0 +1,19 @@
+{
+  "name": "ladiesonthegreen.com",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm --workspace server run dev\" \"npm --workspace client run dev\"",
+    "build": "npm --workspace client run build",
+    "preview": "npm --workspace client run preview",
+    "start": "npm --workspace server start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
