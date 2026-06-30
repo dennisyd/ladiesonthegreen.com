@@ -550,6 +550,10 @@ p {
   margin-bottom: 34px;
 }
 
+.membership .section-kicker {
+  color: var(--white);
+}
+
 .membership__intro p {
   color: rgba(255, 255, 255, 0.72);
 }
@@ -654,12 +658,14 @@ p {
 }
 
 .partners h2 {
+  font-size: clamp(1.08rem, 1.98vw, 2.28rem);
   margin-inline: auto;
   max-width: 980px;
 }
 
 .partners .section-kicker {
   color: var(--white);
+  font-size: 0.9rem;
 }
 
 .partner-row {
@@ -694,6 +700,10 @@ p {
 
 .contact__copy p {
   color: rgba(255, 255, 255, 0.78);
+}
+
+.contact h2 {
+  font-size: clamp(1.92rem, 4vw, 4.4rem);
 }
 
 .join-form {

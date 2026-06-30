@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
-const facebookUrl = "https://www.facebook.com/ladiesonthegreen";
+const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
 
 const navItems = [
   { label: "Home", href: "#top" },
@@ -196,7 +196,6 @@ function App() {
           <div className="section-heading">
             <span className="section-kicker">Featured Events</span>
             <h2 id="events-title">Golf experiences made to be seen, shared, and remembered.</h2>
-            <a className="text-link" href="#contact">Request the calendar</a>
           </div>
           <div className="event-gallery">
             {galleryEvents.map((event, index) => (
