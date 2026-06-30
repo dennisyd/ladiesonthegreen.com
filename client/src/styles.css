@@ -1,8 +1,8 @@
 :root {
   color-scheme: light;
-  --navy: #071931;
-  --navy-deep: #050b1d;
-  --navy-2: #0d2743;
+  --navy: #0a3d2a;
+  --navy-deep: #031c13;
+  --navy-2: #11613f;
   --gold: #d8b34b;
   --green: #075f39;
   --green-dark: #062c20;
@@ -52,8 +52,8 @@ img {
 .site-header {
   align-items: center;
   background:
-    radial-gradient(circle at 85% 0%, rgba(43, 69, 120, 0.26), transparent 34%),
-    linear-gradient(90deg, rgba(5, 11, 29, 0.98), rgba(9, 24, 55, 0.96));
+    radial-gradient(circle at 85% 0%, rgba(33, 117, 72, 0.32), transparent 34%),
+    linear-gradient(90deg, rgba(3, 28, 19, 0.98), rgba(10, 61, 42, 0.96));
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   display: grid;
   gap: clamp(16px, 2vw, 34px);
@@ -198,10 +198,10 @@ nav a,
 .hero {
   align-items: center;
   background:
-    radial-gradient(circle at 50% 28%, rgba(18, 39, 82, 0.5), transparent 31%),
-    radial-gradient(circle at 0% 55%, rgba(38, 66, 116, 0.28), transparent 28%),
-    radial-gradient(circle at 100% 45%, rgba(38, 66, 116, 0.22), transparent 32%),
-    linear-gradient(180deg, rgba(5, 9, 24, 0.78), rgba(5, 9, 24, 0.94)),
+    radial-gradient(circle at 50% 28%, rgba(27, 104, 61, 0.5), transparent 31%),
+    radial-gradient(circle at 0% 55%, rgba(22, 126, 78, 0.28), transparent 28%),
+    radial-gradient(circle at 100% 45%, rgba(74, 145, 90, 0.24), transparent 32%),
+    linear-gradient(180deg, rgba(3, 28, 19, 0.78), rgba(3, 28, 19, 0.94)),
     var(--navy-deep);
   color: var(--white);
   display: flex;
@@ -234,15 +234,15 @@ nav a,
 }
 
 .hero__logo {
-  height: clamp(220px, 27vw, 430px);
+  height: clamp(150px, 17vw, 260px);
   object-fit: contain;
-  width: clamp(220px, 27vw, 430px);
+  width: clamp(150px, 17vw, 260px);
 }
 
 .hero__name {
   color: var(--gold);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.4rem, 5vw, 4.7rem);
+  font-size: clamp(1.45rem, 3vw, 2.85rem);
   letter-spacing: 0.12em;
   line-height: 1;
   margin: 12px 0 26px;
@@ -251,7 +251,7 @@ nav a,
 
 .hero__content h1 {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.2rem, 4vw, 4.7rem);
+  font-size: clamp(1.35rem, 2.5vw, 2.85rem);
   font-weight: 400;
   line-height: 1.08;
   margin: 0 auto 22px;
@@ -260,7 +260,7 @@ nav a,
 
 .hero__content > p:not(.hero__name) {
   color: rgba(255, 255, 255, 0.9);
-  font-size: clamp(0.92rem, 1.35vw, 1.25rem);
+  font-size: clamp(0.72rem, 0.85vw, 0.85rem);
   font-weight: 800;
   letter-spacing: 0.26em;
   line-height: 1.7;
@@ -283,12 +283,15 @@ nav a,
 .hero__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 36px;
+  gap: 10px;
+  margin-top: 24px;
 }
 
 .hero__actions .button {
-  min-width: 300px;
+  font-size: 0.72rem;
+  min-height: 42px;
+  min-width: 190px;
+  padding: 0 18px;
 }
 
 .button--gold {
@@ -876,16 +879,16 @@ textarea:focus {
   }
 
   .hero__logo {
-    height: clamp(190px, 62vw, 280px);
-    width: clamp(190px, 62vw, 280px);
+    height: clamp(130px, 42vw, 190px);
+    width: clamp(130px, 42vw, 190px);
   }
 
   .hero__name {
-    font-size: clamp(1.7rem, 8vw, 2.6rem);
+    font-size: clamp(1.2rem, 5vw, 1.65rem);
   }
 
   .hero__content h1 {
-    font-size: clamp(1.75rem, 9vw, 3.2rem);
+    font-size: clamp(1.2rem, 5.4vw, 2rem);
   }
 
   .hero__content > p:not(.hero__name) {

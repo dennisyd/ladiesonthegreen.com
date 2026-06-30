@@ -28,6 +28,21 @@ npm start
 
 The Express server serves the React build from `client/dist/` and listens on `PORT` or `3000`.
 
+## Contact form email
+
+The "Send Inquiry" form posts to `/api/contact`. In production, configure SMTP environment variables before starting the server:
+
+```bash
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=hello@ladiesonthegreen.com
+SMTP_PASS=your_smtp_password
+SMTP_FROM=hello@ladiesonthegreen.com
+CONTACT_TO=hello@ladiesonthegreen.com
+```
+
+Use `SMTP_PORT=465` or `SMTP_SECURE=true` when your mail provider requires SSL.
+
 ## VPS deployment outline
 
 1. Push this folder to GitHub.

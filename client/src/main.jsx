@@ -7,7 +7,7 @@ const facebookUrl = "https://www.facebook.com/ladiesonthegreen";
 const navItems = [
   { label: "Home", href: "#top" },
   { label: "About Us", href: "#about" },
-  { label: "Enrollment", href: "#contact" },
+  { label: "Join", href: "#contact" },
   { label: "Events", href: "#events" },
   { label: "Membership", href: "#membership" }
 ];
@@ -137,8 +137,8 @@ function App() {
         </nav>
         <div className="header-actions">
           <a className="circle-link" href="#events" onClick={closeMenu} aria-label="Explore events">›</a>
-          <a className="header-cta" href="#contact" onClick={closeMenu}>Enroll ↘</a>
-          <a className="cart-link" href="#contact" onClick={closeMenu} aria-label="Enrollment cart">0</a>
+          <a className="header-cta" href="#contact" onClick={closeMenu}>Join ↘</a>
+          <a className="cart-link" href="#contact" onClick={closeMenu} aria-label="Join cart">0</a>
         </div>
       </header>
 
@@ -152,7 +152,7 @@ function App() {
               A welcoming golf and social club for women ready to learn the game, enjoy the course, and build real friendships along the way.
             </p>
             <div className="hero__actions" aria-label="Primary actions">
-              <a className="button button--light" href="#contact">Enroll Now</a>
+              <a className="button button--light" href="#contact">Join Now</a>
               <a className="button button--gold" href="#events">Explore Our Signature Events ↘</a>
             </div>
           </div>
