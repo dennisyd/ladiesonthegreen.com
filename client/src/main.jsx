@@ -147,9 +147,9 @@ function App() {
           <div className="hero__content">
             <img className="hero__logo" src="/ladiesonthegreen.png" alt="Ladies On The Green Golf & Social Club logo" />
             <p className="hero__name">Ladies On The Green</p>
-            <h1 id="hero-title">Connecting Women Across Cities Through Golf, Community and Culture</h1>
+            <h1 id="hero-title">Join, Connect, and Tee Off With Confidence</h1>
             <p>
-              Join a community of fearless women breaking barriers in the world of golf and beyond.
+              A welcoming golf and social club for women ready to learn the game, enjoy the course, and build real friendships along the way.
             </p>
             <div className="hero__actions" aria-label="Primary actions">
               <a className="button button--light" href="#contact">Enroll Now</a>
