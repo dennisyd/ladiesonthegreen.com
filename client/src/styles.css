@@ -467,6 +467,7 @@ p {
 }
 
 .featured-event {
+  align-items: center;
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -478,7 +479,7 @@ p {
 }
 
 .featured-event__image {
-  min-height: 320px;
+  aspect-ratio: 1179 / 630;
 }
 
 .featured-event__image img {
@@ -927,10 +928,6 @@ textarea:focus {
   .contact,
   .featured-event {
     grid-template-columns: 1fr;
-  }
-
-  .featured-event__image {
-    min-height: 260px;
   }
 
   .event-gallery {
