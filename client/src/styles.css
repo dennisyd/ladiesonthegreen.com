@@ -466,6 +466,81 @@ p {
   text-transform: uppercase;
 }
 
+.featured-event {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+  margin-bottom: clamp(40px, 6vw, 64px);
+  overflow: hidden;
+}
+
+.featured-event__image {
+  min-height: 320px;
+}
+
+.featured-event__image img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.featured-event__body {
+  padding: clamp(28px, 4vw, 48px);
+}
+
+.featured-event__badge {
+  background: var(--pink);
+  border-radius: 999px;
+  color: var(--white);
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  margin-bottom: 16px;
+  padding: 6px 16px;
+  text-transform: uppercase;
+}
+
+.featured-event__body h3 {
+  color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+  line-height: 1.05;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+}
+
+.featured-event__host {
+  color: var(--green);
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.featured-event__details {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 16px 0;
+}
+
+.featured-event__details li {
+  color: var(--navy);
+  font-weight: 800;
+  padding: 4px 0;
+}
+
+.featured-event__body > p {
+  color: var(--muted);
+  font-size: 1.03rem;
+  line-height: 1.75;
+  margin-bottom: 26px;
+}
+
 .event-gallery {
   display: grid;
   gap: 18px;
@@ -849,8 +924,13 @@ textarea:focus {
   .membership__intro,
   .benefit-panel,
   .spotlight,
-  .contact {
+  .contact,
+  .featured-event {
     grid-template-columns: 1fr;
+  }
+
+  .featured-event__image {
+    min-height: 260px;
   }
 
   .event-gallery {

@@ -197,6 +197,27 @@ function App() {
             <span className="section-kicker">Featured Events</span>
             <h2 id="events-title">Golf experiences made to be seen, shared, and remembered.</h2>
           </div>
+          <article className="featured-event">
+            <div className="featured-event__image">
+              <img src="/ladies-love-lemonade.jpg" alt="Ladies Love Lemonade golf clinic flyer, presented by Joe Golf and Kappa Alpha Psi Fraternity Inc, Baltimore Alumni Chapter" />
+            </div>
+            <div className="featured-event__body">
+              <span className="featured-event__badge">Next Event</span>
+              <h3>Ladies Love Lemonade</h3>
+              <p className="featured-event__host">
+                Presented by Joe Golf, in conjunction with Kappa Alpha Psi Fraternity, Inc. &mdash; Baltimore Alumni Chapter
+              </p>
+              <ul className="featured-event__details">
+                <li>Friday, July 10, 2026 &middot; 11:00 AM &ndash; 1:00 PM</li>
+                <li>Pine Ridge Golf Course &mdash; 3060 Ridge Rd, Eldersburg, MD 21784</li>
+                <li>Complimentary &middot; Ladies only, all skill levels &middot; Spaces are limited</li>
+              </ul>
+              <p>
+                A curated golf experience and clinic for ladies. An introductory session led by PGA instructors covering the basics and fundamentals of golf, putting, and chipping &mdash; with complimentary lemonade courtesy of Tito&rsquo;s.
+              </p>
+              <a className="button button--gold" href="#contact">RSVP for This Event ↘</a>
+            </div>
+          </article>
           <div className="event-gallery">
             {galleryEvents.map((event, index) => (
               <article className="gallery-card" key={event.title}>
