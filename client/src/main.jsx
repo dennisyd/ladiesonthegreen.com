@@ -74,6 +74,13 @@ const benefitTabs = [
   }
 ];
 
+const momentsGallery = [
+  { src: "/moments-clubhouse.jpg", alt: "Pine Ridge Golf Course clubhouse at golden hour" },
+  { src: "/moments-cart-bags.jpg", alt: "Golf bags loaded onto a cart before a round" },
+  { src: "/moments-gps.jpg", alt: "Cart GPS screen showing the yardage for an upcoming hole" },
+  { src: "/moments-sunset.jpg", alt: "Sunset over the green at Pine Ridge Golf Course" }
+];
+
 const partners = ["Courses", "Clinics", "Brands", "Local Hosts"];
 
 function App() {
@@ -231,6 +238,20 @@ function App() {
                   <small>{String(index + 1).padStart(2, "0")}</small>
                 </div>
               </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="moments" id="moments" aria-labelledby="moments-title">
+          <div className="section-heading">
+            <span className="section-kicker">Moments on the Green</span>
+            <h2 id="moments-title">A glimpse of the course, the carts, and the golden hour.</h2>
+          </div>
+          <div className="moments-gallery">
+            {momentsGallery.map((photo) => (
+              <div className="moments-gallery__item" key={photo.src}>
+                <img src={photo.src} alt={photo.alt} loading="lazy" />
+              </div>
             ))}
           </div>
         </section>
