@@ -197,12 +197,7 @@ nav a,
 
 .hero {
   align-items: center;
-  background:
-    radial-gradient(circle at 50% 28%, rgba(27, 104, 61, 0.5), transparent 31%),
-    radial-gradient(circle at 0% 55%, rgba(22, 126, 78, 0.28), transparent 28%),
-    radial-gradient(circle at 100% 45%, rgba(74, 145, 90, 0.24), transparent 32%),
-    linear-gradient(180deg, rgba(3, 28, 19, 0.78), rgba(3, 28, 19, 0.94)),
-    var(--navy-deep);
+  background: var(--navy-deep);
   color: var(--white);
   display: flex;
   justify-content: center;
@@ -210,6 +205,37 @@ nav a,
   overflow: hidden;
   padding: clamp(44px, 6vw, 82px) clamp(18px, 5vw, 72px);
   position: relative;
+}
+
+.hero__slideshow {
+  inset: 0;
+  position: absolute;
+  z-index: 0;
+}
+
+.hero__slide {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  opacity: 0;
+  position: absolute;
+  transition: opacity 1.6s ease;
+  width: 100%;
+}
+
+.hero__slide.is-active {
+  opacity: 1;
+}
+
+.hero__scrim {
+  background:
+    radial-gradient(circle at 50% 28%, rgba(27, 104, 61, 0.5), transparent 31%),
+    radial-gradient(circle at 0% 55%, rgba(22, 126, 78, 0.28), transparent 28%),
+    radial-gradient(circle at 100% 45%, rgba(74, 145, 90, 0.24), transparent 32%),
+    linear-gradient(180deg, rgba(3, 28, 19, 0.78), rgba(3, 28, 19, 0.94));
+  inset: 0;
+  position: absolute;
+  z-index: 1;
 }
 
 .hero::before {
@@ -221,6 +247,7 @@ nav a,
   inset: 0;
   opacity: 0.9;
   position: absolute;
+  z-index: 2;
 }
 
 .hero__content {
@@ -230,7 +257,7 @@ nav a,
   max-width: 1480px;
   position: relative;
   text-align: center;
-  z-index: 1;
+  z-index: 3;
 }
 
 .hero__logo {

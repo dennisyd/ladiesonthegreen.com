@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
 const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
+
+const heroImages = [
+  { src: "/hero-1.jpg", alt: "Ladies On The Green members out for a social evening" },
+  { src: "/hero-2.jpg", alt: "Ladies On The Green members out for a social evening" },
+  { src: "/hero-3.jpg", alt: "Ladies On The Green members at a golf outing" }
+];
 
 const navItems = [
   { label: "Home", href: "#top" },
@@ -87,7 +93,15 @@ function App() {
   const [formState, setFormState] = useState({ status: "idle", message: "" });
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeBenefit, setActiveBenefit] = useState(0);
+  const [heroIndex, setHeroIndex] = useState(0);
   const currentBenefit = benefitTabs[activeBenefit];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroIndex((index) => (index + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -151,6 +165,17 @@ function App() {
 
       <main id="top">
         <section className="hero" aria-labelledby="hero-title">
+          <div className="hero__slideshow" aria-hidden="true">
+            {heroImages.map((image, index) => (
+              <img
+                className={index === heroIndex ? "hero__slide is-active" : "hero__slide"}
+                key={image.src}
+                src={image.src}
+                alt=""
+              />
+            ))}
+          </div>
+          <div className="hero__scrim" aria-hidden="true" />
           <div className="hero__content">
             <img className="hero__logo" src="/ladiesonthegreen.png" alt="Ladies On The Green Golf & Social Club logo" />
             <p className="hero__name">Ladies On The Green</p>
