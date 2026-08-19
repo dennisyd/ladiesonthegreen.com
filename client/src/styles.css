@@ -37,6 +37,18 @@ a {
   text-decoration: none;
 }
 
+.sr-only {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 button,
 input,
 select,
@@ -196,7 +208,7 @@ nav a,
 }
 
 .hero {
-  align-items: center;
+  align-items: flex-end;
   background: var(--navy-deep);
   color: var(--white);
   display: flex;
@@ -229,10 +241,10 @@ nav a,
 
 .hero__scrim {
   background:
-    radial-gradient(circle at 50% 28%, rgba(27, 104, 61, 0.5), transparent 31%),
-    radial-gradient(circle at 0% 55%, rgba(22, 126, 78, 0.28), transparent 28%),
-    radial-gradient(circle at 100% 45%, rgba(74, 145, 90, 0.24), transparent 32%),
-    linear-gradient(180deg, rgba(3, 28, 19, 0.78), rgba(3, 28, 19, 0.94));
+    radial-gradient(circle at 50% 28%, rgba(27, 104, 61, 0.24), transparent 35%),
+    radial-gradient(circle at 0% 55%, rgba(22, 126, 78, 0.14), transparent 30%),
+    radial-gradient(circle at 100% 45%, rgba(74, 145, 90, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(3, 28, 19, 0.15), rgba(3, 28, 19, 0.4));
   inset: 0;
   position: absolute;
   z-index: 1;
