@@ -561,6 +561,23 @@ p {
   text-transform: uppercase;
 }
 
+.featured-event--past .featured-event__badge {
+  background: var(--navy);
+}
+
+.featured-event--past .featured-event__image img {
+  filter: grayscale(0.35);
+  opacity: 0.9;
+}
+
+.featured-event__past {
+  color: var(--green);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
 .featured-event__body h3 {
   color: var(--navy);
   font-family: Georgia, "Times New Roman", serif;

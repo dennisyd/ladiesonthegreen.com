@@ -24,18 +24,47 @@ const featuredEvents = [
     cta: { label: "Reserve Your Spot — $79 ↘", href: golfExperienceRegistrationUrl, external: true }
   },
   {
+    image: "/martha-vineyard-social-meetup.jpg",
+    alt: "Ladies On The Green Martha's Vineyard social meet-up at Farm Neck Golf Club, Wednesday August 12",
+    badge: "Past Event",
+    title: "Martha’s Vineyard Golf Meet-Up",
+    host: "A complimentary social meet-up with goodie bags courtesy of our sponsors",
+    details: [
+      "Wednesday, August 12, 2026 · 11:00 AM",
+      "Farm Neck Golf Club — Oak Bluffs, MA",
+      "Complimentary · Ladies only, all levels"
+    ],
+    text: "A relaxed social meet-up for Ladies on the Green on Martha’s Vineyard — coffee, conversation, and connections at the beautiful Farm Neck Golf Club. This event sold out and has already taken place.",
+    pastNote: "Sold out · This event has taken place"
+  },
+  {
+    image: "/sunrise-yoga-on-the-beach.jpg",
+    alt: "Sunrise Yoga on the Beach flyer for Ladies On The Green at Inkwell Beach, Oak Bluffs, Thursday August 13, 2026",
+    badge: "Past Event",
+    title: "Sunrise Yoga on the Beach",
+    host: "Breathe · Stretch · Connect — a Martha's Vineyard morning of movement and mindfulness",
+    details: [
+      "Thursday, August 13, 2026 · 8:00 AM",
+      "Inkwell Beach — Oak Bluffs, MA",
+      "Free to join · All experience levels welcome"
+    ],
+    text: "A sunrise beach yoga session to start the Martha’s Vineyard morning with movement, mindfulness, and meaningful connections. This event has already taken place.",
+    tallImage: true,
+    pastNote: "This event has taken place"
+  },
+  {
     image: "/ladies-love-lemonade.jpg",
     alt: "Ladies Love Lemonade golf clinic flyer, presented by Joe Golf and Kappa Alpha Psi Fraternity Inc, Baltimore Alumni Chapter",
-    badge: "Featured",
+    badge: "Past Event",
     title: "Ladies Love Lemonade",
     host: "Presented by Joe Golf, in conjunction with Kappa Alpha Psi Fraternity, Inc. — Baltimore Alumni Chapter",
     details: [
       "Friday, July 10, 2026 · 11:00 AM – 1:00 PM",
       "Pine Ridge Golf Course — 3060 Ridge Rd, Eldersburg, MD 21784",
-      "Complimentary · Ladies only, all skill levels · Spaces are limited"
+      "Complimentary · Ladies only, all skill levels"
     ],
-    text: "A curated golf experience and clinic for ladies. An introductory session led by PGA instructors covering the basics and fundamentals of golf, putting, and chipping — with complimentary lemonade courtesy of Tito’s.",
-    cta: { label: "RSVP for This Event ↘", href: "#contact", external: false }
+    text: "A curated golf experience and clinic for ladies. An introductory session led by PGA instructors covering the basics and fundamentals of golf, putting, and chipping — with complimentary lemonade courtesy of Tito’s. This event has already taken place.",
+    pastNote: "This event has taken place"
   }
 ];
 
@@ -260,7 +289,7 @@ function App() {
           </div>
           {featuredEvents.map((event) => (
             <article
-              className={`featured-event${event.tallImage ? " featured-event--tall" : ""}`}
+              className={`featured-event${event.tallImage ? " featured-event--tall" : ""}${event.pastNote ? " featured-event--past" : ""}`}
               key={event.title}
             >
               <div className="featured-event__image">
@@ -276,13 +305,17 @@ function App() {
                   ))}
                 </ul>
                 <p>{event.text}</p>
-                <a
-                  className="button button--gold"
-                  href={event.cta.href}
-                  {...(event.cta.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                >
-                  {event.cta.label}
-                </a>
+                {event.cta ? (
+                  <a
+                    className="button button--gold"
+                    href={event.cta.href}
+                    {...(event.cta.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  >
+                    {event.cta.label}
+                  </a>
+                ) : (
+                  <p className="featured-event__past">{event.pastNote}</p>
+                )}
               </div>
             </article>
           ))}
