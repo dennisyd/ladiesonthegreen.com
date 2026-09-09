@@ -41,8 +41,6 @@ const featuredEvents = [
 
 const heroImages = [
   { src: "/hero-1.jpg", alt: "Ladies On The Green members out for a social evening" },
-  { src: "/hero-2.jpg", alt: "Ladies On The Green members out for a social evening" },
-  { src: "/hero-3.jpg", alt: "Ladies On The Green members at a golf outing" },
   { src: "/hero-4.jpg", alt: "Ladies On The Green members seated together at the clubhouse" }
 ];
 
