@@ -25,16 +25,17 @@ const featuredEvents = [
   },
   {
     image: "/martha-vineyard-social-meetup.jpg",
-    alt: "Ladies On The Green Martha's Vineyard social meet-up at Farm Neck Golf Club, Wednesday August 12",
+    alt: "Martha's Vineyard Golf Meet-Up flyer for Ladies On The Green at Farm Neck Golf Club, Wednesday August 12 at 10:00 AM",
     badge: "Past Event",
     title: "Martha’s Vineyard Golf Meet-Up",
-    host: "A complimentary social meet-up with goodie bags courtesy of our sponsors",
+    host: "Connect · Learn · Swing · Thrive — a free impromptu golf meet-up",
     details: [
-      "Wednesday, August 12, 2026 · 11:00 AM",
-      "Farm Neck Golf Club — Oak Bluffs, MA",
-      "Complimentary · Ladies only, all levels"
+      "Wednesday, August 12, 2026 · 10:00 AM",
+      "Farm Neck Golf Club — 1 Farm Neck Way, Oak Bluffs, MA 02557",
+      "Free to attend · All skill levels welcome"
     ],
-    text: "A relaxed social meet-up for Ladies on the Green on Martha’s Vineyard — coffee, conversation, and connections at the beautiful Farm Neck Golf Club. This event sold out and has already taken place.",
+    text: "Whether you’re new to golf or an experienced player, come practice at the driving range, sharpen your swing, and connect with an amazing community of women who share a passion for golf, friendship, and networking. Range balls and any golf fees are the responsibility of each participant. This event has already taken place.",
+    tallImage: true,
     pastNote: "Sold out · This event has taken place"
   },
   {
