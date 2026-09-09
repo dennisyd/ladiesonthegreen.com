@@ -5,8 +5,7 @@ import "./styles.css";
 const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
 
 // Stripe Payment Link for the Private Club Golf Experience ($79).
-// Replace with the live link from your Stripe dashboard (Payments -> Payment Links).
-const golfExperienceRegistrationUrl = "https://buy.stripe.com/REPLACE_WITH_YOUR_LINK";
+const golfExperienceRegistrationUrl = "https://buy.stripe.com/14A00j5wf3aU0aX9hodby0z";
 
 const featuredEvents = [
   {
