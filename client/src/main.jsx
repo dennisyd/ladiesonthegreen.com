@@ -4,6 +4,42 @@ import "./styles.css";
 
 const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
 
+// Stripe Payment Link for the Private Club Golf Experience ($79).
+// Replace with the live link from your Stripe dashboard (Payments -> Payment Links).
+const golfExperienceRegistrationUrl = "https://buy.stripe.com/REPLACE_WITH_YOUR_LINK";
+
+const featuredEvents = [
+  {
+    image: "/private-club-golf-experience.jpg",
+    alt: "Private Club Golf Experience flyer for Ladies On The Green at Country Club at Woodmore, Saturday October 3, 2026",
+    badge: "Next Event",
+    title: "Private Club Golf Experience",
+    host: "Learn · Play · Connect — small group instruction with 2 PGA-certified pros",
+    details: [
+      "Saturday, October 3, 2026 · 1:00 PM",
+      "Country Club at Woodmore — 12320 Pleasant Prospect Road, Mitchellville, MD 20721",
+      "$79 per person · All skill levels welcome · Clubs provided · Limited to 20 spots"
+    ],
+    text: "A curated golf clinic in a private country club setting, designed to help you learn, improve your game, and make meaningful connections. Includes PGA-certified instruction, a networking reception afterward with drinks and conversation, and access to a beautiful private course.",
+    tallImage: true,
+    cta: { label: "Reserve Your Spot — $79 ↘", href: golfExperienceRegistrationUrl, external: true }
+  },
+  {
+    image: "/ladies-love-lemonade.jpg",
+    alt: "Ladies Love Lemonade golf clinic flyer, presented by Joe Golf and Kappa Alpha Psi Fraternity Inc, Baltimore Alumni Chapter",
+    badge: "Featured",
+    title: "Ladies Love Lemonade",
+    host: "Presented by Joe Golf, in conjunction with Kappa Alpha Psi Fraternity, Inc. — Baltimore Alumni Chapter",
+    details: [
+      "Friday, July 10, 2026 · 11:00 AM – 1:00 PM",
+      "Pine Ridge Golf Course — 3060 Ridge Rd, Eldersburg, MD 21784",
+      "Complimentary · Ladies only, all skill levels · Spaces are limited"
+    ],
+    text: "A curated golf experience and clinic for ladies. An introductory session led by PGA instructors covering the basics and fundamentals of golf, putting, and chipping — with complimentary lemonade courtesy of Tito’s.",
+    cta: { label: "RSVP for This Event ↘", href: "#contact", external: false }
+  }
+];
+
 const heroImages = [
   { src: "/hero-1.jpg", alt: "Ladies On The Green members out for a social evening" },
   { src: "/hero-2.jpg", alt: "Ladies On The Green members out for a social evening" },
@@ -225,27 +261,34 @@ function App() {
             <span className="section-kicker">Featured Events</span>
             <h2 id="events-title">Golf experiences made to be seen, shared, and remembered.</h2>
           </div>
-          <article className="featured-event">
-            <div className="featured-event__image">
-              <img src="/ladies-love-lemonade.jpg" alt="Ladies Love Lemonade golf clinic flyer, presented by Joe Golf and Kappa Alpha Psi Fraternity Inc, Baltimore Alumni Chapter" />
-            </div>
-            <div className="featured-event__body">
-              <span className="featured-event__badge">Next Event</span>
-              <h3>Ladies Love Lemonade</h3>
-              <p className="featured-event__host">
-                Presented by Joe Golf, in conjunction with Kappa Alpha Psi Fraternity, Inc. &mdash; Baltimore Alumni Chapter
-              </p>
-              <ul className="featured-event__details">
-                <li>Friday, July 10, 2026 &middot; 11:00 AM &ndash; 1:00 PM</li>
-                <li>Pine Ridge Golf Course &mdash; 3060 Ridge Rd, Eldersburg, MD 21784</li>
-                <li>Complimentary &middot; Ladies only, all skill levels &middot; Spaces are limited</li>
-              </ul>
-              <p>
-                A curated golf experience and clinic for ladies. An introductory session led by PGA instructors covering the basics and fundamentals of golf, putting, and chipping &mdash; with complimentary lemonade courtesy of Tito&rsquo;s.
-              </p>
-              <a className="button button--gold" href="#contact">RSVP for This Event ↘</a>
-            </div>
-          </article>
+          {featuredEvents.map((event) => (
+            <article
+              className={`featured-event${event.tallImage ? " featured-event--tall" : ""}`}
+              key={event.title}
+            >
+              <div className="featured-event__image">
+                <img src={event.image} alt={event.alt} />
+              </div>
+              <div className="featured-event__body">
+                <span className="featured-event__badge">{event.badge}</span>
+                <h3>{event.title}</h3>
+                <p className="featured-event__host">{event.host}</p>
+                <ul className="featured-event__details">
+                  {event.details.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+                <p>{event.text}</p>
+                <a
+                  className="button button--gold"
+                  href={event.cta.href}
+                  {...(event.cta.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                >
+                  {event.cta.label}
+                </a>
+              </div>
+            </article>
+          ))}
           <div className="event-gallery">
             {galleryEvents.map((event, index) => (
               <article className="gallery-card" key={event.title}>
