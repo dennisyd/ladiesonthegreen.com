@@ -39,6 +39,21 @@ const featuredEvents = [
     pastNote: "Sold out · This event has taken place"
   },
   {
+    id: "mv-meetup-listing",
+    image: "/martha-vineyard-social-meetup-listing.jpg",
+    alt: "Ladies On The Green Martha's Vineyard Golf Meet-Up event listing showing Sold Out",
+    badge: "Past Event",
+    title: "Martha’s Vineyard Golf Meet-Up",
+    host: "Connect · Learn · Swing · Thrive — a free impromptu golf meet-up",
+    details: [
+      "Wednesday, August 12, 2026 · 10:00 AM",
+      "Farm Neck Golf Club — 1 Farm Neck Way, Oak Bluffs, MA 02557",
+      "Free to attend · All skill levels welcome"
+    ],
+    text: "Whether you’re new to golf or an experienced player, come practice at the driving range, sharpen your swing, and connect with an amazing community of women who share a passion for golf, friendship, and networking. Range balls and any golf fees are the responsibility of each participant. This event has already taken place.",
+    pastNote: "Sold out · This event has taken place"
+  },
+  {
     image: "/sunrise-yoga-on-the-beach.jpg",
     alt: "Sunrise Yoga on the Beach flyer for Ladies On The Green at Inkwell Beach, Oak Bluffs, Thursday August 13, 2026",
     badge: "Past Event",
@@ -291,7 +306,7 @@ function App() {
           {featuredEvents.map((event) => (
             <article
               className={`featured-event${event.tallImage ? " featured-event--tall" : ""}${event.pastNote ? " featured-event--past" : ""}`}
-              key={event.title}
+              key={event.id ?? event.title}
             >
               <div className="featured-event__image">
                 <img src={event.image} alt={event.alt} />
