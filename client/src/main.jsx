@@ -24,6 +24,22 @@ const featuredEvents = [
     cta: { label: "Reserve Your Spot — $79 ↘", href: golfExperienceRegistrationUrl, external: true }
   },
   {
+    id: "nyfw-glitz-and-glam",
+    image: "/nyfw-glitz-and-glam-runway.jpg",
+    alt: "Ladies On The Green NYFW Weekend flyer for the EPN NYFW Glitz & Glam Runway Extravaganza, Saturday September 12, 2026 at Léman Ballroom in New York",
+    badge: "Past Event",
+    title: "NYFW Weekend — Glitz & Glam Runway Extravaganza",
+    host: "Network · Empower · Give Back · Shine — where style meets purpose",
+    details: [
+      "Saturday, September 12, 2026 · 8:00 PM Show",
+      "Léman Ballroom — 41 Broad Street, New York, NY 10004",
+      "EPN NYFW Runway Extravaganza · High fashion, bold beauty, lasting impact"
+    ],
+    text: "Ladies On The Green took over New York Fashion Week weekend with a night of high fashion, connection, and purpose at the EPN NYFW Glitz & Glam Runway Extravaganza — more than fashion, a movement. This event has already taken place.",
+    tallImage: true,
+    pastNote: "This event has taken place"
+  },
+  {
     image: "/martha-vineyard-social-meetup.jpg",
     alt: "Martha's Vineyard Golf Meet-Up flyer for Ladies On The Green at Farm Neck Golf Club, Wednesday August 12 at 10:00 AM",
     badge: "Past Event",
