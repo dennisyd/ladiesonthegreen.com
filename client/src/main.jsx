@@ -256,7 +256,9 @@ function App() {
           </div>
           <div className="hero__scrim" aria-hidden="true" />
           <div className="hero__content">
-            <h1 id="hero-title" className="sr-only">Ladies On The Green &mdash; Join, Connect, and Tee Off With Confidence</h1>
+            <p className="hero__name">Ladies On The Green Collective</p>
+            <h1 id="hero-title">Our Strength Is Our Network</h1>
+            <p>A curated collective of accomplished women connecting through golf, lifestyle, and elevated experiences.</p>
             <div className="hero__actions" aria-label="Primary actions">
               <a className="button button--light" href="#contact">Join Now</a>
               <a className="button button--gold" href="#events">Explore Our Signature Events ↘</a>
