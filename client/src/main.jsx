@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
@@ -100,9 +100,10 @@ const featuredEvents = [
   }
 ];
 
-const heroImages = [
-  { src: "/hero-1.jpg", alt: "Ladies On The Green members out for a social evening" },
-  { src: "/hero-4.jpg", alt: "Ladies On The Green members seated together at the clubhouse" }
+const heroSlides = [
+  { type: "image", src: "/hero-1.jpg", alt: "Ladies On The Green members out for a social evening" },
+  { type: "video", src: "/golf-video.mp4", alt: "", duration: 15000 },
+  { type: "image", src: "/hero-4.jpg", alt: "Ladies On The Green members seated together at the clubhouse" }
 ];
 
 const navItems = [
@@ -189,14 +190,31 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeBenefit, setActiveBenefit] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
+  const heroVideoRef = useRef(null);
   const currentBenefit = benefitTabs[activeBenefit];
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setHeroIndex((index) => (index + 1) % heroImages.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
+    const activeSlide = heroSlides[heroIndex];
+    const timer = setTimeout(() => {
+      setHeroIndex((index) => (index + 1) % heroSlides.length);
+    }, activeSlide.duration ?? 5000);
+    return () => clearTimeout(timer);
+  }, [heroIndex]);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+    if (heroSlides[heroIndex].type === "video") {
+      try {
+        video.currentTime = 0;
+      } catch {
+        // Metadata not loaded yet; play() below will still start from 0.
+      }
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [heroIndex]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -261,14 +279,27 @@ function App() {
       <main id="top">
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero__slideshow" aria-hidden="true">
-            {heroImages.map((image, index) => (
-              <img
-                className={index === heroIndex ? "hero__slide is-active" : "hero__slide"}
-                key={image.src}
-                src={image.src}
-                alt=""
-              />
-            ))}
+            {heroSlides.map((slide, index) =>
+              slide.type === "video" ? (
+                <video
+                  className={index === heroIndex ? "hero__slide is-active" : "hero__slide"}
+                  key={slide.src}
+                  ref={heroVideoRef}
+                  src={slide.src}
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                />
+              ) : (
+                <img
+                  className={index === heroIndex ? "hero__slide is-active" : "hero__slide"}
+                  key={slide.src}
+                  src={slide.src}
+                  alt=""
+                />
+              )
+            )}
           </div>
           <div className="hero__scrim" aria-hidden="true" />
           <div className="hero__content">
