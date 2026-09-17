@@ -102,7 +102,7 @@ const featuredEvents = [
 
 const heroSlides = [
   { type: "image", src: "/hero-1.jpg", alt: "Ladies On The Green members out for a social evening" },
-  { type: "video", src: "/golf-video.mp4", alt: "", duration: 15000 },
+  { type: "video", src: "/golf-video.mp4", alt: "" },
   { type: "image", src: "/hero-4.jpg", alt: "Ladies On The Green members seated together at the clubhouse" }
 ];
 
@@ -195,6 +195,9 @@ function App() {
 
   useEffect(() => {
     const activeSlide = heroSlides[heroIndex];
+    // Video slides advance on their own "ended" event (see below) so they
+    // always play in full, however long the clip is.
+    if (activeSlide.type === "video") return;
     const timer = setTimeout(() => {
       setHeroIndex((index) => (index + 1) % heroSlides.length);
     }, activeSlide.duration ?? 5000);
@@ -287,9 +290,9 @@ function App() {
                   ref={heroVideoRef}
                   src={slide.src}
                   muted
-                  loop
                   playsInline
                   preload="auto"
+                  onEnded={() => setHeroIndex((i) => (i + 1) % heroSlides.length)}
                 />
               ) : (
                 <img
