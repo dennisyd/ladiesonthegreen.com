@@ -109,7 +109,7 @@ const heroSlides = [
 const navItems = [
   { label: "Home", href: "#top" },
   { label: "About Us", href: "#about" },
-  { label: "Join", href: "#contact" },
+  { label: "Become A Member", href: "#contact" },
   { label: "Events", href: "#events" },
   { label: "Membership", href: "#membership" }
 ];
@@ -274,7 +274,7 @@ function App() {
         </nav>
         <div className="header-actions">
           <a className="circle-link" href="#events" onClick={closeMenu} aria-label="Explore events">›</a>
-          <a className="header-cta" href="#contact" onClick={closeMenu}>Join ↘</a>
+          <a className="header-cta" href="#contact" onClick={closeMenu}>Become A Member ↘</a>
           <a className="cart-link" href="#contact" onClick={closeMenu} aria-label="Join cart">0</a>
         </div>
       </header>
@@ -310,7 +310,7 @@ function App() {
             <h1 id="hero-title">Our Strength Is Our Network</h1>
             <p>A curated collective of accomplished women connecting through golf, lifestyle, and elevated experiences.</p>
             <div className="hero__actions" aria-label="Primary actions">
-              <a className="button button--light" href="#contact">Join Now</a>
+              <a className="button button--light" href="#contact">Become A Member</a>
               <a className="button button--gold" href="#events">Explore Our Signature Events ↘</a>
             </div>
           </div>

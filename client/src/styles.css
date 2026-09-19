@@ -114,6 +114,7 @@ nav {
 nav a,
 .header-cta {
   color: var(--white);
+  white-space: nowrap;
 }
 
 .login-link {
@@ -176,7 +177,7 @@ nav a,
   border-color: var(--gold);
   color: var(--white);
   min-width: 184px;
-  padding: 15px 28px;
+  padding: 15px 22px;
 }
 
 .cart-link {
