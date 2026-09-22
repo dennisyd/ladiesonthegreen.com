@@ -28,7 +28,10 @@ export default function MagazinePage() {
   const [title, setTitle] = useState("Ladies On The Green");
   const [pages, setPages] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
+  const [pageAspect, setPageAspect] = useState(520 / 720);
+  const [bookSize, setBookSize] = useState({ width: 520, height: 720 });
   const bookRef = useRef(null);
+  const viewerRef = useRef(null);
 
   useEffect(() => {
     document.title = "Digital Magazine | Ladies On The Green";
@@ -61,6 +64,9 @@ export default function MagazinePage() {
           canvas.height = viewport.height;
           await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
           rendered.push(canvas.toDataURL("image/jpeg", 0.86));
+          if (pageNumber === 1) {
+            setPageAspect(viewport.width / viewport.height);
+          }
           setMessage(`Rendering pages... (${pageNumber}/${pdf.numPages})`);
         }
 
@@ -79,6 +85,47 @@ export default function MagazinePage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (status !== "ready") return;
+
+    function recalcSize() {
+      const viewerEl = viewerRef.current;
+      if (!viewerEl) return;
+
+      // Measure the real, current chrome above/around the book (header,
+      // section padding, heading, gap, bottom padding) instead of guessing
+      // fixed numbers, so this stays correct if any of that CSS changes.
+      const viewerTop = viewerEl.getBoundingClientRect().top;
+      const controlsH = document.querySelector(".magazine-controls")?.getBoundingClientRect().height ?? 56;
+      const viewerStyle = getComputedStyle(viewerEl);
+      const gap = parseFloat(viewerStyle.rowGap || viewerStyle.gap) || 0;
+      const wrapEl = document.querySelector(".magazine-page-wrap");
+      const wrapPaddingBottom = wrapEl ? parseFloat(getComputedStyle(wrapEl).paddingBottom) : 24;
+
+      const availableHeight = Math.max(
+        240,
+        window.innerHeight - viewerTop - controlsH - gap - wrapPaddingBottom - 8
+      );
+      const availableWidth = Math.min(
+        900,
+        Math.max(280, viewerEl.clientWidth - 32)
+      );
+
+      let height = availableHeight;
+      let width = height * pageAspect;
+      if (width > availableWidth) {
+        width = availableWidth;
+        height = width / pageAspect;
+      }
+
+      setBookSize({ width: Math.round(width), height: Math.round(height) });
+    }
+
+    recalcSize();
+    window.addEventListener("resize", recalcSize);
+    return () => window.removeEventListener("resize", recalcSize);
+  }, [status, pageAspect]);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -118,16 +165,13 @@ export default function MagazinePage() {
         )}
 
         {status === "ready" && pages.length > 0 && (
-          <div className="magazine-viewer">
+          <div className="magazine-viewer" ref={viewerRef}>
             <HTMLFlipBook
+              key={`${bookSize.width}x${bookSize.height}`}
               ref={bookRef}
-              width={520}
-              height={720}
-              size="stretch"
-              minWidth={280}
-              maxWidth={900}
-              minHeight={380}
-              maxHeight={1200}
+              width={bookSize.width}
+              height={bookSize.height}
+              size="fixed"
               maxShadowOpacity={0.4}
               showCover={true}
               mobileScrollSupport={true}

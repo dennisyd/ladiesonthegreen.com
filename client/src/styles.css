@@ -1484,11 +1484,11 @@ textarea:focus {
 
 /* Digital magazine flipbook (/magazine) */
 .magazine-page-wrap {
-  padding: clamp(32px, 5vw, 64px) clamp(18px, 5vw, 72px) clamp(56px, 7vw, 110px);
+  padding: clamp(20px, 3vw, 40px) clamp(18px, 5vw, 72px) clamp(20px, 3vw, 40px);
 }
 
 .magazine-heading {
-  margin: 0 auto 32px;
+  margin: 0 auto 18px;
   max-width: 1000px;
   text-align: center;
 }
