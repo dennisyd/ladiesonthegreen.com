@@ -1560,6 +1560,52 @@ textarea:focus {
   background: var(--green);
 }
 
+.magazine-controls__fullscreen {
+  background: transparent !important;
+  border: 1px solid var(--navy) !important;
+  color: var(--navy) !important;
+  margin-left: auto;
+}
+
+.magazine-controls__fullscreen:hover {
+  background: var(--navy) !important;
+  color: var(--white) !important;
+}
+
+.magazine-viewer:fullscreen,
+.magazine-viewer:-webkit-full-screen {
+  align-content: center;
+  background: var(--navy-deep);
+  gap: 24px;
+  height: 100vh;
+  justify-items: center;
+  width: 100vw;
+}
+
+.magazine-viewer.is-fullscreen .magazine-controls {
+  color: var(--white);
+}
+
+.magazine-viewer.is-fullscreen .magazine-controls button {
+  background: var(--white);
+  color: var(--navy);
+}
+
+.magazine-viewer.is-fullscreen .magazine-controls button:hover {
+  background: var(--gold);
+}
+
+.magazine-viewer.is-fullscreen .magazine-controls__fullscreen {
+  background: transparent !important;
+  border: 1px solid var(--white) !important;
+  color: var(--white) !important;
+}
+
+.magazine-viewer.is-fullscreen .magazine-controls__fullscreen:hover {
+  background: var(--white) !important;
+  color: var(--navy) !important;
+}
+
 /* Magazine admin (/magazine/admin) */
 .magazine-admin {
   align-items: center;

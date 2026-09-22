@@ -30,6 +30,7 @@ export default function MagazinePage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageAspect, setPageAspect] = useState(520 / 720);
   const [bookSize, setBookSize] = useState({ width: 520, height: 720 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const bookRef = useRef(null);
   const viewerRef = useRef(null);
 
@@ -96,12 +97,16 @@ export default function MagazinePage() {
       // Measure the real, current chrome above/around the book (header,
       // section padding, heading, gap, bottom padding) instead of guessing
       // fixed numbers, so this stays correct if any of that CSS changes.
+      const fullscreen = document.fullscreenElement === viewerEl;
       const viewerTop = viewerEl.getBoundingClientRect().top;
       const controlsH = document.querySelector(".magazine-controls")?.getBoundingClientRect().height ?? 56;
       const viewerStyle = getComputedStyle(viewerEl);
       const gap = parseFloat(viewerStyle.rowGap || viewerStyle.gap) || 0;
       const wrapEl = document.querySelector(".magazine-page-wrap");
-      const wrapPaddingBottom = wrapEl ? parseFloat(getComputedStyle(wrapEl).paddingBottom) : 24;
+      // The wrap's own bottom padding only matters in normal flow; once the
+      // viewer is the fullscreen root, that ancestor's padding no longer
+      // constrains it.
+      const wrapPaddingBottom = fullscreen || !wrapEl ? 12 : parseFloat(getComputedStyle(wrapEl).paddingBottom);
 
       const availableHeight = Math.max(
         240,
@@ -124,8 +129,28 @@ export default function MagazinePage() {
 
     recalcSize();
     window.addEventListener("resize", recalcSize);
-    return () => window.removeEventListener("resize", recalcSize);
+    document.addEventListener("fullscreenchange", recalcSize);
+    return () => {
+      window.removeEventListener("resize", recalcSize);
+      document.removeEventListener("fullscreenchange", recalcSize);
+    };
   }, [status, pageAspect]);
+
+  useEffect(() => {
+    function handleFullscreenChange() {
+      setIsFullscreen(document.fullscreenElement === viewerRef.current);
+    }
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      viewerRef.current?.requestFullscreen().catch(() => {});
+    }
+  }
 
   function closeMenu() {
     setMenuOpen(false);
@@ -165,7 +190,7 @@ export default function MagazinePage() {
         )}
 
         {status === "ready" && pages.length > 0 && (
-          <div className="magazine-viewer" ref={viewerRef}>
+          <div className={`magazine-viewer${isFullscreen ? " is-fullscreen" : ""}`} ref={viewerRef}>
             <HTMLFlipBook
               key={`${bookSize.width}x${bookSize.height}`}
               ref={bookRef}
@@ -192,6 +217,9 @@ export default function MagazinePage() {
               </span>
               <button type="button" onClick={() => bookRef.current?.pageFlip().flipNext()}>
                 Next ›
+              </button>
+              <button type="button" className="magazine-controls__fullscreen" onClick={toggleFullscreen}>
+                {isFullscreen ? "Exit Fullscreen ✕" : "Read Fullscreen ⛶"}
               </button>
             </div>
           </div>
