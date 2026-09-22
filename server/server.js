@@ -87,6 +87,69 @@ app.post("/api/contact", async (req, res) => {
   });
 });
 
+app.post("/api/membership", async (req, res) => {
+  const { email, name, address, address2, city, state, zip, country, phone } = req.body ?? {};
+
+  if (!email || !name || !address || !city || !state || !zip) {
+    return res.status(400).json({ ok: false, error: "Please complete all required fields." });
+  }
+
+  console.log("New Ladies On The Green founding membership application", {
+    name,
+    email,
+    phone,
+    address,
+    address2,
+    city,
+    state,
+    zip,
+    country,
+    receivedAt: new Date().toISOString()
+  });
+
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    return res.status(500).json({
+      ok: false,
+      error: "Sign-up is not available right now. Please contact us at hello@ladiesonthegreen.com."
+    });
+  }
+
+  try {
+    await transporter.sendMail({
+      to: contactTo,
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      replyTo: email,
+      subject: `New founding membership application: ${name}`,
+      text: [
+        "New founding membership application ($89 / year)",
+        "",
+        `Name: ${name}`,
+        `Email: ${email}`,
+        `Phone: ${phone || "-"}`,
+        "",
+        "Address:",
+        address,
+        address2 || "",
+        `${city}, ${state} ${zip}`,
+        country || ""
+      ].join("\n")
+    });
+  } catch (error) {
+    console.error("Failed to send membership application", error);
+    return res.status(500).json({
+      ok: false,
+      error: "We could not save your details. Please email hello@ladiesonthegreen.com directly."
+    });
+  }
+
+  return res.status(200).json({
+    ok: true,
+    message: "Thank you! Your details are in. We will email you shortly with your payment link."
+  });
+});
+
 const clientDistPath = path.join(__dirname, "..", "client", "dist");
 
 app.use(
