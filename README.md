@@ -43,6 +43,19 @@ CONTACT_TO=hello@ladiesonthegreen.com
 
 Use `SMTP_PORT=465` or `SMTP_SECURE=true` when your mail provider requires SSL.
 
+## Digital magazine (flipbook)
+
+- `/magazine` — public page-turning viewer. Renders the PDF entirely in the browser (pdf.js), page by page, inside a flipbook (react-pageflip). No server-side conversion needed.
+- `/magazine/admin` — password-gated upload form. Uploading a PDF replaces the issue shown at `/magazine`; only one issue is live at a time, and the previous file is deleted automatically.
+
+Set an admin password before starting the server, or uploads are refused:
+
+```bash
+MAGAZINE_ADMIN_PASSWORD=choose_a_password
+```
+
+Uploaded PDFs are stored on disk at `server/uploads/magazine/` (gitignored) with metadata in `server/data/magazine.json` (gitignored) — both persist across deploys as long as you don't wipe the VPS filesystem, but they are **not** part of the git repo or the deploy pull. Back up `server/uploads/` and `server/data/` separately if the current issue matters.
+
 ## VPS deployment outline
 
 1. Push this folder to GitHub.

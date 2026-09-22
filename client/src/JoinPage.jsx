@@ -20,7 +20,8 @@ const navItems = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/#about" },
   { label: "Events", href: "/#events" },
-  { label: "Membership", href: "/#membership" }
+  { label: "Membership", href: "/#membership" },
+  { label: "Magazine", href: "/magazine" }
 ];
 
 export default function JoinPage() {

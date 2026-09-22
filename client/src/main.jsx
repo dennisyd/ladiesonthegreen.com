@@ -1,7 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 import JoinPage from "./JoinPage.jsx";
+
+// Code-split: the flipbook viewer pulls in pdf.js + react-pageflip (~2MB),
+// which only the /magazine routes need, so keep them out of every other
+// page's bundle.
+const MagazinePage = lazy(() => import("./MagazinePage.jsx"));
+const MagazineAdminPage = lazy(() => import("./MagazineAdminPage.jsx"));
 
 const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
 
@@ -112,7 +118,8 @@ const navItems = [
   { label: "About Us", href: "#about" },
   { label: "Become A Member", href: "/join" },
   { label: "Events", href: "#events" },
-  { label: "Membership", href: "#membership" }
+  { label: "Membership", href: "#membership" },
+  { label: "Magazine", href: "/magazine" }
 ];
 
 const stats = [
@@ -535,6 +542,22 @@ function App() {
   );
 }
 
-const isJoinPage = window.location.pathname.replace(/\/+$/, "") === "/join";
+const routes = {
+  "/join": JoinPage,
+  "/magazine": MagazinePage,
+  "/magazine/admin": MagazineAdminPage
+};
+const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+const PageComponent = routes[pathname];
 
-createRoot(document.getElementById("root")).render(isJoinPage ? <JoinPage /> : <App />);
+const root = createRoot(document.getElementById("root"));
+
+if (!PageComponent) {
+  root.render(<App />);
+} else {
+  root.render(
+    <Suspense fallback={<div className="page-loading">Loading...</div>}>
+      <PageComponent />
+    </Suspense>
+  );
+}
