@@ -1463,3 +1463,21 @@ textarea:focus {
     position: static;
   }
 }
+
+.checkout__form .req {
+  color: var(--pink);
+  font-weight: 900;
+}
+
+.checkout__form legend {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.checkout__req-note {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+}

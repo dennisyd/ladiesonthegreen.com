@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 
 // Stripe Payment Link for the $89/year Founding Membership (recurring yearly price).
-// Leave empty until the link exists: the form still saves the application and
-// shows a confirmation, it just skips the redirect to payment.
-const membershipPaymentUrl = "";
+// If this is ever emptied, the form still saves the application and shows a
+// confirmation, it just skips the redirect to payment.
+const membershipPaymentUrl = "https://buy.stripe.com/7sY8wPgaT9zie1Nalsdby0B";
 
 const memberExperience = [
   "Members-only golf, racquet, social, and charitable experiences",
@@ -38,29 +38,45 @@ export default function JoinPage() {
 
     setFormState({ status: "loading", message: "Saving your details..." });
 
+    function goToPayment() {
+      setFormState({ status: "success", message: "Thank you! Taking you to secure payment..." });
+      const url = new URL(membershipPaymentUrl);
+      url.searchParams.set("prefilled_email", payload.email);
+      window.location.href = url.toString();
+    }
+
     try {
       const response = await fetch("/api/membership", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
+
+      if (response.status === 400) {
+        setFormState({ status: "error", message: data.error || "Please complete all required fields." });
+        return;
+      }
+
+      // The server logs every application before it tries to send email, so a
+      // server-side failure should never stand between a member and payment.
+      if (membershipPaymentUrl) {
+        goToPayment();
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(data.error || "Something went wrong.");
       }
 
-      if (membershipPaymentUrl) {
-        setFormState({ status: "success", message: "Thank you! Taking you to secure payment..." });
-        const url = new URL(membershipPaymentUrl);
-        url.searchParams.set("prefilled_email", payload.email);
-        window.location.href = url.toString();
-        return;
-      }
-
       form.reset();
       setFormState({ status: "success", message: data.message });
     } catch (error) {
+      // Network hiccup while saving: still let the member pay.
+      if (membershipPaymentUrl) {
+        goToPayment();
+        return;
+      }
       setFormState({
         status: "error",
         message: error.message || "Please try again in a moment."
@@ -145,23 +161,23 @@ export default function JoinPage() {
 
             <form className="checkout__form" onSubmit={handleSubmit}>
               <fieldset>
-                <legend>Contact</legend>
+                <legend>Contact <span className="checkout__req-note">* Required</span></legend>
                 <label>
-                  Email
+                  <span>Email <b className="req" aria-hidden="true">*</b></span>
                   <input name="email" type="email" autoComplete="email" placeholder="Email" required />
                 </label>
                 <label>
-                  Full name
+                  <span>Full name <b className="req" aria-hidden="true">*</b></span>
                   <input name="name" type="text" autoComplete="name" placeholder="First and last name" required />
                 </label>
                 <label>
-                  Address
+                  <span>Address <b className="req" aria-hidden="true">*</b></span>
                   <input name="address" type="text" autoComplete="address-line1" placeholder="Address" required />
                 </label>
                 <input name="address2" type="text" autoComplete="address-line2" placeholder="Apt, Suite" aria-label="Apt, Suite" />
                 <div className="checkout__row">
-                  <input name="city" type="text" autoComplete="address-level2" placeholder="City" aria-label="City" required />
-                  <input name="zip" type="text" autoComplete="postal-code" placeholder="Zip" aria-label="Zip" required />
+                  <input name="city" type="text" autoComplete="address-level2" placeholder="City *" aria-label="City (required)" required />
+                  <input name="zip" type="text" autoComplete="postal-code" placeholder="Zip *" aria-label="Zip (required)" required />
                 </div>
                 <select name="country" autoComplete="country-name" aria-label="Country" defaultValue="United States">
                   <option>United States</option>
@@ -169,7 +185,7 @@ export default function JoinPage() {
                   <option>United Kingdom</option>
                   <option>Other</option>
                 </select>
-                <input name="state" type="text" autoComplete="address-level1" placeholder="State/Province/Region" aria-label="State/Province/Region" required />
+                <input name="state" type="text" autoComplete="address-level1" placeholder="State/Province/Region *" aria-label="State/Province/Region (required)" required />
                 <label>
                   Phone number
                   <input name="phone" type="tel" autoComplete="tel" placeholder="Phone Number" />
