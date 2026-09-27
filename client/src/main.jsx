@@ -358,6 +358,25 @@ function App() {
           </div>
         </section>
 
+        <section className="film" id="film" aria-labelledby="film-title">
+          <div className="film__inner">
+            <div className="section-heading">
+              <span className="section-kicker">The Ladies On The Green Experience</span>
+              <h2 id="film-title">The connections go beyond the course.</h2>
+            </div>
+            <div className="film__frame">
+              <video
+                src="/ladies-on-the-green-film.mp4"
+                poster="/ladies-on-the-green-film-poster.jpg"
+                controls
+                playsInline
+                preload="none"
+                aria-label="Ladies On The Green: golf, friendship, and lifestyle highlights"
+              />
+            </div>
+          </div>
+        </section>
+
         <section className="events" id="events" aria-labelledby="events-title">
           <div className="section-heading">
             <span className="section-kicker">Featured Events</span>

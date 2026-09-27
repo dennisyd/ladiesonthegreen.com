@@ -487,6 +487,37 @@ p {
   text-transform: uppercase;
 }
 
+.film {
+  background: linear-gradient(180deg, var(--navy-deep), var(--green-dark));
+  color: var(--cream);
+  padding: clamp(70px, 9vw, 122px) clamp(18px, 4vw, 48px);
+}
+
+.film__inner {
+  margin-inline: auto;
+  max-width: 1260px;
+}
+
+.film .section-kicker {
+  color: var(--gold);
+}
+
+.film__frame {
+  aspect-ratio: 16 / 9;
+  background: var(--navy-deep);
+  border: 2px solid var(--gold);
+  border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.film__frame video {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
 .events {
   max-width: none;
 }
