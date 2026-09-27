@@ -161,7 +161,6 @@ export default function MagazinePage() {
       <header className="site-header" aria-label="Primary navigation">
         <a className="brand" href="/" aria-label="Ladies On The Green home">
           <img src="/ladiesonthegreen.png" alt="" />
-          <span>Ladies On The Green</span>
         </a>
         <span aria-hidden="true" />
         <button className="menu-toggle" type="button" onClick={() => setMenuOpen((open) => !open)}>

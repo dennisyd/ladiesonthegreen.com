@@ -266,7 +266,6 @@ function App() {
       <header className="site-header" aria-label="Primary navigation">
         <a className="brand" href="#top" aria-label="Ladies On The Green home" onClick={closeMenu}>
           <img src="/ladiesonthegreen.png" alt="" />
-          <span>Ladies On The Green</span>
         </a>
         <a className="login-link" href="#contact" onClick={closeMenu}>
           <span aria-hidden="true">●</span>
