@@ -365,8 +365,8 @@ function App() {
             </div>
             <div className="film__frame">
               <video
-                src="/ladies-on-the-green-film.mp4?v=2"
-                poster="/ladies-on-the-green-film-poster.jpg?v=2"
+                src="/ladies-on-the-green-film.mp4?v=3"
+                poster="/ladies-on-the-green-film-poster.jpg?v=3"
                 controls
                 playsInline
                 preload="none"
