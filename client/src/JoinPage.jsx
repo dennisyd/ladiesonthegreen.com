@@ -150,7 +150,7 @@ export default function JoinPage() {
                 ${rate.amount} <span>/ year</span>
               </p>
               {rate.isFounding && (
-                <p className="join-copy__deadline">Founding rate ends October 15. Then ${regularRate.amount}/year.</p>
+                <p className="join-copy__deadline">The ${rate.amount} annual deal expires October 15. Then ${regularRate.amount}/year.</p>
               )}
               <p>
                 Join our inaugural membership community and enjoy priority access, preferred pricing, exclusive privileges, and experiences curated especially for LOTG members.
