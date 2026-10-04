@@ -16,6 +16,14 @@ const contactTo = process.env.CONTACT_TO || process.env.SMTP_USER;
 app.disable("x-powered-by");
 app.use(express.json({ limit: "32kb" }));
 
+// Founding Membership rate (keep in sync with client/src/JoinPage.jsx):
+// $99/year through October 15, 2026, then $149/year from midnight Eastern Oct 16.
+const FOUNDING_RATE_ENDS = new Date("2026-10-16T00:00:00-04:00");
+
+function membershipRate(now = new Date()) {
+  return now < FOUNDING_RATE_ENDS ? 99 : 149;
+}
+
 function createTransporter() {
   const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env;
 
@@ -126,7 +134,7 @@ app.post("/api/membership", async (req, res) => {
       replyTo: email,
       subject: `New founding membership application: ${name}`,
       text: [
-        "New founding membership application ($89 / year)",
+        `New founding membership application ($${membershipRate()} / year)`,
         "",
         `Name: ${name}`,
         `Email: ${email}`,

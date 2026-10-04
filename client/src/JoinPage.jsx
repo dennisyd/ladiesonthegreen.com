@@ -1,9 +1,18 @@
 import React, { useEffect, useState } from "react";
 
-// Stripe Payment Link for the $89/year Founding Membership (recurring yearly price).
-// If this is ever emptied, the form still saves the application and shows a
-// confirmation, it just skips the redirect to payment.
-const membershipPaymentUrl = "https://buy.stripe.com/7sY8wPgaT9zie1Nalsdby0B";
+// Founding Membership pricing: $99/year through October 15, 2026 (shown against a
+// crossed-out $149), then $149/year from midnight Eastern on October 16.
+// Each price has its own Stripe Payment Link (recurring yearly price). If a link is
+// ever emptied, the form still saves the application and shows a confirmation, it
+// just skips the redirect to payment.
+const FOUNDING_RATE_ENDS = new Date("2026-10-16T00:00:00-04:00");
+const foundingRate = { amount: 99, paymentUrl: "https://buy.stripe.com/aFaeVd0bV3aUf5Rbpwdby0E" };
+const regularRate = { amount: 149, paymentUrl: "" };
+
+function currentRate(now = new Date()) {
+  const isFounding = now < FOUNDING_RATE_ENDS;
+  return { ...(isFounding ? foundingRate : regularRate), isFounding };
+}
 
 const memberExperience = [
   "Members-only golf, racquet, social, and charitable experiences",
@@ -26,6 +35,8 @@ const navItems = [
 
 export default function JoinPage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const rate = currentRate();
+  const membershipPaymentUrl = rate.paymentUrl;
   const [formState, setFormState] = useState({ status: "idle", message: "" });
 
   useEffect(() => {
@@ -134,7 +145,13 @@ export default function JoinPage() {
 
             <div className="join-copy__offer">
               <span className="section-kicker">Founding Membership</span>
-              <p className="join-copy__price">$89 <span>/ year</span></p>
+              <p className="join-copy__price">
+                {rate.isFounding && <s className="price-was">${regularRate.amount}</s>}
+                ${rate.amount} <span>/ year</span>
+              </p>
+              {rate.isFounding && (
+                <p className="join-copy__deadline">Founding rate ends October 15. Then ${regularRate.amount}/year.</p>
+              )}
               <p>
                 Join our inaugural membership community and enjoy priority access, preferred pricing, exclusive privileges, and experiences curated especially for LOTG members.
               </p>
@@ -154,7 +171,8 @@ export default function JoinPage() {
                 <img src="/ladiesonthegreen.png" alt="Ladies On The Green" />
               </div>
               <p className="checkout__price">
-                <span>USD</span> $89.00
+                {rate.isFounding && <s className="price-was">${regularRate.amount}.00</s>}
+                <span>USD</span> ${rate.amount}.00
                 <small>Yearly</small>
               </p>
             </div>
@@ -196,11 +214,14 @@ export default function JoinPage() {
                 <h3>Summary</h3>
                 <div className="checkout__line">
                   <span>Ladies on the Green Founding Membership</span>
-                  <strong>$89.00<small>Yearly</small></strong>
+                  <strong>
+                    {rate.isFounding && <s className="price-was">${regularRate.amount}.00</s>}
+                    ${rate.amount}.00<small>Yearly</small>
+                  </strong>
                 </div>
                 <div className="checkout__due">
                   <span>Due now</span>
-                  <strong><em>USD</em> $89.00</strong>
+                  <strong><em>USD</em> ${rate.amount}.00</strong>
                 </div>
               </div>
 

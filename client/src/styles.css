@@ -1328,6 +1328,30 @@ textarea:focus {
   opacity: 0.8;
 }
 
+/* Regular price shown crossed out next to the founding rate. */
+.price-was {
+  color: var(--muted);
+  font-size: 0.6em;
+  font-weight: 500;
+  margin-right: 0.35em;
+  text-decoration-thickness: 2px;
+  vertical-align: middle;
+}
+
+.join-copy__offer .price-was {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.checkout__line .price-was {
+  font-size: 0.85em;
+}
+
+.join-copy .join-copy__offer .join-copy__deadline {
+  color: var(--gold);
+  font-weight: 800;
+  margin-top: -6px;
+}
+
 .join-copy__closing {
   color: var(--navy) !important;
   font-family: Georgia, "Times New Roman", serif;
