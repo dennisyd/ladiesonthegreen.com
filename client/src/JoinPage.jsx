@@ -1,18 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { currentRate, regularRate } from "../../shared/membership.js";
 
-// Founding Membership pricing: $99/year through October 15, 2026 (shown against a
-// crossed-out $149), then $149/year from midnight Eastern on October 16.
-// Each price has its own Stripe Payment Link (recurring yearly price). If a link is
-// ever emptied, the form still saves the application and shows a confirmation, it
-// just skips the redirect to payment.
-const FOUNDING_RATE_ENDS = new Date("2026-10-16T00:00:00-04:00");
-const foundingRate = { amount: 99, paymentUrl: "https://buy.stripe.com/aFaeVd0bV3aUf5Rbpwdby0E" };
-const regularRate = { amount: 149, paymentUrl: "" };
-
-function currentRate(now = new Date()) {
-  const isFounding = now < FOUNDING_RATE_ENDS;
-  return { ...(isFounding ? foundingRate : regularRate), isFounding };
-}
+// Prices, the founding-rate deadline and the Stripe Payment Links live in
+// shared/membership.js so the server tracks payments against the same links.
 
 const memberExperience = [
   "Members-only golf, racquet, social, and charitable experiences",

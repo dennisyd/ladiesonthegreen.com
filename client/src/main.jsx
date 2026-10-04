@@ -8,6 +8,8 @@ import JoinPage from "./JoinPage.jsx";
 // page's bundle.
 const MagazinePage = lazy(() => import("./MagazinePage.jsx"));
 const MagazineAdminPage = lazy(() => import("./MagazineAdminPage.jsx"));
+const AdminPage = lazy(() => import("./AdminPage.jsx"));
+const MembersPage = lazy(() => import("./MembersPage.jsx"));
 
 const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
 
@@ -267,7 +269,7 @@ function App() {
         <a className="brand" href="#top" aria-label="Ladies On The Green home" onClick={closeMenu}>
           <img src="/ladiesonthegreen.png" alt="" />
         </a>
-        <a className="login-link" href="#contact" onClick={closeMenu}>
+        <a className="login-link" href="/members" onClick={closeMenu}>
           <span aria-hidden="true">●</span>
           Log In
         </a>
@@ -563,7 +565,9 @@ function App() {
 const routes = {
   "/join": JoinPage,
   "/magazine": MagazinePage,
-  "/magazine/admin": MagazineAdminPage
+  "/magazine/admin": MagazineAdminPage,
+  "/admin": AdminPage,
+  "/members": MembersPage
 };
 const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
 const PageComponent = routes[pathname];

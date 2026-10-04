@@ -56,6 +56,40 @@ MAGAZINE_ADMIN_PASSWORD=choose_a_password
 
 Uploaded PDFs are stored on disk at `server/uploads/magazine/` (gitignored) with metadata in `server/data/magazine.json` (gitignored) — both persist across deploys as long as you don't wipe the VPS filesystem, but they are **not** part of the git repo or the deploy pull. Back up `server/uploads/` and `server/data/` separately if the current issue matters.
 
+## Members, payments, and admin
+
+- `/join` — Founding Membership sign-up. Every submission is saved as a member ("Not paid yet"), then the visitor is sent to the Stripe Payment Link for the current price. Prices, the founding-rate deadline, and the Payment Links live in `shared/membership.js` (used by both the client and the server).
+- `/admin` — password-protected dashboard: member list with payment status, CSV export, follow-up reminders for people who registered but didn't pay, event ticket registrations, member offers, announcement emails, and a Stripe sync.
+- `/members` — member portal. Members sign in with a one-time link emailed to them (no passwords). Only active (or past-due, so they can fix their card) members get in. Shows their membership, offers and discount codes, member events, the opt-in member directory, and a "Manage billing" button (Stripe's customer portal).
+
+### Server settings
+
+Put these in a `.env` file at the repo root on the VPS (`/var/www/ladiesonthegreen.com/.env`, gitignored) or in the PM2 environment. Variables already set in the environment take priority over the file. Restart the app after changing them (`pm2 restart ladiesonthegreen`).
+
+```bash
+ADMIN_PASSWORD=choose_a_dashboard_password      # falls back to MAGAZINE_ADMIN_PASSWORD if unset
+STRIPE_SECRET_KEY=sk_live_...                    # Stripe → Developers → API keys
+STRIPE_WEBHOOK_SECRET=whsec_...                  # from the webhook endpoint below
+SITE_URL=https://ladiesonthegreen.com            # optional; used in emailed links
+```
+
+The SMTP settings above are also required in production: sign-in links, reminders, and announcements are sent by email. Without SMTP (local development) those emails are printed to the server log instead.
+
+### Stripe setup (one time)
+
+1. **Webhook** — Stripe Dashboard → Developers → Webhooks → Add endpoint:
+   - URL: `https://ladiesonthegreen.com/api/stripe/webhook`
+   - Events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`
+   - Copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+2. **Customer portal** — Settings → Billing → Customer portal: allow updating payment methods and canceling, then **Save** (the "Manage billing" button needs this saved once).
+3. In `/admin` → Settings, run **Sync now** to pull in payments made before the webhook existed.
+
+Only purchases made through the Payment Links listed in `shared/membership.js` are tracked, so other products on the same Stripe account never appear. When you create a new Payment Link (e.g. the $149 price), add it there.
+
+### Data and backups
+
+Members, offers, event registrations, and announcement history are JSON files in `server/data/` (gitignored, alongside the magazine metadata). They persist across deploys but are not in git — back up `server/data/` regularly.
+
 ## VPS deployment outline
 
 1. Push this folder to GitHub.

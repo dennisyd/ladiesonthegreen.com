@@ -1,46 +1,34 @@
 import express from "express";
-import nodemailer from "nodemailer";
 import multer from "multer";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { existsSync } from "node:fs";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Optional settings file at the repo root (gitignored). Variables already set in
+// the environment (e.g. by PM2) win over the file.
+const envFile = path.join(__dirname, "..", ".env");
+if (existsSync(envFile) && typeof process.loadEnvFile === "function") {
+  process.loadEnvFile(envFile);
+}
+
+// Imported after the .env file is loaded: these read process.env at load time.
+const { contactTo, createTransporter } = await import("./lib/mailer.js");
+const { createMembership } = await import("./members.js");
+const { currentRate } = await import("../shared/membership.js");
+
 const app = express();
 const port = process.env.PORT || 3000;
-const smtpPort = Number(process.env.SMTP_PORT || 587);
-const contactTo = process.env.CONTACT_TO || process.env.SMTP_USER;
+const membership = createMembership(path.join(__dirname, "data"));
 
 app.disable("x-powered-by");
+app.set("trust proxy", 1); // behind Nginx: real client IP + https detection for secure cookies
+membership.mountWebhook(app); // needs the raw body, so before express.json
 app.use(express.json({ limit: "32kb" }));
-
-// Founding Membership rate (keep in sync with client/src/JoinPage.jsx):
-// $99/year through October 15, 2026, then $149/year from midnight Eastern Oct 16.
-const FOUNDING_RATE_ENDS = new Date("2026-10-16T00:00:00-04:00");
-
-function membershipRate(now = new Date()) {
-  return now < FOUNDING_RATE_ENDS ? 99 : 149;
-}
-
-function createTransporter() {
-  const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env;
-
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !contactTo) {
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: smtpPort,
-    secure: process.env.SMTP_SECURE === "true" || smtpPort === 465,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS
-    }
-  });
-}
 
 app.post("/api/contact", async (req, res) => {
   const { name, email, interest, message } = req.body ?? {};
@@ -105,6 +93,12 @@ app.post("/api/membership", async (req, res) => {
     return res.status(400).json({ ok: false, error: "Please complete all required fields." });
   }
 
+  try {
+    await membership.recordApplication({ email, name, address, address2, city, state, zip, country, phone });
+  } catch (error) {
+    console.error("Failed to save membership application", error);
+  }
+
   console.log("New Ladies On The Green founding membership application", {
     name,
     email,
@@ -134,7 +128,7 @@ app.post("/api/membership", async (req, res) => {
       replyTo: email,
       subject: `New founding membership application: ${name}`,
       text: [
-        `New founding membership application ($${membershipRate()} / year)`,
+        `New founding membership application ($${currentRate().amount} / year)`,
         "",
         `Name: ${name}`,
         `Email: ${email}`,
@@ -243,6 +237,12 @@ app.post("/api/magazine/upload", (req, res) => {
   });
 });
 
+membership.mountRoutes(app);
+
+app.use("/api", (_req, res) => {
+  res.status(404).json({ ok: false, error: "Not found." });
+});
+
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "uploads"), {
@@ -268,6 +268,12 @@ app.use(
 
 app.use((_req, res) => {
   res.sendFile(path.join(clientDistPath, "index.html"));
+});
+
+app.use((error, req, res, next) => {
+  console.error("Request failed", req.method, req.path, error);
+  if (res.headersSent || !req.path.startsWith("/api")) return next(error);
+  res.status(500).json({ ok: false, error: "Something went wrong. Please try again." });
 });
 
 app.listen(port, () => {
