@@ -5,14 +5,17 @@ import { currentRate, regularRate } from "../../shared/membership.js";
 // shared/membership.js so the server tracks payments against the same links.
 
 const memberExperience = [
-  "Members-only golf, racquet, social, and charitable experiences",
-  "Priority access to clinics, events, and limited-capacity experiences",
-  "Preferred member pricing and private discount codes",
-  "Golf lesson reservations and small-group instruction",
-  "Curated travel to iconic destinations",
-  "Partner privileges across golf, wellness, travel, dining, fashion, and lifestyle",
-  "Meaningful personal and professional connections",
-  "Member invitations and surprises all year long"
+  "Members-only golf, racquet, social, wellness, and charitable experiences",
+  "Priority and early access to clinics, events, golf trips, and limited-capacity experiences",
+  "Exclusive member privileges, preferred offers, and partner benefits",
+  "Complimentary quarterly digital access to The Collective, the Ladies on the Green® golf and lifestyle magazine",
+  "Golf lessons, practice sessions, and intimate small-group instruction",
+  "Opportunities to play premier courses and discover new golf destinations",
+  "Curated golf travel to iconic destinations, including our signature annual golf trip",
+  "Exclusive partner privileges across golf, wellness, travel, dining, fashion, and lifestyle",
+  "Meaningful networking opportunities to build relationships, expand your circle, and grow your business",
+  "Access to our private member community for conversations, connections, invitations, and opportunities",
+  "Special member surprises and privileges throughout the year"
 ];
 
 const navItems = [
@@ -119,11 +122,24 @@ export default function JoinPage() {
             </p>
 
             <h2>Your Member Experience</h2>
+            <p>
+              Membership has its privileges. As a Ladies on the Green&reg; member, you&rsquo;ll enjoy preferred access, exclusive benefits, and curated experiences designed to help you play more, connect more, and experience more.
+            </p>
             <ul className="join-copy__list">
               {memberExperience.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
+
+            <h2>Play. Connect. Travel. Grow.</h2>
+            <p>
+              Our curated calendar of golf experiences brings women together through lessons, practice, local rounds, wellness, friendly competition, networking, travel, and experiences beyond the fairway.
+            </p>
+
+            <h2>Golf Trips</h2>
+            <p>
+              Take your game beyond your home course. Explore iconic destinations, play memorable courses, and experience golf through the lens of friendship, travel, and connection with Ladies on the Green&reg;.
+            </p>
 
             <h2>Our Strength Is Our Network</h2>
             <p>
