@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 import JoinPage from "./JoinPage.jsx";
+import { SHOP_IN_NAV } from "../../shared/shop.js";
 
 // Code-split: the flipbook viewer pulls in pdf.js + react-pageflip (~2MB),
 // which only the /magazine routes need, so keep them out of every other
@@ -122,7 +123,7 @@ const navItems = [
   { label: "Become A Member", href: "/join" },
   { label: "Events", href: "#events" },
   { label: "Membership", href: "#membership" },
-  { label: "Shop", href: "/shop" },
+  ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
   { label: "Magazine", href: "/magazine" }
 ];
 

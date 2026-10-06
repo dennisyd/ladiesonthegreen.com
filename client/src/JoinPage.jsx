@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { currentRate, regularRate } from "../../shared/membership.js";
+import { SHOP_IN_NAV } from "../../shared/shop.js";
 
 // Prices, the founding-rate deadline and the Stripe Payment Links live in
 // shared/membership.js so the server tracks payments against the same links.
@@ -23,7 +24,7 @@ const navItems = [
   { label: "About Us", href: "/#about" },
   { label: "Events", href: "/#events" },
   { label: "Membership", href: "/#membership" },
-  { label: "Shop", href: "/shop" },
+  ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
   { label: "Magazine", href: "/magazine" }
 ];
 

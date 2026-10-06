@@ -1,4 +1,5 @@
 import React, { forwardRef, useEffect, useRef, useState } from "react";
+import { SHOP_IN_NAV } from "../../shared/shop.js";
 import HTMLFlipBook from "react-pageflip";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -10,7 +11,7 @@ const navItems = [
   { label: "About Us", href: "/#about" },
   { label: "Events", href: "/#events" },
   { label: "Membership", href: "/#membership" },
-  { label: "Shop", href: "/shop" },
+  ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
   { label: "Magazine", href: "/magazine" }
 ];
 

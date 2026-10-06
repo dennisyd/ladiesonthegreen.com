@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { MAX_PER_ITEM, SHIPPING_CENTS, formatCents, products as catalog } from "../../shared/shop.js";
+import { MAX_PER_ITEM, SHIPPING_CENTS, SHOP_IN_NAV, formatCents, products as catalog } from "../../shared/shop.js";
 import { api } from "./api.js";
 
 const CART_KEY = "lotg_cart";
@@ -31,6 +31,16 @@ export default function ShopPage() {
 
   useEffect(() => {
     document.title = "Shop | Ladies On The Green";
+    if (!SHOP_IN_NAV) {
+      // Not launched yet: keep the page out of search results.
+      let robots = document.querySelector('meta[name="robots"]');
+      if (!robots) {
+        robots = document.createElement("meta");
+        robots.name = "robots";
+        document.head.appendChild(robots);
+      }
+      robots.content = "noindex";
+    }
     api("/api/shop").then((data) => setProducts(data.products), () => {});
   }, []);
 

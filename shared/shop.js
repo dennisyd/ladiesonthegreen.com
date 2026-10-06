@@ -3,6 +3,10 @@
 // "plenty" (not counted). Live stock is tracked on the server and can be changed
 // in /admin → Shop without editing this file.
 
+// Whether "Shop" appears in the site menus. While false, the shop is still
+// reachable by typing /shop, it just isn't linked. Set to true to launch it.
+export const SHOP_IN_NAV = false;
+
 // One flat fee per order, however many items are in it. US addresses only.
 export const SHIPPING_CENTS = 599;
 export const MAX_PER_ITEM = 10;
