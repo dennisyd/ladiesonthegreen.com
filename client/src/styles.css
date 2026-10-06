@@ -1971,6 +1971,12 @@ textarea:focus {
   text-underline-offset: 3px;
 }
 
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
 .admin-link--danger {
   color: #b5003d;
 }

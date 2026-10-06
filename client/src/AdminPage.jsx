@@ -126,7 +126,6 @@ function MembersTab() {
   const filters = [
     ["all", `All (${stats.total})`],
     ["active", `Active (${stats.active})`],
-    ["registered", `Not paid (${stats.registered})`],
     ["past_due", `Past due (${stats.pastDue})`],
     ["canceled", `Canceled (${stats.canceled})`]
   ];
@@ -135,7 +134,7 @@ function MembersTab() {
     <section>
       <div className="admin-stats">
         <Stat label="Active members" value={stats.active} />
-        <Stat label="Registered, not paid" value={stats.registered} />
+        <Stat label="Started, not paid (see Follow-ups)" value={stats.unpaidSignups} />
         <Stat label="Past due" value={stats.pastDue} />
         <Stat label="Annual revenue" value={formatMoney(stats.annualRevenue)} />
         <Stat label="Renewing in 30 days" value={stats.renewingSoon} />
@@ -155,7 +154,7 @@ function MembersTab() {
 
       {list.length === 0 ? (
         <p className="admin-empty">
-          {stats.total === 0 ? "No members yet. Applications from the Join page and Stripe payments will appear here." : "No members match."}
+          {stats.total === 0 ? "No members yet. People appear here once their payment goes through." : "No members match."}
         </p>
       ) : (
         <div className="admin-table-wrap">
@@ -256,7 +255,7 @@ function MemberDetail({ member, onChanged }) {
         <dt>Last payment</dt><dd>{member.lastPaymentAt ? `${formatMoney(member.lastPaymentAmount)} on ${formatDate(member.lastPaymentAt)}` : "—"}</dd>
         <dt>Reminders sent</dt><dd>{member.reminders?.count || 0}{member.reminders?.lastAt ? ` (last ${formatDate(member.reminders.lastAt)})` : ""}</dd>
         <dt>Last portal sign-in</dt><dd>{formatDate(member.lastLoginAt)}</dd>
-        <dt>Came from</dt><dd>{member.source === "stripe" ? "Paid on Stripe (no Join form)" : "Join form"}</dd>
+        <dt>Came from</dt><dd>{{ stripe: "Paid on Stripe (no Join form)", manual: "Marked paid by an admin" }[member.source] || "Join form, then paid"}</dd>
       </dl>
       <div className="member-detail__edit">
         <label>
@@ -266,11 +265,11 @@ function MemberDetail({ member, onChanged }) {
         <label>
           Status
           <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            {Object.entries(statusLabels).map(([key, label]) => (
+            {Object.entries(statusLabels).filter(([key]) => key !== "registered").map(([key, label]) => (
               <option key={key} value={key}>{label}</option>
             ))}
           </select>
-          <small>Stripe updates this automatically. Change it by hand only for cash/check payments or comps (marking Active gives one year).</small>
+          <small>Stripe updates this automatically. Change it by hand only to correct a mistake or for cash/check renewals (marking Active gives one year).</small>
         </label>
         <div className="member-detail__actions">
           <button type="button" className="button button--gold" onClick={save}>Save</button>
@@ -285,23 +284,36 @@ function MemberDetail({ member, onChanged }) {
 // ---------------------------------------------------------------- Follow-ups
 
 function FollowUpsTab() {
-  const { data, error, reload } = useApi("/api/admin/members");
+  const { data, error, reload } = useApi("/api/admin/signups");
   const [note, setNote] = useState({ error: "", message: "" });
   const [busy, setBusy] = useState("");
 
-  const unpaid = (data?.members || []).filter((m) => m.status === "registered");
+  const unpaid = data?.signups || [];
 
-  async function remind(member) {
-    setBusy(member.id);
+  async function run(key, action, message) {
+    setBusy(key);
     try {
-      await api(`/api/admin/members/${member.id}/remind`, { method: "POST" });
-      setNote({ error: "", message: `Reminder sent to ${member.email}.` });
+      await action();
+      setNote({ error: "", message });
       reload();
     } catch (err) {
       setNote({ error: err.message, message: "" });
     } finally {
       setBusy("");
     }
+  }
+
+  const remind = (signup) =>
+    run(signup.id, () => api(`/api/admin/signups/${signup.id}/remind`, { method: "POST" }), `Reminder sent to ${signup.email}.`);
+
+  function markPaid(signup) {
+    if (!window.confirm(`Mark ${signup.name || signup.email} as a paid member for one year? Use this only if they paid you directly (cash, check) or you're gifting the membership.`)) return;
+    run(signup.id, () => api(`/api/admin/signups/${signup.id}/activate`, { method: "POST" }), `${signup.name || signup.email} is now an active member.`);
+  }
+
+  function remove(signup) {
+    if (!window.confirm(`Delete the unfinished sign-up for ${signup.name || signup.email}?`)) return;
+    run(signup.id, () => api(`/api/admin/signups/${signup.id}`, { method: "DELETE" }), "Sign-up deleted.");
   }
 
   async function remindAll() {
@@ -327,8 +339,11 @@ function FollowUpsTab() {
     <section>
       <div className="admin-section-head">
         <div>
-          <h2>Registered but not paid</h2>
-          <p>These people filled in the Join form but haven&rsquo;t completed payment. A reminder links them back to the Join page and mentions the founding-rate deadline while it lasts.</p>
+          <h2>Started but didn&rsquo;t pay</h2>
+          <p>
+            These people filled in the Join form but never completed payment. They are <strong>not members</strong> and can&rsquo;t sign in.
+            A reminder links them back to the Join page. Entries are deleted automatically after {data.keepDays} days.
+          </p>
         </div>
         <button type="button" className="button button--gold" onClick={remindAll} disabled={!unpaid.length || busy === "all"}>
           {busy === "all" ? "Sending..." : "Remind everyone"}
@@ -341,7 +356,7 @@ function FollowUpsTab() {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Name</th><th>Registered</th><th>Reminders</th><th aria-label="Actions" /></tr>
+              <tr><th>Name</th><th>Started</th><th>Reminders</th><th aria-label="Actions" /></tr>
             </thead>
             <tbody>
               {unpaid.map((m) => (
@@ -350,9 +365,13 @@ function FollowUpsTab() {
                   <td>{formatDate(m.registeredAt)}</td>
                   <td>{m.reminders?.count ? `${m.reminders.count} (last ${formatDate(m.reminders.lastAt)})` : "None yet"}</td>
                   <td>
-                    <button type="button" className="admin-link" onClick={() => remind(m)} disabled={busy === m.id}>
-                      {busy === m.id ? "Sending..." : "Send reminder"}
-                    </button>
+                    <div className="admin-actions">
+                      <button type="button" className="admin-link" onClick={() => remind(m)} disabled={busy === m.id}>
+                        {busy === m.id ? "Working..." : "Send reminder"}
+                      </button>
+                      <button type="button" className="admin-link" onClick={() => markPaid(m)} disabled={busy === m.id}>Mark as paid</button>
+                      <button type="button" className="admin-link admin-link--danger" onClick={() => remove(m)} disabled={busy === m.id}>Delete</button>
+                    </div>
                   </td>
                 </tr>
               ))}

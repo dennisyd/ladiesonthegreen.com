@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
-// status: registered (filled in the Join form, not paid) | active | past_due | canceled
+// Member status: active | past_due | canceled. A record with status "registered"
+// is an unfinished Join-form sign-up; those live in signups.json, not the member list.
 export function newMember(fields, nowIso = new Date().toISOString()) {
   return {
     id: crypto.randomUUID(),

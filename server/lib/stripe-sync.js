@@ -2,7 +2,8 @@ import { eventPaymentLinks, membershipPaymentUrls } from "../../shared/membershi
 import { newMember, normalizeEmail } from "./member-model.js";
 
 // Stripe subscription status -> member status. "incomplete" (first payment not
-// finished yet) is deliberately absent: the member stays "registered".
+// finished yet) is deliberately absent: nobody becomes a member until Stripe
+// reports a paid subscription.
 const STATUS = {
   active: "active",
   trialing: "active",
@@ -25,7 +26,9 @@ const invoiceSubscriptionId = (invoice) =>
   idOf(invoice.lines?.data?.[0]?.subscription) ??
   null;
 
-export function createStripeSync({ stripe, members, registrations }) {
+// `signups` (optional) holds Join-form submissions that haven't paid yet; a
+// payment turns the matching signup into the member record.
+export function createStripeSync({ stripe, members, registrations, signups }) {
   const linkUrls = new Map(); // payment link id -> url
 
   async function paymentLinkUrl(id) {
@@ -61,19 +64,29 @@ export function createStripeSync({ stripe, members, registrations }) {
   async function applySubscription(sub, { email, name, phone, payment, fromCheckout = false } = {}) {
     const customerId = idOf(sub.customer);
     const customerEmail = normalizeEmail(email || sub.customer?.email);
-    return members.update((data) => {
+    const status = STATUS[sub.status];
+    const signup =
+      fromCheckout && signups && customerEmail
+        ? (await signups.read()).signups.find((x) => x.email === customerEmail) || null
+        : null;
+    const result = await members.update((data) => {
       let member = findMember(data.members, {
         subscriptionId: sub.id,
         customerId,
         email: fromCheckout ? customerEmail : null
       });
       if (!member) {
-        if (!fromCheckout || !customerEmail) return null;
-        member = newMember({ email: customerEmail, name, phone, source: "stripe" });
+        // Only a paid checkout creates a member.
+        if (!fromCheckout || !customerEmail || !status) return null;
+        member = signup ? { ...signup } : newMember({ email: customerEmail, name, phone, source: "stripe" });
         data.members.push(member);
+      } else if (signup) {
+        // Returning member filled in the form again: keep any newer contact details.
+        for (const key of ["name", "phone", "address", "address2", "city", "state", "zip", "country"]) {
+          if (signup[key]) member[key] = signup[key];
+        }
       }
 
-      const status = STATUS[sub.status];
       if (status) {
         if (status === "active" && !member.activatedAt) member.activatedAt = iso(sub.start_date) || new Date().toISOString();
         member.status = status;
@@ -96,6 +109,12 @@ export function createStripeSync({ stripe, members, registrations }) {
       member.updatedAt = new Date().toISOString();
       return { id: member.id, status: member.status };
     });
+    if (result && signup) {
+      await signups.update((data) => {
+        data.signups = data.signups.filter((x) => x.email !== customerEmail);
+      });
+    }
+    return result;
   }
 
   async function recordRegistration(session, eventName) {

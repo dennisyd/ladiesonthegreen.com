@@ -14,7 +14,9 @@ const MEMBER_COOKIE = "lotg_member";
 const ADMIN_SESSION_SECONDS = 12 * 60 * 60;
 const MEMBER_SESSION_SECONDS = 30 * 24 * 60 * 60;
 const SIGN_IN_LINK_SECONDS = 30 * 60;
-const MEMBER_STATUSES = ["registered", "active", "past_due", "canceled"];
+const MEMBER_STATUSES = ["active", "past_due", "canceled"];
+const SIGNUP_KEEP_DAYS = 30; // unfinished signups are deleted after this long
+const CONTACT_FIELDS = ["name", "phone", "address", "address2", "city", "state", "zip", "country"];
 const OFFER_CATEGORIES = ["Offer", "Discount code", "Event"];
 
 const firstName = (name) => String(name || "").trim().split(/\s+/)[0] || "there";
@@ -33,6 +35,9 @@ function csv(rows, columns) {
 
 export function createMembership(dataDir) {
   const members = jsonStore(path.join(dataDir, "members.json"), { members: [] });
+  // People who filled in the Join form but haven't paid. They are not members:
+  // they only appear in the admin Follow-ups tab, and expire after SIGNUP_KEEP_DAYS.
+  const signups = jsonStore(path.join(dataDir, "signups.json"), { signups: [] });
   const offers = jsonStore(path.join(dataDir, "offers.json"), { offers: [] });
   const registrations = jsonStore(path.join(dataDir, "registrations.json"), { registrations: [] });
   const announcements = jsonStore(path.join(dataDir, "announcements.json"), { announcements: [] });
@@ -41,7 +46,7 @@ export function createMembership(dataDir) {
   const auth = createAuth(dataDir);
   const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  const sync = stripe ? createStripeSync({ stripe, members, registrations }) : null;
+  const sync = stripe ? createStripeSync({ stripe, members, registrations, signups }) : null;
   // Falls back to the magazine password so the dashboard works before a separate one is set.
   const adminPassword = process.env.ADMIN_PASSWORD || process.env.MAGAZINE_ADMIN_PASSWORD;
 
@@ -55,24 +60,68 @@ export function createMembership(dataDir) {
 
   // --- Join form ----------------------------------------------------------
 
-  // Save (or refresh) an application. Never downgrades a member who has paid.
+  // Current unfinished signups, dropping any older than SIGNUP_KEEP_DAYS.
+  async function readSignups() {
+    const cutoff = new Date(Date.now() - SIGNUP_KEEP_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const { signups: list } = await signups.read();
+    if (list.some((x) => x.registeredAt < cutoff)) {
+      await signups.update((data) => {
+        data.signups = data.signups.filter((x) => x.registeredAt >= cutoff);
+      });
+      return list.filter((x) => x.registeredAt >= cutoff);
+    }
+    return list;
+  }
+
+  // Runs once at startup: earlier versions stored unpaid sign-ups in the member
+  // list as "registered". Move them to the signups list so only paid people are members.
+  async function init() {
+    const { members: list } = await members.read();
+    const unpaid = list.filter((m) => m.status === "registered");
+    if (!unpaid.length) return;
+    await signups.update((data) => {
+      for (const m of unpaid) {
+        if (!data.signups.some((x) => x.email === m.email)) data.signups.push(m);
+      }
+    });
+    await members.update((data) => {
+      data.members = data.members.filter((m) => m.status !== "registered");
+    });
+    console.log(`Moved ${unpaid.length} unpaid sign-up(s) out of the member list.`);
+  }
+
+  // Join form. Submitting it does not make anyone a member: the details wait in
+  // the signups list until Stripe confirms payment. An existing member who
+  // submits again just gets their contact details refreshed.
   async function recordApplication(fields) {
     const email = normalizeEmail(fields.email);
-    return members.update((data) => {
+    const isMember = await members.update((data) => {
       const existing = data.members.find((m) => m.email === email);
+      if (!existing) return false;
+      for (const key of CONTACT_FIELDS) {
+        if (fields[key]) existing[key] = clean(fields[key]);
+      }
+      existing.updatedAt = new Date().toISOString();
+      return true;
+    });
+    if (isMember) return;
+
+    await signups.update((data) => {
+      const existing = data.signups.find((x) => x.email === email);
       if (existing) {
-        for (const key of ["name", "phone", "address", "address2", "city", "state", "zip", "country"]) {
+        for (const key of CONTACT_FIELDS) {
           if (fields[key]) existing[key] = clean(fields[key]);
         }
-        existing.updatedAt = new Date().toISOString();
-        return existing.id;
+        existing.registeredAt = existing.updatedAt = new Date().toISOString();
+        existing.rateAtSignup = currentRate().amount;
+        return;
       }
-      const member = newMember({
-        ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, clean(v)])),
-        rateAtSignup: currentRate().amount
-      });
-      data.members.push(member);
-      return member.id;
+      data.signups.push(
+        newMember({
+          ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, clean(v)])),
+          rateAtSignup: currentRate().amount
+        })
+      );
     });
   }
 
@@ -102,11 +151,11 @@ export function createMembership(dataDir) {
     };
   }
 
-  async function sendReminder(member, req) {
-    await sendEmail(reminderEmail(member, req));
-    await members.update((data) => {
-      const m = data.members.find((x) => x.id === member.id);
-      if (m) m.reminders = { count: (m.reminders?.count || 0) + 1, lastAt: new Date().toISOString() };
+  async function sendReminder(signup, req) {
+    await sendEmail(reminderEmail(signup, req));
+    await signups.update((data) => {
+      const x = data.signups.find((y) => y.id === signup.id);
+      if (x) x.reminders = { count: (x.reminders?.count || 0) + 1, lastAt: new Date().toISOString() };
     });
   }
 
@@ -197,8 +246,10 @@ export function createMembership(dataDir) {
             "Ladies On The Green"
           ].join("\n")
         });
-      } else if (member?.status === "registered") {
-        await sendEmail(reminderEmail(member, req));
+      } else if (!member) {
+        // Started the Join form but never paid: point them back to it.
+        const signup = (await readSignups()).find((x) => x.email === email);
+        if (signup) await sendEmail(reminderEmail(signup, req));
       }
       res.json(generic);
     });
@@ -320,6 +371,7 @@ export function createMembership(dataDir) {
 
     app.get("/api/admin/members", requireAdmin, async (_req, res) => {
       const { members: list } = await members.read();
+      const unpaid = await readSignups();
       const soon = Date.now() + 30 * 24 * 60 * 60 * 1000;
       const active = list.filter((m) => m.status === "active");
       res.json({
@@ -328,7 +380,7 @@ export function createMembership(dataDir) {
         stats: {
           total: list.length,
           active: active.length,
-          registered: list.filter((m) => m.status === "registered").length,
+          unpaidSignups: unpaid.length,
           pastDue: list.filter((m) => m.status === "past_due").length,
           canceled: list.filter((m) => m.status === "canceled").length,
           annualRevenue: active.reduce((sum, m) => sum + (m.plan?.amount || 0) * (m.plan?.interval === "month" ? 12 : 1), 0),
@@ -376,15 +428,22 @@ export function createMembership(dataDir) {
       res.json({ ok: true });
     });
 
-    app.post("/api/admin/members/:id/remind", requireAdmin, async (req, res) => {
-      const { members: list } = await members.read();
-      const member = list.find((m) => m.id === req.params.id);
-      if (!member) return res.status(404).json({ ok: false, error: "Member not found." });
-      if (member.status !== "registered") {
-        return res.status(400).json({ ok: false, error: "Reminders are only for people who haven't paid." });
-      }
+    // ---------- Unfinished signups (Follow-ups) ----------
+
+    app.get("/api/admin/signups", requireAdmin, async (_req, res) => {
+      const list = await readSignups();
+      res.json({
+        ok: true,
+        keepDays: SIGNUP_KEEP_DAYS,
+        signups: list.sort((a, b) => b.registeredAt.localeCompare(a.registeredAt))
+      });
+    });
+
+    app.post("/api/admin/signups/:id/remind", requireAdmin, async (req, res) => {
+      const signup = (await readSignups()).find((x) => x.id === req.params.id);
+      if (!signup) return res.status(404).json({ ok: false, error: "Sign-up not found." });
       try {
-        await sendReminder(member, req);
+        await sendReminder(signup, req);
         res.json({ ok: true });
       } catch (error) {
         console.error("Reminder failed", error);
@@ -396,22 +455,55 @@ export function createMembership(dataDir) {
     app.post("/api/admin/remind-unpaid", requireAdmin, async (req, res) => {
       const skipDays = Number(req.body?.skipDays ?? 3);
       const cutoff = Date.now() - skipDays * 24 * 60 * 60 * 1000;
-      const { members: list } = await members.read();
-      const due = list.filter(
-        (m) => m.status === "registered" && (!m.reminders?.lastAt || Date.parse(m.reminders.lastAt) < cutoff)
-      );
+      const list = await readSignups();
+      const due = list.filter((x) => !x.reminders?.lastAt || Date.parse(x.reminders.lastAt) < cutoff);
       let sent = 0;
       const failed = [];
-      for (const member of due) {
+      for (const signup of due) {
         try {
-          await sendReminder(member, req);
+          await sendReminder(signup, req);
           sent += 1;
         } catch (error) {
-          console.error("Reminder failed", member.email, error);
-          failed.push(member.email);
+          console.error("Reminder failed", signup.email, error);
+          failed.push(signup.email);
         }
       }
-      res.json({ ok: true, sent, failed, skipped: list.filter((m) => m.status === "registered").length - due.length });
+      res.json({ ok: true, sent, failed, skipped: list.length - due.length });
+    });
+
+    // Paid outside Stripe (cash, check, comp): make them an active member for a year.
+    app.post("/api/admin/signups/:id/activate", requireAdmin, async (req, res) => {
+      const signup = (await readSignups()).find((x) => x.id === req.params.id);
+      if (!signup) return res.status(404).json({ ok: false, error: "Sign-up not found." });
+      const now = new Date();
+      const until = new Date(now);
+      until.setFullYear(until.getFullYear() + 1);
+      const member = {
+        ...signup,
+        status: "active",
+        source: "manual",
+        activatedAt: now.toISOString(),
+        paidThrough: until.toISOString(),
+        plan: { amount: signup.rateAtSignup || currentRate().amount, interval: "year" },
+        updatedAt: now.toISOString()
+      };
+      const added = await members.update((data) => {
+        if (data.members.some((m) => m.email === member.email)) return false;
+        data.members.push(member);
+        return true;
+      });
+      await signups.update((data) => {
+        data.signups = data.signups.filter((x) => x.id !== signup.id);
+      });
+      if (!added) return res.status(409).json({ ok: false, error: "That email is already a member." });
+      res.json({ ok: true, member });
+    });
+
+    app.delete("/api/admin/signups/:id", requireAdmin, async (req, res) => {
+      await signups.update((data) => {
+        data.signups = data.signups.filter((x) => x.id !== req.params.id);
+      });
+      res.json({ ok: true });
     });
 
     app.get("/api/admin/members.csv", requireAdmin, async (_req, res) => {
@@ -592,6 +684,7 @@ export function createMembership(dataDir) {
   }
 
   return {
+    init,
     recordApplication,
     mountWebhook,
     mountRoutes,

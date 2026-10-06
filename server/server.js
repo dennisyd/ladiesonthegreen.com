@@ -25,6 +25,7 @@ const { currentRate } = await import("../shared/membership.js");
 const app = express();
 const port = process.env.PORT || 3000;
 const membership = createMembership(path.join(__dirname, "data"));
+await membership.init();
 const shop = createShop(path.join(__dirname, "data"), {
   stripe: membership.stripe,
   requireAdmin: membership.requireAdmin
