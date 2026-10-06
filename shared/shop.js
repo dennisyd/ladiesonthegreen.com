@@ -4,7 +4,7 @@
 // in /admin → Shop without editing this file.
 
 // One flat fee per order, however many items are in it. US addresses only.
-export const SHIPPING_CENTS = 795;
+export const SHIPPING_CENTS = 599;
 export const MAX_PER_ITEM = 10;
 
 export const products = [
