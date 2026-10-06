@@ -19,11 +19,17 @@ if (existsSync(envFile) && typeof process.loadEnvFile === "function") {
 // Imported after the .env file is loaded: these read process.env at load time.
 const { contactTo, createTransporter } = await import("./lib/mailer.js");
 const { createMembership } = await import("./members.js");
+const { createShop } = await import("./shop.js");
 const { currentRate } = await import("../shared/membership.js");
 
 const app = express();
 const port = process.env.PORT || 3000;
 const membership = createMembership(path.join(__dirname, "data"));
+const shop = createShop(path.join(__dirname, "data"), {
+  stripe: membership.stripe,
+  requireAdmin: membership.requireAdmin
+});
+membership.addWebhookHandler(shop.handleEvent);
 
 app.disable("x-powered-by");
 app.set("trust proxy", 1); // behind Nginx: real client IP + https detection for secure cookies
@@ -238,6 +244,7 @@ app.post("/api/magazine/upload", (req, res) => {
 });
 
 membership.mountRoutes(app);
+shop.mountRoutes(app);
 
 app.use("/api", (_req, res) => {
   res.status(404).json({ ok: false, error: "Not found." });

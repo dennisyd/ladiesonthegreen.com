@@ -10,6 +10,7 @@ const MagazinePage = lazy(() => import("./MagazinePage.jsx"));
 const MagazineAdminPage = lazy(() => import("./MagazineAdminPage.jsx"));
 const AdminPage = lazy(() => import("./AdminPage.jsx"));
 const MembersPage = lazy(() => import("./MembersPage.jsx"));
+const ShopPage = lazy(() => import("./ShopPage.jsx"));
 
 const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
 
@@ -121,6 +122,7 @@ const navItems = [
   { label: "Become A Member", href: "/join" },
   { label: "Events", href: "#events" },
   { label: "Membership", href: "#membership" },
+  { label: "Shop", href: "/shop" },
   { label: "Magazine", href: "/magazine" }
 ];
 
@@ -567,7 +569,8 @@ const routes = {
   "/magazine": MagazinePage,
   "/magazine/admin": MagazineAdminPage,
   "/admin": AdminPage,
-  "/members": MembersPage
+  "/members": MembersPage,
+  "/shop": ShopPage
 };
 const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
 const PageComponent = routes[pathname];

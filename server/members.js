@@ -45,6 +45,9 @@ export function createMembership(dataDir) {
   // Falls back to the magazine password so the dashboard works before a separate one is set.
   const adminPassword = process.env.ADMIN_PASSWORD || process.env.MAGAZINE_ADMIN_PASSWORD;
 
+  // Other features (the shop) can claim Stripe events before membership tracking sees them.
+  const webhookHandlers = [];
+
   const allowAdminLogin = createRateLimiter(8, 15 * 60 * 1000);
   const allowMemberLogin = createRateLimiter(5, 15 * 60 * 1000);
 
@@ -143,7 +146,12 @@ export function createMembership(dataDir) {
         return res.status(400).send(`Webhook signature check failed: ${error.message}`);
       }
       try {
-        const result = await sync.handleEvent(event);
+        let result = null;
+        for (const handler of webhookHandlers) {
+          result = await handler(event);
+          if (result) break;
+        }
+        result ||= await sync.handleEvent(event);
         await stripeStatus.update((s) => {
           s.lastWebhookAt = new Date().toISOString();
           s.lastWebhookType = event.type;
@@ -583,5 +591,12 @@ export function createMembership(dataDir) {
     });
   }
 
-  return { recordApplication, mountWebhook, mountRoutes };
+  return {
+    recordApplication,
+    mountWebhook,
+    mountRoutes,
+    requireAdmin,
+    stripe,
+    addWebhookHandler: (handler) => webhookHandlers.push(handler)
+  };
 }

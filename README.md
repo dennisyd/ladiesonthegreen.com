@@ -86,6 +86,13 @@ The SMTP settings above are also required in production: sign-in links, reminder
 
 Only purchases made through the Payment Links listed in `shared/membership.js` are tracked, so other products on the same Stripe account never appear. When you create a new Payment Link (e.g. the $149 price), add it there.
 
+### Shop
+
+- `/shop` — merchandise with a cart and Stripe Checkout. Shipping is one flat fee per order (US addresses only), so several items ship for the same price.
+- The catalog (names, prices, descriptions, photos, starting stock) and the shipping fee live in `shared/shop.js`. Product photos are in `client/public/merch/`.
+- Paid orders arrive through the same Stripe webhook and appear in `/admin` → Shop with the shipping address and any order note. Stock counts down as orders are paid; adjust it (or mark an item sold out) in the same tab.
+- The Stripe key needs **Checkout Sessions: Write** for the shop to create checkouts (membership tracking alone only needs Read).
+
 ### Data and backups
 
 Members, offers, event registrations, and announcement history are JSON files in `server/data/` (gitignored, alongside the magazine metadata). They persist across deploys but are not in git — back up `server/data/` regularly.

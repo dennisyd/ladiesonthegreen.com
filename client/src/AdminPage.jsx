@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { api, formatDate, formatMoney, statusLabels } from "./api.js";
 
-const tabs = ["Members", "Follow-ups", "Events", "Offers", "Announcements", "Settings"];
+const tabs = ["Members", "Follow-ups", "Events", "Shop", "Offers", "Announcements", "Settings"];
 
 export default function AdminPage() {
   const [signedIn, setSignedIn] = useState(null); // null = checking
@@ -40,6 +40,7 @@ export default function AdminPage() {
         {tab === "Members" && <MembersTab />}
         {tab === "Follow-ups" && <FollowUpsTab />}
         {tab === "Events" && <EventsTab />}
+        {tab === "Shop" && <ShopTab />}
         {tab === "Offers" && <OffersTab />}
         {tab === "Announcements" && <AnnouncementsTab />}
         {tab === "Settings" && <SettingsTab />}
@@ -410,6 +411,127 @@ function EventsTab() {
         </div>
       ))}
     </section>
+  );
+}
+
+// ---------------------------------------------------------------- Shop
+
+function ShopTab() {
+  const { data, error, reload } = useApi("/api/admin/shop");
+  const [note, setNote] = useState({ error: "", message: "" });
+
+  async function saveStock(product, value) {
+    try {
+      await api(`/api/admin/shop/stock/${product.id}`, { method: "PUT", body: { stock: value === "" ? null : Number(value) } });
+      setNote({ error: "", message: `Stock updated for ${product.name}.` });
+      reload();
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    }
+  }
+
+  async function setShipped(order, shipped) {
+    try {
+      await api(`/api/admin/shop/orders/${encodeURIComponent(order.id)}`, { method: "PATCH", body: { shipped } });
+      reload();
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    }
+  }
+
+  if (!data) return <Notice error={error} message={error ? "" : "Loading..."} />;
+  const toShip = data.orders.filter((o) => o.status !== "shipped").length;
+  const money = (cents) => formatMoney(cents / 100);
+
+  return (
+    <section>
+      <div className="admin-section-head">
+        <div>
+          <h2>Shop orders</h2>
+          <p>{toShip ? `${toShip} order${toShip === 1 ? "" : "s"} waiting to ship.` : "Nothing waiting to ship."} Paid orders arrive here automatically from Stripe.</p>
+        </div>
+      </div>
+      <Notice {...note} />
+      {data.orders.length === 0 ? (
+        <p className="admin-empty">No orders yet.</p>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Order</th><th>Items</th><th>Ship to</th><th>Total</th><th aria-label="Status" /></tr>
+            </thead>
+            <tbody>
+              {data.orders.map((o) => (
+                <tr key={o.id}>
+                  <td>
+                    <strong>{o.number}</strong>
+                    <span className="admin-sub">{formatDate(o.paidAt)}</span>
+                  </td>
+                  <td>
+                    {o.items.map((i) => (
+                      <span key={i.id} className="admin-line">{i.qty} × {i.name}</span>
+                    ))}
+                    {o.note && <span className="admin-sub">Note: {o.note}</span>}
+                    {o.oversold?.length > 0 && (
+                      <span className="admin-sub admin-sub--warn">Out of stock when paid: {o.oversold.join(", ")}. Contact the customer.</span>
+                    )}
+                  </td>
+                  <td>
+                    <strong>{o.name}</strong>
+                    {o.address && (
+                      <span className="admin-sub">
+                        {[o.address.line1, o.address.line2].filter(Boolean).join(", ")}<br />
+                        {[o.address.city, o.address.state].filter(Boolean).join(", ")} {o.address.postal_code}
+                      </span>
+                    )}
+                    <span className="admin-sub">{o.email}{o.phone ? ` · ${o.phone}` : ""}</span>
+                  </td>
+                  <td>
+                    {money(o.totalCents)}
+                    <span className="admin-sub">incl. {money(o.shippingCents)} shipping</span>
+                  </td>
+                  <td>
+                    {o.status === "shipped" ? (
+                      <>
+                        <span className="status-badge status-badge--active">Shipped {formatDate(o.shippedAt)}</span>
+                        <button type="button" className="admin-link" onClick={() => setShipped(o, false)}>Undo</button>
+                      </>
+                    ) : (
+                      <button type="button" className="button button--gold" onClick={() => setShipped(o, true)}>Mark shipped</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="admin-group admin-group--spaced">
+        <h3>Stock</h3>
+        <p className="admin-sub">Stock counts down as orders are paid. Leave a box blank for items you have plenty of; set 0 to mark an item sold out.</p>
+        <div className="admin-stock">
+          {data.products.map((p) => (
+            <StockRow key={p.id} product={p} onSave={saveStock} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StockRow({ product, onSave }) {
+  const [value, setValue] = useState(product.stock === null ? "" : String(product.stock));
+  useEffect(() => setValue(product.stock === null ? "" : String(product.stock)), [product.stock]);
+  return (
+    <form className="admin-stock__row" onSubmit={(e) => { e.preventDefault(); onSave(product, value); }}>
+      <div>
+        <strong>{product.name}</strong>
+        <span className="admin-sub">{formatMoney(product.price / 100)}</span>
+      </div>
+      <input type="number" min="0" step="1" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Plenty" aria-label={`Stock for ${product.name}`} />
+      <button type="submit" className="admin-link">Save</button>
+    </form>
   );
 }
 
