@@ -1209,7 +1209,7 @@ textarea:focus {
   }
 
   .hero {
-    min-height: auto;
+    min-height: 640px;
   }
 
   .hero__logo {

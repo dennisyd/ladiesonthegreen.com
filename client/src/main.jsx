@@ -112,7 +112,9 @@ const featuredEvents = [
 ];
 
 const heroSlides = [
-  { type: "image", src: "/hero-1.jpg", alt: "Ladies On The Green members out for a social evening" },
+  { type: "image", src: "/hero-golf-argyle-landscape.png", position: "58% top", alt: "Woman wearing a pink and green Ladies On The Green golf polo on the course" },
+  { type: "image", src: "/hero-golf-yellow-landscape.png", position: "64% top", alt: "Woman in yellow beside her golf bag and Ladies On The Green branding" },
+  { type: "image", src: "/hero-sunset-friends-landscape.png", position: "50% center", alt: "Three diverse women looking out at the sunset together on the beach" },
   { type: "video", src: "/golf-video.mp4", alt: "" },
   { type: "image", src: "/hero-4.jpg", alt: "Ladies On The Green members seated together at the clubhouse" }
 ];
@@ -306,6 +308,7 @@ function App() {
                   key={slide.src}
                   src={slide.src}
                   alt=""
+                  style={{ objectPosition: slide.position }}
                 />
               )
             )}
