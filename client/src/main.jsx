@@ -333,6 +333,25 @@ function App() {
           </div>
         </section>
 
+        <section className="film" id="film" aria-labelledby="film-title">
+          <div className="film__inner">
+            <div className="section-heading">
+              <span className="section-kicker">The Ladies On The Green Experience</span>
+              <h2 id="film-title">The connections go beyond the course.</h2>
+            </div>
+            <div className="film__frame">
+              <video
+                src="/ladies-on-the-green-film.mp4?v=4"
+                poster="/ladies-on-the-green-film-poster.jpg?v=4"
+                controls
+                playsInline
+                preload="none"
+                aria-label="Ladies On The Green: golf, friendship, and lifestyle highlights"
+              />
+            </div>
+          </div>
+        </section>
+
         <section className="about" id="collective" aria-labelledby="collective-title">
           <div className="section-kicker">About Ladies On The Green</div>
           <div className="about__grid">
@@ -349,25 +368,6 @@ function App() {
               </p>
               <p className="about__network"><strong>Our Strength Is Our Network.</strong></p>
               <a className="button button--gold" href="/join">Become a Member Today.</a>
-            </div>
-          </div>
-        </section>
-
-        <section className="film" id="film" aria-labelledby="film-title">
-          <div className="film__inner">
-            <div className="section-heading">
-              <span className="section-kicker">The Ladies On The Green Experience</span>
-              <h2 id="film-title">The connections go beyond the course.</h2>
-            </div>
-            <div className="film__frame">
-              <video
-                src="/ladies-on-the-green-film.mp4?v=4"
-                poster="/ladies-on-the-green-film-poster.jpg?v=4"
-                controls
-                playsInline
-                preload="none"
-                aria-label="Ladies On The Green: golf, friendship, and lifestyle highlights"
-              />
             </div>
           </div>
         </section>
