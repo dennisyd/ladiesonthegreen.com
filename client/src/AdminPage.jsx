@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { api, formatDate, formatMoney, statusLabels } from "./api.js";
 
+import ShopCatalogAdmin from "./ShopCatalogAdmin.jsx";
+
 const tabs = ["Members", "Follow-ups", "Events", "Shop", "Offers", "Announcements", "Settings"];
 
 export default function AdminPage() {
   const [signedIn, setSignedIn] = useState(null); // null = checking
-  const [tab, setTab] = useState("Members");
+  const [tab, setTab] = useState(new URLSearchParams(window.location.search).get("tab") === "shop" ? "Shop" : "Members");
 
   useEffect(() => {
     document.title = "Admin | Ladies On The Green";
@@ -464,12 +466,14 @@ function ShopTab() {
 
   return (
     <section>
-      <div className="admin-section-head">
+      <ShopCatalogAdmin data={data} reload={reload} />
+      <div className="admin-section-head admin-group--spaced">
         <div>
           <h2>Shop orders</h2>
-          <p>{toShip ? `${toShip} order${toShip === 1 ? "" : "s"} waiting to ship.` : "Nothing waiting to ship."} Paid orders arrive here automatically from Stripe.</p>
+          <p>{toShip ? `${toShip} order${toShip === 1 ? "" : "s"} waiting to ship.` : "Nothing waiting to ship."} Cart orders arrive here automatically after Stripe confirms payment.</p>
         </div>
       </div>
+      <Notice error={error} />
       <Notice {...note} />
       {data.orders.length === 0 ? (
         <p className="admin-empty">No orders yet.</p>

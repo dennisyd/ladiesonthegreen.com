@@ -89,9 +89,13 @@ Only purchases made through the Payment Links listed in `shared/membership.js` a
 ### Shop
 
 - `/shop` — merchandise with a cart and Stripe Checkout. Shipping is one flat fee per order (US addresses only), so several items ship for the same price.
-- The catalog (names, prices, descriptions, photos, starting stock) and the shipping fee live in `shared/shop.js`. Product photos are in `client/public/merch/`.
+- `/admin?tab=shop` — manage products without editing code: add, edit, delete or hide products; set names, USD prices, descriptions, detail bullets, badges and stock; upload up to 12 JPG/PNG/WebP photos (5 MB each), paste image URLs, remove photos and reorder them. The first photo is the cover and customers browse the rest in a carousel. Flat cart shipping is also editable here.
+- Existing products in `shared/shop.js` seed the catalog on first use. Changes are saved in `server/data/shop.json`; uploaded photos are in `server/uploads/shop/`. Back up both folders and preserve them when deploying. Deleted products stay deleted, and previous orders remain available.
+- Each product can have an optional Stripe Payment Link (`https://buy.stripe.com/...`). With a link, the product shows **Buy now** and opens Stripe directly. Set the price, shipping charge and shipping-address collection on that Payment Link in Stripe as well; changing the displayed price here does not change Stripe. These purchases are managed in Stripe and do not automatically appear in this shop’s orders or reduce stock. Leave the link blank to use the integrated cart, automatic order tracking and stock updates.
 - Paid orders arrive through the same Stripe webhook and appear in `/admin` → Shop with the shipping address and any order note. Stock counts down as orders are paid; adjust it (or mark an item sold out) in the same tab.
 - The Stripe key needs **Checkout Sessions: Write** for the shop to create checkouts (membership tracking alone only needs Read).
+
+Run `node --test server/shop.test.js` to check product management, access protection, photo uploads, persistence, checkout prices and order history with temporary data and a simulated Stripe checkout.
 
 ### Data and backups
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { MAX_PER_ITEM, SHIPPING_CENTS, SHOP_IN_NAV, formatCents, products as catalog } from "../../shared/shop.js";
+import { MAX_PER_ITEM, SHIPPING_CENTS, SHOP_IN_NAV, formatCents } from "../../shared/shop.js";
 import { api } from "./api.js";
 
 const CART_KEY = "lotg_cart";
@@ -24,8 +24,11 @@ function loadCart() {
 export default function ShopPage() {
   const ordered = new URLSearchParams(window.location.search).get("order") === "success";
   const [menuOpen, setMenuOpen] = useState(false);
-  // Start from the built-in catalog so the page is never empty; the server adds live stock.
-  const [products, setProducts] = useState(catalog);
+  const [settings, setSettings] = useState({ shippingCents: SHIPPING_CENTS });
+  const [catalogState, setCatalogState] = useState("loading");
+  const [checkoutReady, setCheckoutReady] = useState(false);
+  function receiveCatalog(data) { setProducts(data.products); setSettings(data); setCheckoutReady(data.checkoutReady); setCatalogState("ready"); }
+  const [products, setProducts] = useState([]);
   const [cart, setCart] = useState(() => (ordered ? {} : loadCart())); // { productId: qty }
   const [state, setState] = useState({ status: "idle", message: "" });
 
@@ -41,7 +44,7 @@ export default function ShopPage() {
       }
       robots.content = "noindex";
     }
-    api("/api/shop").then((data) => setProducts(data.products), () => {});
+    api("/api/shop").then(receiveCatalog, () => setCatalogState("error"));
   }, []);
 
   useEffect(() => {
@@ -64,7 +67,7 @@ export default function ShopPage() {
   const lines = useMemo(
     () =>
       products
-        .filter((p) => cart[p.id] > 0)
+        .filter((p) => !p.stripeLink && cart[p.id] > 0)
         .map((p) => ({ product: p, qty: Math.min(cart[p.id], limitFor(p)) }))
         .filter((line) => line.qty > 0),
     [products, cart]
@@ -82,7 +85,7 @@ export default function ShopPage() {
       window.location.href = url;
     } catch (err) {
       setState({ status: "error", message: err.message });
-      api("/api/shop").then((data) => setProducts(data.products), () => {}); // stock may have changed
+      api("/api/shop").then(receiveCatalog, () => setCatalogState("error")); // stock may have changed
     }
   }
 
@@ -112,17 +115,20 @@ export default function ShopPage() {
           <h1>Wear the club. Carry the community.</h1>
           <p>Signature Ladies On The Green pieces for the course, the clubhouse, and everywhere in between.</p>
           <p className="shop-hero__shipping">
-            One flat {formatCents(SHIPPING_CENTS)} shipping fee per order, no matter how many items you add.
+            One flat {formatCents(settings.shippingCents)} shipping fee per order, no matter how many items you add.
           </p>
         </section>
 
         {ordered && (
           <div className="shop-banner" role="status">
-            <strong>Thank you! Your order is confirmed.</strong>
-            <span>A receipt is on its way to your email, and we&rsquo;ll ship your order soon.</span>
+            <strong>Thank you! Your checkout is complete.</strong>
+            <span>Stripe will email your receipt once payment is confirmed.</span>
           </div>
         )}
 
+        {catalogState === "loading" && <p role="status">Loading the shop…</p>}
+        {catalogState === "error" && <p role="alert">The shop could not be loaded. <button className="admin-link" onClick={() => { setCatalogState("loading"); api("/api/shop").then(receiveCatalog, () => setCatalogState("error")); }}>Try again</button></p>}
+        {catalogState === "ready" && !products.length && <p>New pieces are on their way. Check back soon.</p>}
         <div className="shop-layout">
           <div className="shop-grid">
             {products.map((product) => {
@@ -131,10 +137,7 @@ export default function ShopPage() {
               const atLimit = inCart >= limitFor(product);
               return (
                 <article className={`shop-card${soldOut ? " is-sold-out" : ""}`} key={product.id}>
-                  <div className="shop-card__image">
-                    <img src={product.image} alt={product.name} loading="lazy" />
-                    <span className="shop-card__tag">{soldOut ? "Sold out" : product.tagline}</span>
-                  </div>
+                  <ProductCarousel product={product} soldOut={soldOut} />
                   <div className="shop-card__body">
                     <div className="shop-card__head">
                       <h2>{product.name}</h2>
@@ -149,7 +152,8 @@ export default function ShopPage() {
                     {product.stock !== null && product.stock > 0 && (
                       <p className="shop-card__stock">Only {product.stock} left</p>
                     )}
-                    {inCart ? (
+                    {product.link && <a href={product.link} target="_blank" rel="noreferrer">More product information ↗</a>}
+                    {product.stripeLink ? <a className={`button button--gold${soldOut ? " is-disabled" : ""}`} href={soldOut ? undefined : product.stripeLink} aria-disabled={soldOut}>{soldOut ? "Sold out" : "Buy now"}</a> : inCart ? (
                       <div className="shop-qty" aria-label={`Quantity of ${product.name}`}>
                         <button type="button" onClick={() => setQty(product, inCart - 1)} aria-label="Remove one">−</button>
                         <span>{inCart} in cart</span>
@@ -188,15 +192,16 @@ export default function ShopPage() {
                 </ul>
                 <dl className="shop-cart__totals">
                   <dt>Subtotal</dt><dd>{formatCents(subtotal)}</dd>
-                  <dt>Shipping (flat, per order)</dt><dd>{formatCents(SHIPPING_CENTS)}</dd>
-                  <dt className="is-total">Total</dt><dd className="is-total">{formatCents(subtotal + SHIPPING_CENTS)}</dd>
+                  <dt>Shipping (flat, per order)</dt><dd>{formatCents(settings.shippingCents)}</dd>
+                  <dt className="is-total">Total</dt><dd className="is-total">{formatCents(subtotal + settings.shippingCents)}</dd>
                 </dl>
-                <button type="button" className="checkout__pay" onClick={checkout} disabled={state.status === "loading"}>
+                <button type="button" className="checkout__pay" onClick={checkout} disabled={state.status === "loading" || !checkoutReady}>
                   {state.status === "loading" ? "Please wait..." : "Checkout securely"}
                 </button>
               </>
             )}
             {state.message && <p className={`form-status form-status--${state.status}`} role="alert">{state.message}</p>}
+            {!checkoutReady && catalogState === "ready" && <p className="shop-cart__note">Cart checkout is currently unavailable. Use a product’s Buy now link or contact hello@ladiesonthegreen.com.</p>}
             <p className="shop-cart__note">
               &#128274; Payment and shipping address are entered on Stripe&rsquo;s secure page. Ships within the United States.
             </p>
@@ -206,9 +211,25 @@ export default function ShopPage() {
 
       {itemCount > 0 && (
         <a className="shop-cart-bar" href="#cart">
-          View cart ({itemCount}) · {formatCents(subtotal + SHIPPING_CENTS)}
+          View cart ({itemCount}) · {formatCents(subtotal + settings.shippingCents)}
         </a>
       )}
     </>
   );
+}
+
+function ProductCarousel({ product, soldOut }) {
+  const [index, setIndex] = useState(0);
+  const images = product.images || [product.image];
+  const current = Math.min(index, images.length - 1);
+  return <div className="shop-card__image" role="region" aria-label={`${product.name} photos`} aria-roledescription="carousel">
+    <img src={images[current]} alt={`${product.name} — photo ${current + 1} of ${images.length}`} loading="lazy" />
+    {(soldOut || product.tagline) && <span className="shop-card__tag">{soldOut ? "Sold out" : product.tagline}</span>}
+    {images.length > 1 && <>
+      <button className="shop-carousel__prev" aria-label={`Previous photo of ${product.name}`} onClick={() => setIndex((current - 1 + images.length) % images.length)}>‹</button>
+      <button className="shop-carousel__next" aria-label={`Next photo of ${product.name}`} onClick={() => setIndex((current + 1) % images.length)}>›</button>
+      <div className="shop-carousel__dots">{images.map((_, i) => <button key={i} aria-label={`Show photo ${i + 1} of ${product.name}`} aria-pressed={i === current} className={i === current ? "is-active" : ""} onClick={() => setIndex(i)} />)}</div>
+      <span className="shop-carousel__count" aria-live="polite">{current + 1} / {images.length}</span>
+    </>}
+  </div>;
 }

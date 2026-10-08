@@ -1,7 +1,6 @@
-// Shop catalog, shared by the Shop page (client) and the server (checkout,
-// stock, orders). Prices are in cents. `stock` is the starting count; null means
-// "plenty" (not counted). Live stock is tracked on the server and can be changed
-// in /admin → Shop without editing this file.
+// Initial shop catalog. After an admin edit, the live catalog is stored in
+// server/data/shop.json. Manage products, photos, prices and stock in /admin
+// → Shop. Prices are in cents; null stock means unlimited.
 
 // Whether "Shop" appears in the site menus. While false, the shop is still
 // reachable by typing /shop, it just isn't linked. Set to true to launch it.

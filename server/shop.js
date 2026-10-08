@@ -1,5 +1,7 @@
 import path from "node:path";
-import { MAX_PER_ITEM, SHIPPING_CENTS, productById, products } from "../shared/shop.js";
+import crypto from "node:crypto";
+import { MAX_PER_ITEM } from "../shared/shop.js";
+import { productsOf, settingsOf, mountCatalog } from "./lib/shop-catalog.js";
 import { jsonStore } from "./lib/store.js";
 
 const iso = (unix) => (unix ? new Date(unix * 1000).toISOString() : new Date().toISOString());
@@ -13,28 +15,31 @@ const decodeItems = (text) =>
       const [id, qty] = part.split(":");
       return { id, qty: Number(qty) };
     })
-    .filter((i) => productById[i.id] && i.qty > 0);
+    .filter((i) => i.id && Number.isSafeInteger(i.qty) && i.qty > 0);
 
 export function createShop(dataDir, { stripe, requireAdmin }) {
   // stock: { productId: number | null } overrides the catalog's starting counts.
   const store = jsonStore(path.join(dataDir, "shop.json"), { stock: {}, orders: [] });
 
-  const stockOf = (data, id) => (id in data.stock ? data.stock[id] : productById[id].stock);
+  const byId = (data) => Object.fromEntries(productsOf(data).map((p) => [p.id, p]));
+  const stockOf = (data, id) => byId(data)[id]?.stock ?? null;
 
   async function catalog() {
     const data = await store.read();
-    return products.map((p) => ({ ...p, stock: stockOf(data, p.id) }));
+    return productsOf(data).filter((p) => p.active);
   }
 
   // Validate a cart against the catalog and current stock.
   function checkCart(data, rawItems) {
+    const productById = byId(data);
     const merged = new Map();
     for (const item of Array.isArray(rawItems) ? rawItems : []) {
       const qty = Math.floor(Number(item?.qty));
-      if (!productById[item?.id] || !(qty > 0)) continue;
+      if (!productById[item?.id]?.active || productById[item.id].stripeLink || !(qty > 0)) return { error: "An item in your cart is no longer available. Refresh the shop and try again." };
       merged.set(item.id, (merged.get(item.id) || 0) + qty);
     }
     if (!merged.size) return { error: "Your cart is empty." };
+    if (merged.size > 10) return { error: "Please order up to 10 different products at a time." };
     const items = [];
     for (const [id, qty] of merged) {
       const product = productById[id];
@@ -58,17 +63,20 @@ export function createShop(dataDir, { stripe, requireAdmin }) {
     const note = (session.custom_fields || []).find((f) => f.key === "note")?.text?.value || "";
     return store.update((data) => {
       if (data.orders.some((o) => o.id === session.id)) return false;
+      const productById = byId(data);
+      const snapshotKey = session.metadata?.catalogSnapshot || session.id;
+      const snapshot = data.pending?.[snapshotKey]?.items || data.pending?.[snapshotKey] || [];
       const short = [];
       for (const { id, qty } of items) {
         const stock = stockOf(data, id);
         if (stock === null) continue;
-        if (qty > stock) short.push(productById[id].name);
+        if (qty > stock) short.push(productById[id]?.name || id);
         data.stock[id] = Math.max(0, stock - qty);
       }
       data.orders.push({
         id: session.id,
         number: `LOTG-${1001 + data.orders.length}`,
-        items: items.map(({ id, qty }) => ({ id, qty, name: productById[id].name, price: productById[id].price })),
+        items: items.map(({ id, qty }) => ({ id, qty, name: snapshot.find((p) => p.id === id)?.name || productById[id]?.name || "Deleted product", price: snapshot.find((p) => p.id === id)?.price ?? productById[id]?.price ?? 0 })),
         name: shipping.name || details.name || "",
         email: details.email || "",
         phone: details.phone || "",
@@ -82,6 +90,7 @@ export function createShop(dataDir, { stripe, requireAdmin }) {
         // Two shoppers bought the last one at the same moment: needs a refund or a swap.
         oversold: short
       });
+      if (data.pending) delete data.pending[snapshotKey];
       return true;
     });
   }
@@ -98,19 +107,31 @@ export function createShop(dataDir, { stripe, requireAdmin }) {
   }
 
   function mountRoutes(app) {
+    mountCatalog(app, store, dataDir, requireAdmin);
     app.get("/api/shop", async (_req, res) => {
-      res.json({ ok: true, products: await catalog(), shippingCents: SHIPPING_CENTS, checkoutReady: Boolean(stripe) });
+      res.json({ ok: true, products: await catalog(), ...settingsOf(await store.read()), checkoutReady: Boolean(stripe) });
     });
 
     app.post("/api/shop/checkout", async (req, res) => {
       if (!stripe) {
         return res.status(503).json({ ok: false, error: "Online checkout isn't available yet. Please email hello@ladiesonthegreen.com to order." });
       }
-      const { items, error } = checkCart(await store.read(), req.body?.items);
+      const data = await store.read();
+      const productById = byId(data);
+      const { shippingCents } = settingsOf(data);
+      const { items, error } = checkCart(data, req.body?.items);
       if (error) return res.status(400).json({ ok: false, error });
 
       const origin = process.env.SITE_URL || `${req.protocol}://${req.get("host")}`;
+      const snapshotKey = crypto.randomUUID();
       try {
+        await store.update((current) => {
+          current.pending ??= {};
+          for (const [key, value] of Object.entries(current.pending)) {
+            if (value.created && Date.now() - value.created > 90 * 86400000) delete current.pending[key];
+          }
+          current.pending[snapshotKey] = { created: Date.now(), items: items.map(({ id, qty }) => ({ id, qty, name: productById[id].name, price: productById[id].price })) };
+        });
         const session = await stripe.checkout.sessions.create({
           mode: "payment",
           line_items: items.map(({ id, qty }) => ({
@@ -127,7 +148,7 @@ export function createShop(dataDir, { stripe, requireAdmin }) {
               shipping_rate_data: {
                 type: "fixed_amount",
                 display_name: "Standard shipping (one flat fee per order)",
-                fixed_amount: { amount: SHIPPING_CENTS, currency: "usd" }
+                fixed_amount: { amount: shippingCents, currency: "usd" }
               }
             }
           ],
@@ -135,12 +156,13 @@ export function createShop(dataDir, { stripe, requireAdmin }) {
           custom_fields: [
             { key: "note", label: { type: "custom", custom: "Order note (e.g. hat logo preference)" }, type: "text", optional: true }
           ],
-          metadata: { lotg_shop: "1", items: encodeItems(items) },
+          metadata: { lotg_shop: "1", items: encodeItems(items), catalogSnapshot: snapshotKey },
           success_url: `${origin}/shop?order=success`,
           cancel_url: `${origin}/shop`
         });
         res.json({ ok: true, url: session.url });
       } catch (err) {
+        await store.update((current) => { if (current.pending) delete current.pending[snapshotKey]; }).catch(() => {});
         console.error("Shop checkout failed", err);
         res.status(500).json({ ok: false, error: "Checkout is temporarily unavailable. Please try again shortly." });
       }
@@ -152,17 +174,18 @@ export function createShop(dataDir, { stripe, requireAdmin }) {
       const data = await store.read();
       res.json({
         ok: true,
-        products: products.map((p) => ({ id: p.id, name: p.name, price: p.price, stock: stockOf(data, p.id) })),
+        products: productsOf(data),
+        settings: settingsOf(data),
         orders: data.orders.sort((a, b) => b.paidAt.localeCompare(a.paidAt))
       });
     });
 
     // stock: a whole number, or null for "plenty" (not counted).
     app.put("/api/admin/shop/stock/:id", requireAdmin, async (req, res) => {
-      if (!productById[req.params.id]) return res.status(404).json({ ok: false, error: "Unknown product." });
+      if (!byId(await store.read())[req.params.id]) return res.status(404).json({ ok: false, error: "Unknown product." });
       const raw = req.body?.stock;
-      const stock = raw === null || raw === "" ? null : Math.floor(Number(raw));
-      if (stock !== null && !(stock >= 0)) return res.status(400).json({ ok: false, error: "Enter 0 or more, or leave blank for unlimited." });
+      const stock = raw === null || raw === "" ? null : Number(raw);
+      if (stock !== null && (!Number.isSafeInteger(stock) || stock < 0)) return res.status(400).json({ ok: false, error: "Enter a whole number of 0 or more, or leave blank for unlimited." });
       await store.update((data) => {
         data.stock[req.params.id] = stock;
       });
