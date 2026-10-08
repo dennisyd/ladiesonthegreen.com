@@ -333,6 +333,26 @@ function App() {
           </div>
         </section>
 
+        <section className="about" id="collective" aria-labelledby="collective-title">
+          <div className="section-kicker">About Ladies On The Green</div>
+          <div className="about__grid">
+            <h2 id="collective-title">A modern club for women taking up space in golf.</h2>
+            <div className="about__copy">
+              <p>
+                Ladies on the Green® is a private golf and lifestyle collective bringing professional women together through golf, friendship, education, and elevated experiences in a welcoming environment.
+              </p>
+              <p>
+                More than a membership, we are a community where women build meaningful relationships, explore new opportunities, and thrive together on and beyond the fairway.
+              </p>
+              <p>
+                Our members enjoy curated golf, racquet, social, wellness, travel, and charitable experiences, with select events reserved exclusively for members. Whether you're new to golf or an experienced player, all skill levels are welcome.
+              </p>
+              <p className="about__network"><strong>Our Strength Is Our Network.</strong></p>
+              <a className="button button--gold" href="/join">Become a Member Today.</a>
+            </div>
+          </div>
+        </section>
+
         <section className="film" id="film" aria-labelledby="film-title">
           <div className="film__inner">
             <div className="section-heading">
@@ -529,13 +549,13 @@ function App() {
             </div>
             <div className="about__copy">
               <p>
-                Ladies on the Green® is a private golf and lifestyle collective bringing professional women together through golf, friendship, education, and elevated experiences in a welcoming environment.
+                Founded by Martine “Dee” Dennis, Founder &amp; CEO, Ladies on the Green® is a private golf and lifestyle collective connecting accomplished women through golf, friendship, networking, and elevated experiences.
               </p>
               <p>
                 More than a membership, we are a community where women build meaningful relationships, explore new opportunities, and thrive together on and beyond the fairway.
               </p>
               <p>
-                Our members enjoy curated golf, racquet, social, wellness, travel, and charitable experiences, with select events reserved exclusively for members. Whether you're new to golf or an experienced player, all skill levels are welcome.
+                Our members enjoy curated golf, racquet, social, wellness, travel, and charitable experiences, with select events reserved exclusively for members. All skill levels are welcome.
               </p>
               <p className="about__network"><strong>Our Strength Is Our Network.</strong></p>
             </div>
@@ -543,7 +563,7 @@ function App() {
           <div className="about__invitation">
             <h3>Your Place in the Collective Awaits</h3>
             <p>Experience the connections, opportunities, and privileges of belonging.</p>
-            <a className="button button--gold" href="/join">Become a Member Today.</a>
+            <a className="button button--gold" href="/join">Become a Member Today!</a>
             <p className="about__closing">Come for the golf. Stay for the friendships. Leave inspired.</p>
           </div>
         </section>
