@@ -459,6 +459,47 @@ p {
   color: var(--green);
 }
 
+.about__heading h2 {
+  font-size: clamp(2.4rem, 4.5vw, 4rem);
+  line-height: 1.08;
+}
+
+.about__tagline {
+  color: var(--green);
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.5;
+  margin-top: 24px;
+}
+
+.about__copy .about__network {
+  color: var(--green);
+  font-size: 1.2rem;
+}
+
+.about__invitation {
+  border-top: 1px solid var(--line);
+  margin-top: 40px;
+  padding-top: 40px;
+  text-align: center;
+}
+
+.about__invitation h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  margin-bottom: 16px;
+}
+
+.about__invitation p {
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.about__invitation .about__closing {
+  font-style: italic;
+  margin: 24px 0 0;
+}
+
 .stats {
   border: 1px solid var(--line);
   display: grid;

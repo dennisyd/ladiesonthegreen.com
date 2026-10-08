@@ -119,18 +119,12 @@ const heroSlides = [
 
 const navItems = [
   { label: "Home", href: "#top" },
-  { label: "About Us", href: "#about" },
   { label: "Become A Member", href: "/join" },
   { label: "Events", href: "#events" },
   { label: "Membership", href: "#membership" },
   ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
-  { label: "Magazine", href: "/magazine" }
-];
-
-const stats = [
-  { value: "01", label: "Golf Community" },
-  { value: "04", label: "Event Styles" },
-  { value: "All", label: "Skill Levels" }
+  { label: "Magazine", href: "/magazine" },
+  { label: "About Us", href: "#about" }
 ];
 
 const galleryEvents = [
@@ -339,29 +333,6 @@ function App() {
           </div>
         </section>
 
-        <section className="about" id="about" aria-labelledby="about-title">
-          <div className="section-kicker">About Ladies On The Green</div>
-          <div className="about__grid">
-            <h2 id="about-title">A modern club for women taking up space in golf.</h2>
-            <div className="about__copy">
-              <p>
-                The club blends golf, friendship, education, and lifestyle into events that feel elevated without feeling intimidating.
-              </p>
-              <p>
-                Whether you are new to the game or already planning your next round, Ladies On The Green gives you a place to show up with confidence.
-              </p>
-            </div>
-          </div>
-          <div className="stats">
-            {stats.map((stat) => (
-              <div className="stat" key={stat.label}>
-                <strong>{stat.value}</strong>
-                <span>{stat.label}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <section className="film" id="film" aria-labelledby="film-title">
           <div className="film__inner">
             <div className="section-heading">
@@ -547,6 +518,34 @@ function App() {
               {formState.message}
             </p>
           </form>
+        </section>
+
+        <section className="about" id="about" aria-labelledby="about-title">
+          <div className="section-kicker">About Us</div>
+          <div className="about__grid">
+            <div className="about__heading">
+              <h2 id="about-title">Ladies on the Green®</h2>
+              <p className="about__tagline">More Than Golf. A Lifestyle. A Community.</p>
+            </div>
+            <div className="about__copy">
+              <p>
+                Founded by Martine “Dee” Dennis, Founder &amp; CEO, Ladies on the Green® is a private golf and lifestyle collective connecting accomplished women through golf, friendship, networking, and elevated experiences.
+              </p>
+              <p>
+                More than a membership, we are a community where women build meaningful relationships, explore new opportunities, and thrive together on and beyond the fairway.
+              </p>
+              <p>
+                Our members enjoy curated golf, racquet, social, wellness, travel, and charitable experiences, with select events reserved exclusively for members. All skill levels are welcome.
+              </p>
+              <p className="about__network"><strong>Our Strength Is Our Network.</strong></p>
+            </div>
+          </div>
+          <div className="about__invitation">
+            <h3>Your Place in the Collective Awaits</h3>
+            <p>Experience the connections, opportunities, and privileges of belonging.</p>
+            <a className="button button--gold" href="/join">Become a Member Today!</a>
+            <p className="about__closing">Come for the golf. Stay for the friendships. Leave inspired.</p>
+          </div>
         </section>
       </main>
 
