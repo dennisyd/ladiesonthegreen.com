@@ -124,8 +124,8 @@ const navItems = [
   { label: "Become A Member", href: "/join" },
   { label: "Events", href: "#events" },
   { label: "Membership", href: "#membership" },
-  ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
   { label: "Magazine", href: "/magazine" },
+  ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
   { label: "About Us", href: "#about" }
 ];
 

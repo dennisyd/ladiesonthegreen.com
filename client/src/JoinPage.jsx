@@ -21,11 +21,11 @@ const memberExperience = [
 
 const navItems = [
   { label: "Home", href: "/" },
-  { label: "About Us", href: "/#about" },
   { label: "Events", href: "/#events" },
   { label: "Membership", href: "/#membership" },
+  { label: "Magazine", href: "/magazine" },
   ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
-  { label: "Magazine", href: "/magazine" }
+  { label: "About Us", href: "/#about" }
 ];
 
 export default function JoinPage() {

@@ -4,7 +4,7 @@
 
 // Whether "Shop" appears in the site menus. While false, the shop is still
 // reachable by typing /shop, it just isn't linked. Set to true to launch it.
-export const SHOP_IN_NAV = false;
+export const SHOP_IN_NAV = true;
 
 // One flat fee per order, however many items are in it. US addresses only.
 export const SHIPPING_CENTS = 599;

@@ -8,11 +8,11 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const navItems = [
   { label: "Home", href: "/" },
-  { label: "About Us", href: "/#about" },
   { label: "Events", href: "/#events" },
   { label: "Membership", href: "/#membership" },
+  { label: "Magazine", href: "/magazine" },
   ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
-  { label: "Magazine", href: "/magazine" }
+  { label: "About Us", href: "/#about" }
 ];
 
 const Page = forwardRef(function Page({ src, alt }, ref) {

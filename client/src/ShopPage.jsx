@@ -8,8 +8,9 @@ const navItems = [
   { label: "Home", href: "/" },
   { label: "Events", href: "/#events" },
   { label: "Membership", href: "/#membership" },
+  { label: "Magazine", href: "/magazine" },
   { label: "Shop", href: "/shop" },
-  { label: "Magazine", href: "/magazine" }
+  { label: "About Us", href: "/#about" }
 ];
 
 function loadCart() {
