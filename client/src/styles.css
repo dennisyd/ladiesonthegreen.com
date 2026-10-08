@@ -2802,7 +2802,7 @@ textarea:focus {
 .shop-editor { margin: 24px 0; padding: 24px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; }
 .shop-editor fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .shop-editor label { display: grid; gap: 7px; margin-bottom: 16px; font-weight: 600; }
-.shop-editor input, .shop-editor textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: inherit; min-width: 0; }
+.shop-editor input, .shop-editor textarea, .shop-editor select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: inherit; min-width: 0; }
 .shop-editor textarea { resize: vertical; }
 .shop-editor__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
 .shop-editor .shop-editor__checkbox { display: flex; align-items: center; }

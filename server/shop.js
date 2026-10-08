@@ -176,6 +176,7 @@ export function createShop(dataDir, { stripe, requireAdmin }) {
         ok: true,
         products: productsOf(data),
         settings: settingsOf(data),
+        checkoutReady: Boolean(stripe),
         orders: data.orders.sort((a, b) => b.paidAt.localeCompare(a.paidAt))
       });
     });

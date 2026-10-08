@@ -58,6 +58,22 @@ export function mountCatalog(app, store, dataDir, requireAdmin) {
   };
   app.post("/api/admin/shop/products", requireAdmin, save);
   app.put("/api/admin/shop/products/:id", requireAdmin, save);
+  app.patch("/api/admin/shop/products/:id/move", requireAdmin, async (req, res) => {
+    const direction = req.body?.direction;
+    if (direction !== "up" && direction !== "down") return res.status(400).json({ error: "Choose up or down." });
+    const result = await store.update((data) => {
+      data.products ??= structuredClone(products);
+      const index = data.products.findIndex((p) => p.id === req.params.id);
+      if (index < 0) return null;
+      const destination = index + (direction === "up" ? -1 : 1);
+      if (destination >= 0 && destination < data.products.length) {
+        [data.products[index], data.products[destination]] = [data.products[destination], data.products[index]];
+      }
+      return productsOf(data);
+    });
+    if (!result) return res.status(404).json({ error: "Product not found." });
+    res.json({ ok: true, products: result });
+  });
   app.delete("/api/admin/shop/products/:id", requireAdmin, async (req, res) => {
     await store.update((data) => { data.products ??= structuredClone(products); data.products = data.products.filter((p) => p.id !== req.params.id); delete data.stock[req.params.id]; });
     res.json({ ok: true });

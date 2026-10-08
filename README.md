@@ -89,13 +89,14 @@ Only purchases made through the Payment Links listed in `shared/membership.js` a
 ### Shop
 
 - `/shop` — merchandise with a cart and Stripe Checkout. Shipping is one flat fee per order (US addresses only), so several items ship for the same price.
-- `/admin?tab=shop` — manage products without editing code: add, edit, delete or hide products; set names, USD prices, descriptions, detail bullets, badges and stock; upload up to 12 JPG/PNG/WebP photos (5 MB each), paste image URLs, remove photos and reorder them. The first photo is the cover and customers browse the rest in a carousel. Flat cart shipping is also editable here.
+- `/admin?tab=shop` — manage products without editing code: add, edit, delete or hide products; set names, USD prices, descriptions, detail bullets, badges and stock; upload up to 12 JPG/PNG/WebP photos (5 MB each), paste image URLs, remove photos and reorder them. The first photo is the cover and customers browse the rest in a carousel. Move products Up or Down to set their order in the customer shop; the order survives server restarts. Flat cart shipping is also editable here.
 - Existing products in `shared/shop.js` seed the catalog on first use. Changes are saved in `server/data/shop.json`; uploaded photos are in `server/uploads/shop/`. Back up both folders and preserve them when deploying. Deleted products stay deleted, and previous orders remain available.
+- **Automatic checkout (recommended):** choose **Shop cart + automatic Stripe total** when editing a product. No individual payment link is needed. The server creates a Stripe Checkout session for each cart using saved product prices and quantities, plus one flat shipping fee for the whole order. This works for a single product, several products, or multiple quantities. The customer sees the combined total and enters her shipping address in Stripe. The server must have `STRIPE_SECRET_KEY` configured; the admin Shop page shows whether it is connected.
 - Each product can have an optional Stripe Payment Link (`https://buy.stripe.com/...`). With a link, the product shows **Buy now** and opens Stripe directly. Set the price, shipping charge and shipping-address collection on that Payment Link in Stripe as well; changing the displayed price here does not change Stripe. These purchases are managed in Stripe and do not automatically appear in this shop’s orders or reduce stock. Leave the link blank to use the integrated cart, automatic order tracking and stock updates.
 - Paid orders arrive through the same Stripe webhook and appear in `/admin` → Shop with the shipping address and any order note. Stock counts down as orders are paid; adjust it (or mark an item sold out) in the same tab.
 - The Stripe key needs **Checkout Sessions: Write** for the shop to create checkouts (membership tracking alone only needs Read).
 
-Run `node --test server/shop.test.js` to check product management, access protection, photo uploads, persistence, checkout prices and order history with temporary data and a simulated Stripe checkout.
+Run `node --test server/shop.test.js` to check product management and ordering, access protection, photo uploads, persistence, single/multiple-product checkout totals and order history with temporary data and a simulated Stripe checkout.
 
 ### Data and backups
 
