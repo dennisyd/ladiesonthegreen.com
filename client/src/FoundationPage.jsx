@@ -55,8 +55,8 @@ export default function FoundationPage() {
         <section className="foundation-hero" aria-labelledby="foundation-title">
           <img
             className="foundation-hero__image"
-            src="/foundation-hero.png"
-            alt="Young women learning to putt together on a golf course with an instructor"
+            src="/foundation-hero-v2.png"
+            alt="Women and children learning to putt together on a golf course with an instructor"
           />
           <div className="foundation-hero__shade" aria-hidden="true" />
           <div className="foundation-hero__content">
