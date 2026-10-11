@@ -2867,3 +2867,218 @@ textarea:focus {
   .shop-admin-products article { flex-wrap: wrap; }
   .shop-admin-products article > div { flex-basis: calc(100% - 90px); }
 }
+/* Secure the Bag Foundation */
+.foundation-page {
+  background: var(--cream);
+}
+
+.foundation-hero {
+  align-items: center;
+  background: var(--navy-deep);
+  color: var(--white);
+  display: flex;
+  isolation: isolate;
+  min-height: clamp(610px, 76svh, 830px);
+  overflow: hidden;
+  padding: clamp(48px, 8vw, 120px) clamp(24px, 8vw, 128px);
+  position: relative;
+}
+
+.foundation-hero__image,
+.foundation-hero__shade {
+  height: 100%;
+  inset: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.foundation-hero__image {
+  object-fit: cover;
+  object-position: center 48%;
+  z-index: -2;
+}
+
+.foundation-hero__shade {
+  background: linear-gradient(90deg, rgba(3, 28, 19, 0.86) 0%, rgba(3, 28, 19, 0.64) 33%, rgba(3, 28, 19, 0.15) 72%),
+    linear-gradient(0deg, rgba(3, 28, 19, 0.43), transparent 46%);
+  z-index: -1;
+}
+
+.foundation-hero__content {
+  max-width: 700px;
+}
+
+.foundation-eyebrow {
+  color: #f5dd92;
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  line-height: 1.6;
+  margin-bottom: 22px;
+  text-transform: uppercase;
+}
+
+.foundation-hero h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3.6rem, 6.4vw, 6.6rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.99;
+  margin: 0 0 30px;
+  text-wrap: balance;
+}
+
+.foundation-hero__content p {
+  border-left: 3px solid var(--gold);
+  font-size: clamp(1.1rem, 1.45vw, 1.38rem);
+  font-weight: 500;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 520px;
+  padding-left: 22px;
+}
+
+.foundation-mission {
+  display: grid;
+  gap: clamp(44px, 8vw, 132px);
+  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: clamp(86px, 10vw, 150px) clamp(24px, 7vw, 110px);
+}
+
+.foundation-mission__label .section-kicker {
+  color: var(--green);
+}
+
+.foundation-mission h2 {
+  color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.65rem, 4vw, 4.35rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  margin: 26px 0 30px;
+  text-wrap: balance;
+}
+
+.foundation-mission__rule {
+  background: var(--gold);
+  display: block;
+  height: 3px;
+  width: 96px;
+}
+
+.foundation-mission__copy {
+  border-top: 1px solid rgba(10, 61, 42, 0.22);
+  padding-top: 21px;
+}
+
+.foundation-mission__copy p {
+  color: #263c31;
+  font-size: clamp(1.1rem, 1.45vw, 1.28rem);
+  line-height: 1.83;
+  margin: 0 0 28px;
+}
+
+.foundation-mission__copy p:last-child {
+  margin-bottom: 0;
+}
+
+.foundation-closing {
+  background: radial-gradient(circle at 50% 0%, rgba(216, 179, 75, 0.17), transparent 42%),
+    linear-gradient(140deg, var(--navy-deep), var(--navy));
+  color: var(--white);
+  padding: clamp(84px, 10vw, 144px) 24px;
+  text-align: center;
+}
+
+.foundation-closing p {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.15rem, 4vw, 4.25rem);
+  letter-spacing: -0.035em;
+  line-height: 1.35;
+  margin: 0 auto;
+  max-width: 1100px;
+}
+
+.foundation-closing em {
+  color: #f1d680;
+  font-style: normal;
+}
+
+@media (min-width: 980.02px) and (max-width: 1160px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+    min-height: auto;
+  }
+
+  .site-header > span:empty,
+  .header-actions {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+    justify-content: center;
+  }
+
+  .site-header nav {
+    align-items: stretch;
+    background: transparent;
+    border-top: 1px solid var(--line);
+    display: none;
+    grid-column: 1 / -1;
+    justify-content: stretch;
+    padding-top: 12px;
+  }
+
+  .site-header nav.is-open {
+    display: grid;
+  }
+
+  .site-header nav a {
+    border-bottom: 1px solid var(--line);
+    padding: 14px 0;
+  }
+}
+
+@media (max-width: 800px) {
+  .foundation-hero {
+    align-items: flex-end;
+    min-height: 700px;
+  }
+
+  .foundation-hero__image {
+    object-position: 64% center;
+  }
+
+  .foundation-hero__shade {
+    background: linear-gradient(0deg, rgba(3, 28, 19, 0.93), rgba(3, 28, 19, 0.55) 50%, rgba(3, 28, 19, 0.08));
+  }
+
+  .foundation-mission {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .foundation-hero {
+    min-height: 660px;
+    padding-bottom: 64px;
+  }
+
+  .foundation-hero h1 {
+    font-size: clamp(3.15rem, 14vw, 4.2rem);
+  }
+
+  .foundation-eyebrow {
+    font-size: 0.7rem;
+  }
+
+  .foundation-mission {
+    gap: 36px;
+    padding-block: 76px;
+  }
+}

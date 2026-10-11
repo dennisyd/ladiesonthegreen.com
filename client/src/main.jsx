@@ -12,6 +12,7 @@ const MagazineAdminPage = lazy(() => import("./MagazineAdminPage.jsx"));
 const AdminPage = lazy(() => import("./AdminPage.jsx"));
 const MembersPage = lazy(() => import("./MembersPage.jsx"));
 const ShopPage = lazy(() => import("./ShopPage.jsx"));
+const FoundationPage = lazy(() => import("./FoundationPage.jsx"));
 
 const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
 
@@ -125,6 +126,7 @@ const navItems = [
   { label: "Events", href: "#events" },
   { label: "Membership", href: "#membership" },
   { label: "Magazine", href: "/magazine" },
+  { label: "Foundation", href: "/foundation" },
   ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
   { label: "About Us", href: "#about" }
 ];
@@ -578,6 +580,7 @@ function App() {
           <p>&copy; {new Date().getFullYear()} Ladies On The Green. Golf & Social Club.</p>
         </div>
         <div className="footer-links">
+          <a href="/foundation">Foundation</a>
           <a href="mailto:hello@ladiesonthegreen.com">hello@ladiesonthegreen.com</a>
           <a href={facebookUrl} target="_blank" rel="noreferrer">Facebook</a>
           <a href="#top">Back to Top</a>
@@ -589,6 +592,7 @@ function App() {
 
 const routes = {
   "/join": JoinPage,
+  "/foundation": FoundationPage,
   "/magazine": MagazinePage,
   "/magazine/admin": MagazineAdminPage,
   "/admin": AdminPage,
