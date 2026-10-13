@@ -4,7 +4,7 @@ import path from "node:path";
 import Stripe from "stripe";
 import { FOUNDING_DEADLINE_LABEL, currentRate, regularRate } from "../shared/membership.js";
 import { clearCookie, createAuth, createRateLimiter, readCookie, safeEqual, setCookie } from "./lib/auth.js";
-import { mailConfigured, sendEmail } from "./lib/mailer.js";
+import { checkMailLogin, mailConfigured, sendEmail } from "./lib/mailer.js";
 import { createMemberMail } from "./lib/member-mail.js";
 import { canUsePortal, directoryView, newMember, normalizeEmail, portalView } from "./lib/member-model.js";
 import { jsonStore } from "./lib/store.js";
@@ -367,11 +367,14 @@ export function createMembership(dataDir) {
     app.get("/api/admin/session", requireAdmin, (_req, res) => res.json({ ok: true }));
 
     app.get("/api/admin/status", requireAdmin, async (_req, res) => {
+      const mailLogin = mailConfigured() ? await checkMailLogin() : { ok: false, error: "" };
       res.json({
         ok: true,
         stripeConfigured: Boolean(stripe),
         webhookConfigured: Boolean(webhookSecret),
         mailConfigured: mailConfigured(),
+        mailWorking: mailLogin.ok,
+        mailError: mailLogin.error,
         separateAdminPassword: Boolean(process.env.ADMIN_PASSWORD),
         ...(await stripeStatus.read())
       });

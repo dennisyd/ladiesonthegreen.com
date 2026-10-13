@@ -863,7 +863,7 @@ function SettingsTab() {
   const checks = [
     ["Stripe connected", data.stripeConfigured, "Add STRIPE_SECRET_KEY to the server settings."],
     ["Stripe payment updates (webhook)", data.webhookConfigured, "Add STRIPE_WEBHOOK_SECRET to the server settings."],
-    ["Email sending", data.mailConfigured, "Add the SMTP settings so sign-in links and reminders can be emailed."],
+    ["Email sending", data.mailWorking, data.mailConfigured ? data.mailError : "Add the SMTP settings so sign-in links and reminders can be emailed."],
     ["Separate admin password", data.separateAdminPassword, "Using the magazine password. Set ADMIN_PASSWORD to give the dashboard its own."]
   ];
 
