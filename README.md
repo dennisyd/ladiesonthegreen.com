@@ -62,6 +62,13 @@ Uploaded PDFs are stored on disk at `server/uploads/magazine/` (gitignored) with
 - `/admin` — password-protected dashboard: member list with payment status, CSV export, follow-up reminders for people who registered but didn't pay, event ticket registrations, member offers, announcement emails, and a Stripe sync.
 - `/members` — member portal. Members sign in with a one-time link emailed to them (no passwords). Only active (or past-due, so they can fix their card) members get in. Shows their membership, offers and discount codes, member events, the opt-in member directory, and a "Manage billing" button (Stripe's customer portal).
 
+### Member email
+
+- **Email a member:** `/admin` → Members → Email. Pick the From address, write a subject and message; replies go to the chosen address.
+- **Sender addresses:** managed in `/admin` → Settings. They must be on the site's mail domain (the domain of `SMTP_FROM`), and each should exist as a mailbox or forward at the mail host.
+- **Welcome email:** edited and switched on in `/admin` → Settings. Sent once when someone first becomes an active member (Stripe payment or "Mark as paid"), never for renewals or members found by a Stripe sync more than 3 days after they joined.
+- Settings are stored in `server/data/mail-settings.json`.
+
 ### Server settings
 
 Put these in a `.env` file at the repo root on the VPS (`/var/www/ladiesonthegreen.com/.env`, gitignored) or in the PM2 environment. Variables already set in the environment take priority over the file. Restart the app after changing them (`pm2 restart ladiesonthegreen`).

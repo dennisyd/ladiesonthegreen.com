@@ -26,12 +26,20 @@ export const mailConfigured = () => Boolean(createTransporter());
 
 // Member-facing email (sign-in links, reminders, announcements). Without SMTP
 // configured (local development) the message is printed to the log instead.
-export async function sendEmail({ to, subject, text }) {
+// `from` picks the sender address (admin-written email); replies then go back
+// to that address. System email leaves it out and comes from the site address.
+export async function sendEmail({ to, subject, text, from }) {
   const transporter = createTransporter();
   if (!transporter) {
-    console.log(`[email not configured] To: ${to}\nSubject: ${subject}\n\n${text}\n`);
+    console.log(`[email not configured] From: ${from || mailFrom || "(site address)"}\nTo: ${to}\nSubject: ${subject}\n\n${text}\n`);
     return { logged: true };
   }
-  await transporter.sendMail({ to, from: mailFrom, replyTo: contactTo, subject, text });
+  await transporter.sendMail({
+    to,
+    from: from ? `Ladies On The Green <${from}>` : mailFrom,
+    replyTo: from || contactTo,
+    subject,
+    text
+  });
   return { sent: true };
 }

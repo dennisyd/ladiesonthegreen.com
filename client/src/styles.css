@@ -2018,6 +2018,52 @@ textarea:focus {
   gap: 6px 16px;
 }
 
+.member-email {
+  display: grid;
+  gap: 14px;
+  max-width: 760px;
+}
+
+.member-email label {
+  color: var(--navy);
+  display: grid;
+  font-size: 0.85rem;
+  font-weight: 800;
+  gap: 6px;
+}
+
+.member-email input,
+.member-email select,
+.member-email textarea,
+.admin-inline-form input {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 500;
+  padding: 11px 12px;
+  width: 100%;
+}
+
+.member-email input[readonly] {
+  background: var(--mint-2);
+  color: var(--muted);
+}
+
+.member-email small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.admin-inline-form {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-split--spaced {
+  margin-top: clamp(20px, 3vw, 36px);
+}
+
 .admin-link--danger {
   color: #b5003d;
 }

@@ -5,6 +5,7 @@ import Stripe from "stripe";
 import { FOUNDING_DEADLINE_LABEL, currentRate, regularRate } from "../shared/membership.js";
 import { clearCookie, createAuth, createRateLimiter, readCookie, safeEqual, setCookie } from "./lib/auth.js";
 import { mailConfigured, sendEmail } from "./lib/mailer.js";
+import { createMemberMail } from "./lib/member-mail.js";
 import { canUsePortal, directoryView, newMember, normalizeEmail, portalView } from "./lib/member-model.js";
 import { jsonStore } from "./lib/store.js";
 import { createStripeSync } from "./lib/stripe-sync.js";
@@ -46,7 +47,14 @@ export function createMembership(dataDir) {
   const auth = createAuth(dataDir);
   const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  const sync = stripe ? createStripeSync({ stripe, members, registrations, signups }) : null;
+  // One-off member emails and the automatic welcome email (see lib/member-mail.js).
+  const memberMail = createMemberMail(dataDir, {
+    members,
+    siteUrl: () => process.env.SITE_URL || "https://ladiesonthegreen.com"
+  });
+  const sync = stripe
+    ? createStripeSync({ stripe, members, registrations, signups, onActivated: memberMail.sendWelcomeIfDue })
+    : null;
   // Falls back to the magazine password so the dashboard works before a separate one is set.
   const adminPassword = process.env.ADMIN_PASSWORD || process.env.MAGAZINE_ADMIN_PASSWORD;
 
@@ -394,6 +402,7 @@ export function createMembership(dataDir) {
       if (body.status && !MEMBER_STATUSES.includes(body.status)) {
         return res.status(400).json({ ok: false, error: "Unknown status." });
       }
+      let newlyActive = false;
       const updated = await members.update((data) => {
         const m = data.members.find((x) => x.id === req.params.id);
         if (!m) return null;
@@ -402,7 +411,10 @@ export function createMembership(dataDir) {
           m.status = body.status;
           // Marking someone paid by hand (cash, check, comp) gives them a year.
           if (body.status === "active") {
-            if (!m.activatedAt) m.activatedAt = new Date().toISOString();
+            if (!m.activatedAt) {
+              m.activatedAt = new Date().toISOString();
+              newlyActive = true;
+            }
             if (!m.plan) m.plan = { amount: m.rateAtSignup || currentRate().amount, interval: "year" };
             if (!m.paidThrough || Date.parse(m.paidThrough) < Date.now()) {
               const until = new Date();
@@ -415,6 +427,7 @@ export function createMembership(dataDir) {
         return m;
       });
       if (!updated) return res.status(404).json({ ok: false, error: "Member not found." });
+      if (newlyActive) await memberMail.sendWelcomeIfDue(updated.id);
       res.json({ ok: true, member: updated });
     });
 
@@ -496,7 +509,8 @@ export function createMembership(dataDir) {
         data.signups = data.signups.filter((x) => x.id !== signup.id);
       });
       if (!added) return res.status(409).json({ ok: false, error: "That email is already a member." });
-      res.json({ ok: true, member });
+      const welcomed = await memberMail.sendWelcomeIfDue(member.id);
+      res.json({ ok: true, member, welcomed });
     });
 
     app.delete("/api/admin/signups/:id", requireAdmin, async (req, res) => {
@@ -505,6 +519,8 @@ export function createMembership(dataDir) {
       });
       res.json({ ok: true });
     });
+
+    memberMail.mountRoutes(app, requireAdmin);
 
     app.get("/api/admin/members.csv", requireAdmin, async (_req, res) => {
       const { members: list } = await members.read();

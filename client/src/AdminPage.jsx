@@ -113,6 +113,7 @@ function MembersTab() {
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [openId, setOpenId] = useState(null);
+  const [emailId, setEmailId] = useState(null);
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -187,11 +188,23 @@ function MembersTab() {
                     <td>{formatDate(m.registeredAt)}</td>
                     <td>{formatDate(m.paidThrough)}</td>
                     <td>
-                      <button type="button" className="admin-link" onClick={() => setOpenId(openId === m.id ? null : m.id)}>
-                        {openId === m.id ? "Close" : "Details"}
-                      </button>
+                      <div className="admin-actions">
+                        <button type="button" className="admin-link" onClick={() => setEmailId(emailId === m.id ? null : m.id)}>
+                          {emailId === m.id ? "Close email" : "Email"}
+                        </button>
+                        <button type="button" className="admin-link" onClick={() => setOpenId(openId === m.id ? null : m.id)}>
+                          {openId === m.id ? "Close" : "Details"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
+                  {emailId === m.id && (
+                    <tr className="admin-detail-row">
+                      <td colSpan={6}>
+                        <MemberEmail member={m} onSent={reload} />
+                      </td>
+                    </tr>
+                  )}
                   {openId === m.id && (
                     <tr className="admin-detail-row">
                       <td colSpan={6}>
@@ -215,6 +228,60 @@ function Stat({ label, value }) {
       <strong>{value}</strong>
       <span>{label}</span>
     </div>
+  );
+}
+
+function MemberEmail({ member, onSent }) {
+  const mail = useApi("/api/admin/mail");
+  const [from, setFrom] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState(`Hi ${(member.name || "").trim().split(/\s+/)[0] || "there"},\n\n`);
+  const [note, setNote] = useState({ error: "", message: "" });
+  const [busy, setBusy] = useState(false);
+
+  const senders = mail.data?.senders || [];
+  const sender = from || senders[0] || "";
+
+  async function send(event) {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      await api(`/api/admin/members/${member.id}/email`, { method: "POST", body: { from: sender, subject, message } });
+      setNote({ error: "", message: `Sent to ${member.email} from ${sender}.` });
+      setSubject("");
+      onSent();
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="member-email" onSubmit={send}>
+      <div className="admin-row">
+        <label>
+          From
+          <select value={sender} onChange={(e) => setFrom(e.target.value)}>
+            {senders.map((address) => (
+              <option key={address} value={address}>{address}</option>
+            ))}
+          </select>
+          <small>Replies go to this address. Add more sender addresses in Settings.</small>
+        </label>
+        <label>
+          To
+          <input value={`${member.name || ""} <${member.email}>`} readOnly />
+        </label>
+      </div>
+      <label>Subject<input value={subject} onChange={(e) => setSubject(e.target.value)} required maxLength={200} /></label>
+      <label>Message<textarea rows={8} value={message} onChange={(e) => setMessage(e.target.value)} required /></label>
+      <div className="member-detail__actions">
+        <button type="submit" className="button button--gold" disabled={busy || !sender}>{busy ? "Sending..." : "Send email"}</button>
+        {member.lastEmailedAt && <span className="admin-sub">Last emailed {formatDate(member.lastEmailedAt)}</span>}
+      </div>
+      <Notice {...note} />
+    </form>
   );
 }
 
@@ -750,6 +817,7 @@ function SettingsTab() {
   ];
 
   return (
+    <>
     <section className="admin-split">
       <div className="admin-card">
         <h2>Setup checklist</h2>
@@ -774,6 +842,120 @@ function SettingsTab() {
         {data.lastSyncAt && <p className="admin-sub">Last sync: {formatDate(data.lastSyncAt)}</p>}
         <Notice {...note} />
       </div>
+    </section>
+    <MailSettings />
+    </>
+  );
+}
+
+function MailSettings() {
+  const { data, error, reload } = useApi("/api/admin/mail");
+  const [newSender, setNewSender] = useState("");
+  const [welcome, setWelcome] = useState(null);
+  const [testTo, setTestTo] = useState("");
+  const [senderNote, setSenderNote] = useState({ error: "", message: "" });
+  const [welcomeNote, setWelcomeNote] = useState({ error: "", message: "" });
+
+  useEffect(() => {
+    if (data && !welcome) setWelcome(data.welcome);
+  }, [data, welcome]);
+
+  if (!data || !welcome) return <Notice error={error} message={error ? "" : "Loading email settings..."} />;
+
+  async function saveSenders(senders, message) {
+    try {
+      await api("/api/admin/mail", { method: "PUT", body: { senders } });
+      setSenderNote({ error: "", message });
+      setNewSender("");
+      reload();
+    } catch (err) {
+      setSenderNote({ error: err.message, message: "" });
+    }
+  }
+
+  function addSender(event) {
+    event.preventDefault();
+    const address = newSender.trim().toLowerCase();
+    if (address) saveSenders([...data.senders, address], `${address} added.`);
+  }
+
+  async function saveWelcome(event) {
+    event.preventDefault();
+    try {
+      const saved = await api("/api/admin/mail", { method: "PUT", body: { welcome } });
+      setWelcome(saved.welcome);
+      setWelcomeNote({
+        error: "",
+        message: saved.welcome.enabled ? "Saved. New members will get this email automatically." : "Saved. The welcome email is switched off."
+      });
+      reload();
+    } catch (err) {
+      setWelcomeNote({ error: err.message, message: "" });
+    }
+  }
+
+  async function sendTest() {
+    try {
+      await api("/api/admin/mail", { method: "PUT", body: { welcome } }); // test what is on screen
+      await api("/api/admin/mail/welcome-test", { method: "POST", body: { to: testTo } });
+      setWelcomeNote({ error: "", message: `Test sent to ${testTo}. It uses sample details ("Test Member").` });
+    } catch (err) {
+      setWelcomeNote({ error: err.message, message: "" });
+    }
+  }
+
+  const set = (key) => (e) => setWelcome({ ...welcome, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
+
+  return (
+    <section className="admin-split admin-split--spaced">
+      <div className="admin-card">
+        <h2>Sender addresses</h2>
+        <p>The addresses you can send member email from. {data.domain ? `They must end in @${data.domain}, and each should be a real inbox or forward so replies reach someone.` : ""}</p>
+        <ul className="admin-offers">
+          {data.senders.map((address) => (
+            <li key={address}>
+              <div><strong>{address}</strong>{address === data.defaultSender && <span className="admin-sub">The site's own address (sign-in links and reminders)</span>}</div>
+              {address !== data.defaultSender && (
+                <button type="button" className="admin-link admin-link--danger" onClick={() => saveSenders(data.senders.filter((a) => a !== address), `${address} removed.`)}>
+                  Remove
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+        <form className="admin-inline-form" onSubmit={addSender}>
+          <input type="email" value={newSender} onChange={(e) => setNewSender(e.target.value)} placeholder={data.domain ? `membership@${data.domain}` : "address@yourdomain.com"} aria-label="New sender address" required />
+          <button type="submit" className="button button--outline">Add</button>
+        </form>
+        <Notice {...senderNote} />
+      </div>
+
+      <form className="admin-card" onSubmit={saveWelcome}>
+        <h2>Welcome email</h2>
+        <p>Sent automatically, once, when someone becomes a paid member (through Stripe or &ldquo;Mark as paid&rdquo;).</p>
+        <label className="admin-check"><input type="checkbox" checked={welcome.enabled} onChange={set("enabled")} /> Send the welcome email to new members</label>
+        <label>
+          From
+          <select value={welcome.from} onChange={set("from")}>
+            {data.senders.map((address) => (
+              <option key={address} value={address}>{address}</option>
+            ))}
+          </select>
+        </label>
+        <label>Subject<input value={welcome.subject} onChange={set("subject")} required maxLength={200} /></label>
+        <label>Message<textarea rows={12} value={welcome.body} onChange={set("body")} required /></label>
+        <p className="admin-sub">
+          These are filled in for each member: {data.placeholders.map(([token, meaning]) => `${token} = ${meaning}`).join("; ")}.
+        </p>
+        <div className="member-detail__actions">
+          <button type="submit" className="button button--gold">Save</button>
+        </div>
+        <div className="admin-inline-form">
+          <input type="email" value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="Send a test to..." aria-label="Send a test to" />
+          <button type="button" className="button button--outline" onClick={sendTest} disabled={!testTo}>Send test</button>
+        </div>
+        <Notice {...welcomeNote} />
+      </form>
     </section>
   );
 }

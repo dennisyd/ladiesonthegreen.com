@@ -28,7 +28,9 @@ const invoiceSubscriptionId = (invoice) =>
 
 // `signups` (optional) holds Join-form submissions that haven't paid yet; a
 // payment turns the matching signup into the member record.
-export function createStripeSync({ stripe, members, registrations, signups }) {
+// `onActivated(memberId)` (optional) runs when a payment makes someone an active
+// member for the first time, e.g. to send the welcome email.
+export function createStripeSync({ stripe, members, registrations, signups, onActivated }) {
   const linkUrls = new Map(); // payment link id -> url
 
   async function paymentLinkUrl(id) {
@@ -87,8 +89,9 @@ export function createStripeSync({ stripe, members, registrations, signups }) {
         }
       }
 
+      const firstActivation = status === "active" && !member.activatedAt;
       if (status) {
-        if (status === "active" && !member.activatedAt) member.activatedAt = iso(sub.start_date) || new Date().toISOString();
+        if (firstActivation) member.activatedAt = iso(sub.start_date) || new Date().toISOString();
         member.status = status;
       }
       member.stripeCustomerId = customerId;
@@ -107,13 +110,14 @@ export function createStripeSync({ stripe, members, registrations, signups }) {
         member.lastPaymentAmount = payment.amount;
       }
       member.updatedAt = new Date().toISOString();
-      return { id: member.id, status: member.status };
+      return { id: member.id, status: member.status, firstActivation };
     });
     if (result && signup) {
       await signups.update((data) => {
         data.signups = data.signups.filter((x) => x.email !== customerEmail);
       });
     }
+    if (result?.firstActivation && onActivated) await onActivated(result.id);
     return result;
   }
 
