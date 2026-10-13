@@ -108,7 +108,7 @@ function Portal({ member, onMemberChange, onSignOut }) {
               <p className="portal-warning">Your last payment didn&rsquo;t go through. Update your card to keep your membership.</p>
             ) : (
               <p className="portal-status-line">
-                {member.plan ? `${formatMoney(member.plan.amount)} / ${member.plan.interval || "year"}` : "Active member"}
+                {member.plan && member.plan.amount > 0 ? `${formatMoney(member.plan.amount)} / ${member.plan.interval || "year"}` : "Active member"}
               </p>
             )}
             {member.paidThrough && (

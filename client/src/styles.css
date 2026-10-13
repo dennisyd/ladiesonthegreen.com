@@ -1925,6 +1925,7 @@ textarea:focus {
 .admin-card textarea,
 .member-detail textarea,
 .member-detail select,
+.member-detail input,
 .admin-toolbar input {
   border: 1px solid var(--line);
   border-radius: 10px;

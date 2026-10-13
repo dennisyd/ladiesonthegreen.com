@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { currentRate } from "../../shared/membership.js";
 import { api, formatDate, formatMoney, statusLabels } from "./api.js";
 
 import ShopCatalogAdmin from "./ShopCatalogAdmin.jsx";
@@ -140,7 +141,7 @@ function MembersTab() {
         <Stat label="Active members" value={stats.active} />
         <Stat label="Started, not paid (see Follow-ups)" value={stats.unpaidSignups} />
         <Stat label="Past due" value={stats.pastDue} />
-        <Stat label="Annual revenue" value={formatMoney(stats.annualRevenue)} />
+        <Stat label="Annual revenue (paid members)" value={formatMoney(stats.annualRevenue)} />
         <Stat label="Renewing in 30 days" value={stats.renewingSoon} />
       </div>
 
@@ -190,7 +191,7 @@ function MembersTab() {
                       <StatusBadge status={m.status} />
                       {m.cancelAtPeriodEnd && <span className="admin-sub">Cancels at renewal</span>}
                     </td>
-                    <td>{m.plan ? `${formatMoney(m.plan.amount)}/${m.plan.interval || "year"}` : "—"}</td>
+                    <td>{m.plan ? (m.plan.amount === 0 ? "Complimentary" : `${formatMoney(m.plan.amount)}/${m.plan.interval || "year"}`) : "—"}</td>
                     <td>{formatDate(m.registeredAt)}</td>
                     <td>{formatDate(m.paidThrough)}</td>
                     <td>
@@ -238,7 +239,7 @@ function Stat({ label, value }) {
 }
 
 function AddMember({ onAdded }) {
-  const empty = { name: "", email: "", phone: "", notes: "" };
+  const empty = { name: "", email: "", phone: "", notes: "", amount: String(currentRate().amount) };
   const [form, setForm] = useState(empty);
   const [note, setNote] = useState({ error: "", message: "" });
   const [busy, setBusy] = useState(false);
@@ -271,9 +272,14 @@ function AddMember({ onAdded }) {
         <label>Email<input type="email" value={form.email} onChange={set("email")} required /></label>
       </div>
       <div className="admin-row">
+        <label>
+          Amount paid for the year ($)
+          <input type="number" min="0" step="0.01" value={form.amount} onChange={set("amount")} required />
+          <small>Enter 0 for a free (complimentary) membership. Free memberships are not counted in revenue.</small>
+        </label>
         <label>Phone (optional)<input value={form.phone} onChange={set("phone")} maxLength={40} /></label>
-        <label>Note (optional, only admins see it)<input value={form.notes} onChange={set("notes")} placeholder="Paid $99 by check on..." /></label>
       </div>
+      <label>Note (optional, only admins see it)<input value={form.notes} onChange={set("notes")} placeholder="Paid by check on... / Gifted by..." /></label>
       <div className="member-detail__actions">
         <button type="submit" className="button button--gold" disabled={busy}>{busy ? "Adding..." : "Add member"}</button>
       </div>
@@ -339,11 +345,13 @@ function MemberEmail({ member, onSent }) {
 function MemberDetail({ member, onChanged }) {
   const [notes, setNotes] = useState(member.notes || "");
   const [status, setStatus] = useState(member.status);
+  const [amount, setAmount] = useState(member.plan ? String(member.plan.amount) : "");
   const [note, setNote] = useState({ error: "", message: "" });
+  const stripeBilled = Boolean(member.stripeSubscriptionId);
 
   async function save() {
     try {
-      await api(`/api/admin/members/${member.id}`, { method: "PATCH", body: { notes, status } });
+      await api(`/api/admin/members/${member.id}`, { method: "PATCH", body: { notes, status, ...(stripeBilled ? {} : { planAmount: amount }) } });
       setNote({ error: "", message: "Saved." });
       onChanged();
     } catch (err) {
@@ -391,6 +399,13 @@ function MemberDetail({ member, onChanged }) {
           </select>
           <small>Stripe updates this automatically. Change it by hand only to correct a mistake or for cash/check renewals (marking Active gives one year).</small>
         </label>
+        {!stripeBilled && (
+          <label>
+            Amount paid for the year ($)
+            <input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <small>Enter 0 for a free (complimentary) membership so it is not counted in revenue.</small>
+          </label>
+        )}
         <div className="member-detail__actions">
           <button type="button" className="button button--gold" onClick={save}>Save</button>
           <button type="button" className="admin-link admin-link--danger" onClick={remove}>Delete member</button>

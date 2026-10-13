@@ -409,6 +409,11 @@ export function createMembership(dataDir) {
       if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
         return res.status(400).json({ ok: false, error: "Enter the member's name and a valid email address." });
       }
+      // What she actually paid for the year; 0 for a complimentary membership.
+      const amount = body.amount === undefined || body.amount === "" ? currentRate().amount : Number(body.amount);
+      if (!(amount >= 0) || amount > 100000) {
+        return res.status(400).json({ ok: false, error: "Enter the amount paid as a number (0 for a free membership)." });
+      }
       const now = new Date();
       const until = new Date(now);
       until.setFullYear(until.getFullYear() + 1);
@@ -422,7 +427,7 @@ export function createMembership(dataDir) {
         source: "manual",
         activatedAt: now.toISOString(),
         paidThrough: until.toISOString(),
-        plan: { amount: signup?.rateAtSignup || currentRate().amount, interval: "year" },
+        plan: { amount, interval: "year" },
         notes: clean(body.notes, 4000),
         updatedAt: now.toISOString()
       };
@@ -446,11 +451,18 @@ export function createMembership(dataDir) {
       if (body.status && !MEMBER_STATUSES.includes(body.status)) {
         return res.status(400).json({ ok: false, error: "Unknown status." });
       }
+      const hasAmount = body.planAmount !== undefined && body.planAmount !== "";
+      const planAmount = Number(body.planAmount);
+      if (hasAmount && (!(planAmount >= 0) || planAmount > 100000)) {
+        return res.status(400).json({ ok: false, error: "Enter the amount paid as a number (0 for a free membership)." });
+      }
       let newlyActive = false;
       const updated = await members.update((data) => {
         const m = data.members.find((x) => x.id === req.params.id);
         if (!m) return null;
         if (typeof body.notes === "string") m.notes = clean(body.notes, 4000);
+        // Stripe sets the amount for card-paying members; only hand-managed ones can be edited.
+        if (hasAmount && !m.stripeSubscriptionId) m.plan = { amount: planAmount, interval: m.plan?.interval || "year" };
         if (body.status && body.status !== m.status) {
           m.status = body.status;
           // Marking someone paid by hand (cash, check, comp) gives them a year.
@@ -576,7 +588,7 @@ export function createMembership(dataDir) {
           { label: "Email", value: (m) => m.email },
           { label: "Phone", value: (m) => m.phone },
           { label: "Status", value: (m) => m.status },
-          { label: "Plan", value: (m) => (m.plan ? `$${m.plan.amount}/${m.plan.interval || "year"}` : "") },
+          { label: "Plan", value: (m) => (m.plan ? (m.plan.amount === 0 ? "Complimentary" : `$${m.plan.amount}/${m.plan.interval || "year"}`) : "") },
           { label: "Registered", value: (m) => m.registeredAt?.slice(0, 10) },
           { label: "Activated", value: (m) => m.activatedAt?.slice(0, 10) },
           { label: "Paid through", value: (m) => m.paidThrough?.slice(0, 10) },
