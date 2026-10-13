@@ -397,6 +397,47 @@ export function createMembership(dataDir) {
       });
     });
 
+    // Add someone who paid outside Stripe (cash, check, comp) straight in as an
+    // active member for one year. Sends the welcome email if it is switched on.
+    app.post("/api/admin/members", requireAdmin, async (req, res) => {
+      const body = req.body || {};
+      const email = normalizeEmail(body.email);
+      const name = clean(body.name, 120);
+      if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        return res.status(400).json({ ok: false, error: "Enter the member's name and a valid email address." });
+      }
+      const now = new Date();
+      const until = new Date(now);
+      until.setFullYear(until.getFullYear() + 1);
+      // If she started the Join form earlier, keep the details she entered there.
+      const signup = (await readSignups()).find((x) => x.email === email);
+      const member = {
+        ...(signup || newMember({ email, name, rateAtSignup: currentRate().amount })),
+        name,
+        phone: clean(body.phone, 40) || signup?.phone || "",
+        status: "active",
+        source: "manual",
+        activatedAt: now.toISOString(),
+        paidThrough: until.toISOString(),
+        plan: { amount: signup?.rateAtSignup || currentRate().amount, interval: "year" },
+        notes: clean(body.notes, 4000),
+        updatedAt: now.toISOString()
+      };
+      const added = await members.update((data) => {
+        if (data.members.some((m) => m.email === email)) return false;
+        data.members.push(member);
+        return true;
+      });
+      if (!added) return res.status(409).json({ ok: false, error: "That email already belongs to a member." });
+      if (signup) {
+        await signups.update((data) => {
+          data.signups = data.signups.filter((x) => x.email !== email);
+        });
+      }
+      const welcomed = await memberMail.sendWelcomeIfDue(member.id);
+      res.json({ ok: true, member, welcomed });
+    });
+
     app.patch("/api/admin/members/:id", requireAdmin, async (req, res) => {
       const body = req.body || {};
       if (body.status && !MEMBER_STATUSES.includes(body.status)) {

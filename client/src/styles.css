@@ -2064,6 +2064,15 @@ textarea:focus {
   margin-top: clamp(20px, 3vw, 36px);
 }
 
+.button--compact {
+  min-height: 44px;
+  padding: 0 20px;
+}
+
+.admin-card--inline {
+  margin-bottom: 20px;
+}
+
 .admin-link--danger {
   color: #b5003d;
 }

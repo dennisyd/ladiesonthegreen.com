@@ -114,6 +114,7 @@ function MembersTab() {
   const [query, setQuery] = useState("");
   const [openId, setOpenId] = useState(null);
   const [emailId, setEmailId] = useState(null);
+  const [adding, setAdding] = useState(false);
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -153,7 +154,12 @@ function MembersTab() {
         </div>
         <input type="search" placeholder="Search name, email, city" value={query} onChange={(e) => setQuery(e.target.value)} />
         <a className="button button--outline" href="/api/admin/members.csv">Export CSV</a>
+        <button type="button" className="button button--gold button--compact" onClick={() => setAdding(!adding)}>
+          {adding ? "Close" : "Add member"}
+        </button>
       </div>
+
+      {adding && <AddMember onAdded={reload} />}
 
       {list.length === 0 ? (
         <p className="admin-empty">
@@ -228,6 +234,51 @@ function Stat({ label, value }) {
       <strong>{value}</strong>
       <span>{label}</span>
     </div>
+  );
+}
+
+function AddMember({ onAdded }) {
+  const empty = { name: "", email: "", phone: "", notes: "" };
+  const [form, setForm] = useState(empty);
+  const [note, setNote] = useState({ error: "", message: "" });
+  const [busy, setBusy] = useState(false);
+  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+
+  async function submit(event) {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      const { member, welcomed } = await api("/api/admin/members", { method: "POST", body: form });
+      setNote({
+        error: "",
+        message: `${member.name} is now an active member through ${formatDate(member.paidThrough)}. ${welcomed ? "The welcome email was sent." : "No welcome email was sent (it is switched off in Settings)."}`
+      });
+      setForm(empty);
+      onAdded();
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="admin-card admin-card--inline" onSubmit={submit}>
+      <h2>Add a paid member</h2>
+      <p className="admin-sub">For someone who paid you directly (cash, check) or a gifted membership. She becomes an active member for one year right away, and gets the welcome email if it is switched on in Settings. Members who pay through the Join page are added automatically.</p>
+      <div className="admin-row">
+        <label>Full name<input value={form.name} onChange={set("name")} required maxLength={120} /></label>
+        <label>Email<input type="email" value={form.email} onChange={set("email")} required /></label>
+      </div>
+      <div className="admin-row">
+        <label>Phone (optional)<input value={form.phone} onChange={set("phone")} maxLength={40} /></label>
+        <label>Note (optional, only admins see it)<input value={form.notes} onChange={set("notes")} placeholder="Paid $99 by check on..." /></label>
+      </div>
+      <div className="member-detail__actions">
+        <button type="submit" className="button button--gold" disabled={busy}>{busy ? "Adding..." : "Add member"}</button>
+      </div>
+      <Notice {...note} />
+    </form>
   );
 }
 
