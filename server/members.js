@@ -5,8 +5,9 @@ import Stripe from "stripe";
 import { FOUNDING_DEADLINE_LABEL, currentRate, regularRate } from "../shared/membership.js";
 import { clearCookie, createAuth, createRateLimiter, readCookie, safeEqual, setCookie } from "./lib/auth.js";
 import { checkMailLogin, mailConfigured, sendEmail } from "./lib/mailer.js";
+import { createMemberEvents } from "./lib/member-events.js";
 import { createMemberMail } from "./lib/member-mail.js";
-import { canUsePortal, directoryView, newMember, normalizeEmail, portalView } from "./lib/member-model.js";
+import { canUsePortal, newMember, normalizeEmail, portalView } from "./lib/member-model.js";
 import { jsonStore } from "./lib/store.js";
 import { createStripeSync } from "./lib/stripe-sync.js";
 
@@ -18,7 +19,7 @@ const SIGN_IN_LINK_SECONDS = 30 * 60;
 const MEMBER_STATUSES = ["active", "past_due", "canceled"];
 const SIGNUP_KEEP_DAYS = 30; // unfinished signups are deleted after this long
 const CONTACT_FIELDS = ["name", "phone", "address", "address2", "city", "state", "zip", "country"];
-const OFFER_CATEGORIES = ["Offer", "Discount code", "Event"];
+const OFFER_CATEGORIES = ["Offer", "Discount code"]; // events have their own list (lib/member-events.js)
 
 const firstName = (name) => String(name || "").trim().split(/\s+/)[0] || "there";
 const clean = (value, max = 500) => String(value ?? "").trim().slice(0, max);
@@ -52,6 +53,8 @@ export function createMembership(dataDir) {
     members,
     siteUrl: () => process.env.SITE_URL || "https://ladiesonthegreen.com"
   });
+  // Events shown in the portal, managed in /admin → Portal events.
+  const memberEvents = createMemberEvents(dataDir, { requireAdmin, requireMember });
   const sync = stripe
     ? createStripeSync({ stripe, members, registrations, signups, onActivated: memberMail.sendWelcomeIfDue })
     : null;
@@ -84,6 +87,10 @@ export function createMembership(dataDir) {
   // Runs once at startup: earlier versions stored unpaid sign-ups in the member
   // list as "registered". Move them to the signups list so only paid people are members.
   async function init() {
+    // Events used to be a type of offer; they now have their own list.
+    const movedEvents = await memberEvents.importFromOffers(offers);
+    if (movedEvents) console.log(`Moved ${movedEvents} event(s) from offers to portal events.`);
+
     const { members: list } = await members.read();
     const unpaid = list.filter((m) => m.status === "registered");
     if (!unpaid.length) return;
@@ -284,46 +291,14 @@ export function createMembership(dataDir) {
       res.json({ ok: true, member: portalView(req.member) });
     });
 
-    app.put("/api/members/me/directory", requireMember, async (req, res) => {
-      const body = req.body || {};
-      const linkedin = clean(body.linkedin, 300);
-      if (linkedin && !isHttpUrl(linkedin)) {
-        return res.status(400).json({ ok: false, error: "LinkedIn should be a full link starting with https://" });
-      }
-      const directory = {
-        optIn: Boolean(body.optIn),
-        headline: clean(body.headline, 120),
-        company: clean(body.company, 120),
-        location: clean(body.location, 120),
-        linkedin,
-        showEmail: Boolean(body.showEmail)
-      };
-      await members.update((data) => {
-        const m = data.members.find((x) => x.id === req.member.id);
-        if (m) m.directory = directory;
-      });
-      res.json({ ok: true, directory });
-    });
-
     app.get("/api/members/offers", requireMember, async (_req, res) => {
       const today = new Date().toISOString().slice(0, 10);
       const { offers: list } = await offers.read();
       res.json({
         ok: true,
         offers: list
-          .filter((o) => o.active && (!o.expiresOn || o.expiresOn >= today))
+          .filter((o) => o.category !== "Event" && o.active && (!o.expiresOn || o.expiresOn >= today))
           .sort((a, b) => (a.eventDate || a.createdAt).localeCompare(b.eventDate || b.createdAt))
-      });
-    });
-
-    app.get("/api/members/directory", requireMember, async (_req, res) => {
-      const { members: list } = await members.read();
-      res.json({
-        ok: true,
-        members: list
-          .filter((m) => canUsePortal(m) && m.directory?.optIn)
-          .map(directoryView)
-          .sort((a, b) => a.name.localeCompare(b.name))
       });
     });
 
@@ -577,6 +552,7 @@ export function createMembership(dataDir) {
     });
 
     memberMail.mountRoutes(app, requireAdmin);
+    memberEvents.mountRoutes(app);
 
     app.get("/api/admin/members.csv", requireAdmin, async (_req, res) => {
       const { members: list } = await members.read();

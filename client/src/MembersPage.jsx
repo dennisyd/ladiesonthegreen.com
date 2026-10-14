@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api, formatDate, formatMoney } from "./api.js";
+import { EventCard } from "./EventCard.jsx";
 
 export default function MembersPage() {
   const [member, setMember] = useState(undefined); // undefined = checking, null = signed out
@@ -16,7 +17,7 @@ export default function MembersPage() {
 
   if (member === undefined) return <div className="page-loading">Loading...</div>;
   if (!member) return <MemberSignIn />;
-  return <Portal member={member} onMemberChange={setMember} onSignOut={signOut} />;
+  return <Portal member={member} onSignOut={signOut} />;
 }
 
 function MemberSignIn() {
@@ -61,12 +62,14 @@ function MemberSignIn() {
   );
 }
 
-function Portal({ member, onMemberChange, onSignOut }) {
+function Portal({ member, onSignOut }) {
   const [offers, setOffers] = useState(null);
+  const [events, setEvents] = useState(null);
   const [billingError, setBillingError] = useState("");
 
   useEffect(() => {
     api("/api/members/offers").then((d) => setOffers(d.offers), () => setOffers([]));
+    api("/api/members/events").then((d) => setEvents(d.events), () => setEvents([]));
   }, []);
 
   async function openBilling() {
@@ -79,8 +82,7 @@ function Portal({ member, onMemberChange, onSignOut }) {
     }
   }
 
-  const events = (offers || []).filter((o) => o.category === "Event");
-  const perks = (offers || []).filter((o) => o.category !== "Event");
+  const perks = offers || [];
   const first = member.name.split(/\s+/)[0] || "member";
 
   return (
@@ -88,9 +90,8 @@ function Portal({ member, onMemberChange, onSignOut }) {
       <header className="portal-bar">
         <a href="/" className="admin-bar__brand"><img src="/ladiesonthegreen.png" alt="Ladies On The Green home" /></a>
         <nav>
-          <a href="#offers">Offers</a>
           <a href="#events">Events</a>
-          <a href="#directory">Directory</a>
+          <a href="#offers">Offers</a>
           <button type="button" className="admin-link" onClick={onSignOut}>Sign out</button>
         </nav>
       </header>
@@ -100,7 +101,7 @@ function Portal({ member, onMemberChange, onSignOut }) {
           <div>
             <span className="section-kicker">Member Portal</span>
             <h1>Welcome back, {first}.</h1>
-            <p>Your offers, member events, and the women of Ladies On The Green, all in one place.</p>
+            <p>Your upcoming member events and exclusive offers, all in one place.</p>
           </div>
           <div className="portal-card portal-card--status">
             <span className="section-kicker">Founding Membership</span>
@@ -121,6 +122,19 @@ function Portal({ member, onMemberChange, onSignOut }) {
           </div>
         </section>
 
+        <section id="events" className="portal-section">
+          <h2>Upcoming events</h2>
+          {events === null && <p>Loading...</p>}
+          {events && events.length === 0 && (
+            <p className="admin-empty">No upcoming events right now. We&rsquo;ll let you know as soon as the next one is announced.</p>
+          )}
+          <div className="event-list">
+            {events?.map((event, index) => (
+              <EventCard key={event.id} event={event} featured={index === 0} />
+            ))}
+          </div>
+        </section>
+
         <section id="offers" className="portal-section">
           <h2>Member offers</h2>
           {offers === null && <p>Loading...</p>}
@@ -129,16 +143,6 @@ function Portal({ member, onMemberChange, onSignOut }) {
             {perks.map((o) => <OfferCard key={o.id} offer={o} />)}
           </div>
         </section>
-
-        <section id="events" className="portal-section">
-          <h2>Member events</h2>
-          {offers && events.length === 0 && <p className="admin-empty">No member events scheduled yet. We&rsquo;ll email you when one opens.</p>}
-          <div className="portal-grid">
-            {events.map((o) => <OfferCard key={o.id} offer={o} />)}
-          </div>
-        </section>
-
-        <Directory member={member} onMemberChange={onMemberChange} />
       </main>
     </div>
   );
@@ -161,8 +165,7 @@ function OfferCard({ offer }) {
     <article className="portal-card">
       <span className="admin-sub">
         {offer.category}
-        {offer.eventDate ? ` · ${formatDate(offer.eventDate + "T12:00")}` : ""}
-        {offer.expiresOn && offer.category !== "Event" ? ` · until ${formatDate(offer.expiresOn + "T12:00")}` : ""}
+        {offer.expiresOn ? ` · until ${formatDate(offer.expiresOn + "T12:00")}` : ""}
       </span>
       <h3>{offer.title}</h3>
       {offer.description && <p>{offer.description}</p>}
@@ -174,81 +177,9 @@ function OfferCard({ offer }) {
       )}
       {offer.link && (
         <a className="text-link" href={offer.link} target="_blank" rel="noopener noreferrer">
-          {offer.category === "Event" ? "Details & RSVP ↗" : "Redeem ↗"}
+          Redeem ↗
         </a>
       )}
     </article>
-  );
-}
-
-function Directory({ member, onMemberChange }) {
-  const [people, setPeople] = useState(null);
-  const [form, setForm] = useState(member.directory);
-  const [editing, setEditing] = useState(false);
-  const [note, setNote] = useState({ status: "idle", message: "" });
-
-  const load = () => api("/api/members/directory").then((d) => setPeople(d.members), () => setPeople([]));
-  useEffect(() => { load(); }, []);
-
-  const set = (key) => (e) => setForm({ ...form, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
-
-  async function save(event) {
-    event.preventDefault();
-    try {
-      const { directory } = await api("/api/members/me/directory", { method: "PUT", body: form });
-      onMemberChange({ ...member, directory });
-      setNote({ status: "success", message: directory.optIn ? "Your listing is live." : "Saved. You're not listed in the directory." });
-      setEditing(false);
-      load();
-    } catch (err) {
-      setNote({ status: "error", message: err.message });
-    }
-  }
-
-  return (
-    <section id="directory" className="portal-section">
-      <div className="admin-section-head">
-        <div>
-          <h2>Member directory</h2>
-          <p>Connect with members who have chosen to share their details. Only members can see this.</p>
-        </div>
-        <button type="button" className="button button--outline" onClick={() => setEditing(!editing)}>
-          {editing ? "Close" : member.directory?.optIn ? "Edit my listing" : "Add me to the directory"}
-        </button>
-      </div>
-
-      {editing && (
-        <form className="admin-card portal-listing-form" onSubmit={save}>
-          <label className="admin-check"><input type="checkbox" checked={form.optIn} onChange={set("optIn")} /> List me in the member directory</label>
-          <div className="admin-row">
-            <label>Title or profession<input value={form.headline} onChange={set("headline")} maxLength={120} placeholder="Attorney, Realtor, Founder..." /></label>
-            <label>Company<input value={form.company} onChange={set("company")} maxLength={120} /></label>
-          </div>
-          <div className="admin-row">
-            <label>Location<input value={form.location} onChange={set("location")} maxLength={120} placeholder="Bowie, MD" /></label>
-            <label>LinkedIn<input value={form.linkedin} onChange={set("linkedin")} placeholder="https://linkedin.com/in/..." /></label>
-          </div>
-          <label className="admin-check"><input type="checkbox" checked={form.showEmail} onChange={set("showEmail")} /> Show my email to other members</label>
-          <button className="button button--gold" type="submit">Save</button>
-        </form>
-      )}
-      {note.message && <p className={`form-status form-status--${note.status}`} role="status">{note.message}</p>}
-
-      {people === null && <p>Loading...</p>}
-      {people && people.length === 0 && <p className="admin-empty">No one is listed yet. Be the first!</p>}
-      <div className="portal-grid portal-grid--people">
-        {people?.map((p) => (
-          <article key={p.id} className="portal-card portal-person">
-            <h3>{p.name}</h3>
-            {(p.headline || p.company) && <p>{[p.headline, p.company].filter(Boolean).join(" · ")}</p>}
-            {p.location && <span className="admin-sub">{p.location}</span>}
-            <div className="portal-person__links">
-              {p.linkedin && <a href={p.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>}
-              {p.email && <a href={`mailto:${p.email}`}>{p.email}</a>}
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
   );
 }

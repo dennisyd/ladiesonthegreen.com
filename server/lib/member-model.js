@@ -29,7 +29,6 @@ export function newMember(fields, nowIso = new Date().toISOString()) {
     lastPaymentAmount: null,
     reminders: { count: 0, lastAt: null },
     notes: "",
-    directory: { optIn: false, headline: "", company: "", location: "", linkedin: "", showEmail: false },
     lastLoginAt: null,
     updatedAt: nowIso
   };
@@ -53,21 +52,6 @@ export function portalView(member) {
     paidThrough: member.paidThrough,
     cancelAtPeriodEnd: member.cancelAtPeriodEnd,
     activatedAt: member.activatedAt,
-    hasBilling: Boolean(member.stripeCustomerId),
-    directory: member.directory
-  };
-}
-
-// What other members see in the directory: only what the member opted to share.
-export function directoryView(member) {
-  const d = member.directory || {};
-  return {
-    id: member.id,
-    name: member.name,
-    headline: d.headline || "",
-    company: d.company || "",
-    location: d.location || [member.city, member.state].filter(Boolean).join(", "),
-    linkedin: d.linkedin || "",
-    email: d.showEmail ? member.email : ""
+    hasBilling: Boolean(member.stripeCustomerId)
   };
 }

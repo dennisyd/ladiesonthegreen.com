@@ -60,7 +60,9 @@ Uploaded PDFs are stored on disk at `server/uploads/magazine/` (gitignored) with
 
 - `/join` — Founding Membership sign-up. Filling in the form does **not** create a member: the details wait in `server/data/signups.json` and the visitor is sent to the Stripe Payment Link for the current price. Only a confirmed payment creates the member (carrying over the form details). Unfinished sign-ups show in `/admin` → Follow-ups, where they can be reminded, marked as paid by hand (cash/check), or deleted; they expire on their own after 30 days. Prices, the founding-rate deadline, and the Payment Links live in `shared/membership.js` (used by both the client and the server).
 - `/admin` — password-protected dashboard: member list with payment status, CSV export, follow-up reminders for people who registered but didn't pay, event ticket registrations, member offers, announcement emails, and a Stripe sync.
-- `/members` — member portal. Members sign in with a one-time link emailed to them (no passwords). Only active (or past-due, so they can fix their card) members get in. Shows their membership, offers and discount codes, member events, the opt-in member directory, and a "Manage billing" button (Stripe's customer portal).
+- `/members` — member portal. Members sign in with a one-time link emailed to them (no passwords). Only active (or past-due, so they can fix their card) members get in. Shows their membership, upcoming member events, offers and discount codes, and a "Manage billing" button (Stripe's customer portal).
+- **Portal events** — managed in `/admin` → Portal events (stored in `server/data/events.json`, photos in `server/uploads/events/`). Each event has a date, optional time, location, description, photo and RSVP link, with a live preview. Events show to members until their date passes; **Archive** hides one but keeps it (Restore brings it back), **Delete** removes it for good.
+- **Welcome email for existing members** — `/admin` → Settings lists active members who haven't been sent the welcome email yet; tick who should get it and send. Individual members can be sent or re-sent it from Members → Details.
 
 ### Member email
 

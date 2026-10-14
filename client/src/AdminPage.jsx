@@ -2,9 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { currentRate } from "../../shared/membership.js";
 import { api, formatDate, formatMoney, statusLabels } from "./api.js";
 
+import { EventCard, formatEventTime, parseEventDate } from "./EventCard.jsx";
 import ShopCatalogAdmin from "./ShopCatalogAdmin.jsx";
 
-const tabs = ["Members", "Follow-ups", "Events", "Shop", "Offers", "Announcements", "Settings"];
+const tabs = ["Members", "Follow-ups", "Portal events", "Event tickets", "Shop", "Offers", "Announcements", "Settings"];
 
 export default function AdminPage() {
   const [signedIn, setSignedIn] = useState(null); // null = checking
@@ -42,7 +43,8 @@ export default function AdminPage() {
       <main className="admin-main">
         {tab === "Members" && <MembersTab />}
         {tab === "Follow-ups" && <FollowUpsTab />}
-        {tab === "Events" && <EventsTab />}
+        {tab === "Portal events" && <PortalEventsTab />}
+        {tab === "Event tickets" && <EventsTab />}
         {tab === "Shop" && <ShopTab />}
         {tab === "Offers" && <OffersTab />}
         {tab === "Announcements" && <AnnouncementsTab />}
@@ -349,6 +351,18 @@ function MemberDetail({ member, onChanged }) {
   const [note, setNote] = useState({ error: "", message: "" });
   const stripeBilled = Boolean(member.stripeSubscriptionId);
 
+  async function sendWelcome() {
+    const resend = Boolean(member.welcomeSentAt);
+    if (resend && !window.confirm(`${member.email} was already sent the welcome email on ${formatDate(member.welcomeSentAt)}. Send it again?`)) return;
+    try {
+      await api(`/api/admin/members/${member.id}/welcome`, { method: "POST", body: { resend } });
+      setNote({ error: "", message: `Welcome email sent to ${member.email}.` });
+      onChanged();
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    }
+  }
+
   async function save() {
     try {
       await api(`/api/admin/members/${member.id}`, { method: "PATCH", body: { notes, status, ...(stripeBilled ? {} : { planAmount: amount }) } });
@@ -383,6 +397,7 @@ function MemberDetail({ member, onChanged }) {
         <dt>Last payment</dt><dd>{member.lastPaymentAt ? `${formatMoney(member.lastPaymentAmount)} on ${formatDate(member.lastPaymentAt)}` : "—"}</dd>
         <dt>Reminders sent</dt><dd>{member.reminders?.count || 0}{member.reminders?.lastAt ? ` (last ${formatDate(member.reminders.lastAt)})` : ""}</dd>
         <dt>Last portal sign-in</dt><dd>{formatDate(member.lastLoginAt)}</dd>
+        <dt>Welcome email</dt><dd>{member.welcomeSentAt ? `Sent ${formatDate(member.welcomeSentAt)}` : "Not sent"}</dd>
         <dt>Came from</dt><dd>{{ stripe: "Paid on Stripe (no Join form)", manual: "Marked paid by an admin" }[member.source] || "Join form, then paid"}</dd>
       </dl>
       <div className="member-detail__edit">
@@ -408,6 +423,11 @@ function MemberDetail({ member, onChanged }) {
         )}
         <div className="member-detail__actions">
           <button type="button" className="button button--gold" onClick={save}>Save</button>
+          {member.status === "active" && (
+            <button type="button" className="admin-link" onClick={sendWelcome}>
+              {member.welcomeSentAt ? "Resend welcome email" : "Send welcome email"}
+            </button>
+          )}
           <button type="button" className="admin-link admin-link--danger" onClick={remove}>Delete member</button>
         </div>
         <Notice {...note} />
@@ -691,6 +711,242 @@ function StockRow({ product, onSave }) {
   );
 }
 
+// ---------------------------------------------------------------- Portal events
+
+const emptyEvent = { title: "", date: "", startTime: "", endTime: "", location: "", description: "", link: "", linkLabel: "", image: "" };
+
+function PortalEventsTab() {
+  const { data, error, reload } = useApi("/api/admin/events");
+  const [form, setForm] = useState(null); // null = editor closed
+  const [editingId, setEditingId] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState({ error: "", message: "" });
+
+  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+
+  function openNew(from = emptyEvent) {
+    setEditingId(null);
+    setForm({ ...from });
+    setNote({ error: "", message: "" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function edit(event) {
+    setEditingId(event.id);
+    setForm({ ...emptyEvent, ...event });
+    setNote({ error: "", message: "" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  const duplicate = (event) => openNew({ ...emptyEvent, ...event, date: "", id: undefined, status: undefined });
+
+  function closeEditor() {
+    setForm(null);
+    setEditingId(null);
+  }
+
+  async function save(e) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await api(editingId ? `/api/admin/events/${editingId}` : "/api/admin/events", { method: editingId ? "PUT" : "POST", body: form });
+      setNote({ error: "", message: editingId ? "Event updated." : "Event added. It is showing in the member portal now." });
+      closeEditor();
+      reload();
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function setStatus(event, status) {
+    try {
+      await api(`/api/admin/events/${event.id}/status`, { method: "PATCH", body: { status } });
+      setNote({
+        error: "",
+        message: status === "archived" ? `"${event.title}" is archived and no longer shown to members.` : `"${event.title}" is showing in the portal again.`
+      });
+      reload();
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    }
+  }
+
+  async function remove(event) {
+    if (!window.confirm(`Delete "${event.title}" permanently? This can't be undone. To just hide it, use Archive instead.`)) return;
+    try {
+      await api(`/api/admin/events/${event.id}`, { method: "DELETE" });
+      if (editingId === event.id) closeEditor();
+      setNote({ error: "", message: `"${event.title}" was deleted.` });
+      reload();
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    }
+  }
+
+  async function uploadImage(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setBusy(true);
+    try {
+      const body = new FormData();
+      body.append("image", file);
+      const res = await fetch("/api/admin/events/image", { method: "POST", body, credentials: "same-origin" });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.error || "The photo could not be uploaded.");
+      setForm((f) => ({ ...f, image: result.image }));
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!data) return <Notice error={error} message={error ? "" : "Loading..."} />;
+
+  const today = data.today;
+  const showing = data.events.filter((e) => e.status === "published" && e.date && e.date >= today);
+  const past = data.events.filter((e) => e.status === "published" && (!e.date || e.date < today));
+  const archived = data.events.filter((e) => e.status === "archived");
+
+  const Row = ({ event, actions }) => {
+    const date = parseEventDate(event.date);
+    const time = formatEventTime(event.startTime, event.endTime);
+    return (
+      <li className="event-row">
+        <div className="event-row__date">
+          <span>{date ? date.toLocaleDateString("en-US", { month: "short" }) : "—"}</span>
+          <strong>{date ? date.getDate() : "—"}</strong>
+        </div>
+        <div className="event-row__main">
+          <strong>{event.title}</strong>
+          <span className="admin-sub">
+            {date ? date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : "Needs a date: edit to add one"}
+            {time ? ` · ${time}` : ""}
+            {event.location ? ` · ${event.location}` : ""}
+          </span>
+        </div>
+        <div className="admin-actions">{actions}</div>
+      </li>
+    );
+  };
+
+  const link = (label, onClick, danger) => (
+    <button type="button" className={`admin-link${danger ? " admin-link--danger" : ""}`} onClick={onClick}>{label}</button>
+  );
+
+  return (
+    <section>
+      <div className="admin-section-head">
+        <div>
+          <h2>Portal events</h2>
+          <p>Events shown to members in the member portal. An event stays up until its date passes. Archive hides one but keeps it; Delete removes it for good.</p>
+        </div>
+        {!form && <button type="button" className="button button--gold" onClick={() => openNew()}>Add event</button>}
+      </div>
+      <Notice {...note} />
+
+      {form && (
+        <div className="event-editor">
+          <form className="admin-card" onSubmit={save}>
+            <h2>{editingId ? "Edit event" : "New event"}</h2>
+            <label>Title<input value={form.title} onChange={set("title")} required maxLength={120} placeholder="Twilight Nine & Wine" /></label>
+            <div className="admin-row">
+              <label>Date<input type="date" value={form.date} onChange={set("date")} required /></label>
+              <label>
+                Location (optional)
+                <input value={form.location} onChange={set("location")} maxLength={160} placeholder="The Country Club at Woodmore" />
+              </label>
+            </div>
+            <div className="admin-row">
+              <label>Start time (optional)<input type="time" value={form.startTime} onChange={set("startTime")} /></label>
+              <label>End time (optional)<input type="time" value={form.endTime} onChange={set("endTime")} disabled={!form.startTime} /></label>
+            </div>
+            <label>
+              Description (optional)
+              <textarea rows={5} value={form.description} onChange={set("description")} maxLength={3000} placeholder="What to expect, what to bring, who it is for..." />
+            </label>
+            <div className="admin-row">
+              <label>
+                RSVP or details link (optional)
+                <input type="url" value={form.link} onChange={set("link")} placeholder="https://..." />
+              </label>
+              <label>
+                Button wording
+                <input value={form.linkLabel} onChange={set("linkLabel")} maxLength={40} placeholder="RSVP & details" disabled={!form.link} />
+              </label>
+            </div>
+            <div className="event-editor__photo">
+              <span>Photo (optional)</span>
+              <div className="member-detail__actions">
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} disabled={busy} aria-label="Upload a photo" />
+                {form.image && <button type="button" className="admin-link admin-link--danger" onClick={() => setForm({ ...form, image: "" })}>Remove photo</button>}
+              </div>
+              <small className="admin-sub">JPG, PNG or WebP, up to 5 MB. A wide (landscape) photo looks best.</small>
+            </div>
+            <div className="member-detail__actions">
+              <button className="button button--gold" type="submit" disabled={busy}>{busy ? "Saving..." : editingId ? "Save changes" : "Add event"}</button>
+              <button type="button" className="admin-link" onClick={closeEditor}>Cancel</button>
+            </div>
+          </form>
+          <div className="event-editor__preview">
+            <span className="admin-sub">Preview: how members will see it</span>
+            <EventCard event={form} featured preview />
+          </div>
+        </div>
+      )}
+
+      <div className="admin-group">
+        <h3>Showing in the portal <span>{showing.length}</span></h3>
+        {showing.length === 0 ? (
+          <p className="admin-empty">Nothing is showing. Members see &ldquo;No upcoming events&rdquo;. Add an event to get started.</p>
+        ) : (
+          <ul className="event-rows">
+            {showing.map((e) => (
+              <Row key={e.id} event={e} actions={<>{link("Edit", () => edit(e))}{link("Duplicate", () => duplicate(e))}{link("Archive", () => setStatus(e, "archived"))}{link("Delete", () => remove(e), true)}</>} />
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {past.length > 0 && (
+        <div className="admin-group">
+          <h3>Past events <span>{past.length} no longer shown to members</span></h3>
+          <ul className="event-rows">
+            {past.map((e) => (
+              <Row key={e.id} event={e} actions={<>{link("Duplicate", () => duplicate(e))}{link("Archive", () => setStatus(e, "archived"))}{link("Delete", () => remove(e), true)}</>} />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {archived.length > 0 && (
+        <div className="admin-group">
+          <h3>Archived <span>{archived.length} hidden, kept for later</span></h3>
+          <ul className="event-rows">
+            {archived.map((e) => (
+              <Row
+                key={e.id}
+                event={e}
+                actions={
+                  <>
+                    {link("Edit", () => edit(e))}
+                    {e.date && link("Restore", () => setStatus(e, "published"))}
+                    {link("Duplicate", () => duplicate(e))}
+                    {link("Delete", () => remove(e), true)}
+                  </>
+                }
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ---------------------------------------------------------------- Offers
 
 const emptyOffer = { title: "", category: "Offer", description: "", code: "", link: "", eventDate: "", expiresOn: "", active: true };
@@ -741,16 +997,12 @@ function OffersTab() {
           <select value={form.category} onChange={set("category")}>
             <option>Offer</option>
             <option>Discount code</option>
-            <option>Event</option>
           </select>
         </label>
         <label>Details<textarea rows={4} value={form.description} onChange={set("description")} maxLength={1500} /></label>
         <label>Discount code (optional)<input value={form.code} onChange={set("code")} maxLength={60} placeholder="LOTG15" /></label>
         <label>Link (optional)<input value={form.link} onChange={set("link")} placeholder="https://..." /></label>
-        <div className="admin-row">
-          <label>Event date (optional)<input type="date" value={form.eventDate} onChange={set("eventDate")} /></label>
-          <label>Hide after (optional)<input type="date" value={form.expiresOn} onChange={set("expiresOn")} /></label>
-        </div>
+        <label>Hide after (optional)<input type="date" value={form.expiresOn} onChange={set("expiresOn")} /></label>
         <label className="admin-check"><input type="checkbox" checked={form.active} onChange={set("active")} /> Visible to members</label>
         <div className="member-detail__actions">
           <button className="button button--gold" type="submit">{editingId ? "Save changes" : "Add offer"}</button>
@@ -973,6 +1225,7 @@ function MailSettings() {
   const set = (key) => (e) => setWelcome({ ...welcome, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
 
   return (
+    <>
     <section className="admin-split admin-split--spaced">
       <div className="admin-card">
         <h2>Sender addresses</h2>
@@ -1022,6 +1275,104 @@ function MailSettings() {
         </div>
         <Notice {...welcomeNote} />
       </form>
+    </section>
+    <WelcomeExisting saved={data.welcome} />
+    </>
+  );
+}
+
+function WelcomeExisting({ saved }) {
+  const { data, error, reload } = useApi("/api/admin/mail/welcome-existing");
+  const [picked, setPicked] = useState(null); // null until the list has loaded
+  const [note, setNote] = useState({ error: "", message: "" });
+  const [busy, setBusy] = useState(false);
+  const job = data?.job;
+  const running = Boolean(job?.running);
+
+  useEffect(() => {
+    if (data && picked === null) setPicked(new Set(data.pending.map((p) => p.id)));
+  }, [data, picked]);
+
+  // Keep the progress fresh while a send is running.
+  useEffect(() => {
+    if (!running) return undefined;
+    const timer = setInterval(reload, 2000);
+    return () => clearInterval(timer);
+  }, [running, reload]);
+
+  if (!data || picked === null) return <Notice error={error} message={error ? "" : "Loading..."} />;
+
+  const pending = data.pending;
+  const chosen = pending.filter((p) => picked.has(p.id));
+  const toggle = (id) => {
+    const next = new Set(picked);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setPicked(next);
+  };
+
+  async function send() {
+    const label = saved?.subject ? `"${saved.subject}"` : "the welcome email";
+    if (!window.confirm(`Send ${label} from ${saved?.from || "the site address"} to ${chosen.length} member${chosen.length === 1 ? "" : "s"} now?`)) return;
+    setBusy(true);
+    try {
+      await api("/api/admin/mail/welcome-existing", { method: "POST", body: { ids: chosen.map((p) => p.id) } });
+      setNote({ error: "", message: "" });
+      reload();
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="admin-card admin-card--inline admin-card--spaced">
+      <h2>Send the welcome email to existing members</h2>
+      <p>
+        These active members were paid before the welcome email existed, or have not been sent it yet. Untick anyone who shouldn&rsquo;t get it
+        (for example test members). Each member is only ever sent it once, and this works even if &ldquo;Send the welcome email to new members&rdquo; above is unticked.
+      </p>
+      <p className="admin-sub">It sends the <strong>saved</strong> welcome email above, so save any changes there first and use &ldquo;Send test&rdquo; to check it.</p>
+
+      {pending.length === 0 ? (
+        <p className="admin-empty">Every active member has already been sent the welcome email.</p>
+      ) : (
+        <>
+          <div className="member-detail__actions">
+            <button type="button" className="admin-link" onClick={() => setPicked(new Set(pending.map((p) => p.id)))}>Select all</button>
+            <button type="button" className="admin-link" onClick={() => setPicked(new Set())}>Select none</button>
+            <span className="admin-sub">{chosen.length} of {pending.length} selected</span>
+          </div>
+          <ul className="welcome-list">
+            {pending.map((p) => (
+              <li key={p.id}>
+                <label className="admin-check">
+                  <input type="checkbox" checked={picked.has(p.id)} onChange={() => toggle(p.id)} disabled={running} />
+                  <span>
+                    <strong>{p.name || "(no name)"}</strong>
+                    <span className="admin-sub">{p.email}{p.complimentary ? " · Complimentary" : ""}{p.activatedAt ? ` · joined ${formatDate(p.activatedAt)}` : ""}</span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          <div className="member-detail__actions">
+            <button type="button" className="button button--gold" onClick={send} disabled={busy || running || chosen.length === 0}>
+              {running ? "Sending..." : `Send to ${chosen.length} member${chosen.length === 1 ? "" : "s"}`}
+            </button>
+          </div>
+        </>
+      )}
+
+      {job && (
+        <p className={`form-status form-status--${job.running ? "idle" : job.failed ? "error" : "success"}`} role="status">
+          {job.running
+            ? `Sending... ${job.sent + job.failed + job.skipped} of ${job.total}`
+            : `Done: ${job.sent} sent${job.skipped ? `, ${job.skipped} skipped (already sent)` : ""}${job.failed ? `, ${job.failed} failed (${job.failedEmails.join(", ")})` : ""}.`}
+        </p>
+      )}
+      <Notice {...note} />
     </section>
   );
 }
