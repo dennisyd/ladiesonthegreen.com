@@ -2401,8 +2401,8 @@ textarea:focus {
   align-items: center;
   display: grid;
   gap: clamp(20px, 4vw, 48px);
-  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
-  margin-bottom: 48px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 40px;
 }
 
 .portal-hero h1 {
@@ -2438,35 +2438,23 @@ textarea:focus {
   margin: 0;
 }
 
-.portal-card--status {
-  background: linear-gradient(160deg, var(--navy-deep), var(--green-dark));
-  border: 2px solid var(--gold);
-  color: var(--cream);
+.portal-alert {
+  align-items: center;
+  background: rgba(233, 73, 125, 0.12);
+  border: 1px solid rgba(233, 73, 125, 0.4);
+  border-radius: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  padding: 16px 20px;
 }
 
-.portal-card--status .section-kicker {
-  color: var(--gold);
+.portal-alert p {
+  color: var(--ink);
+  font-weight: 700;
   margin: 0;
-}
-
-.portal-card--status p {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.portal-hero .portal-card--status p {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.portal-hero .portal-status-line {
-  color: var(--white);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 2rem;
-}
-
-.portal-warning {
-  background: rgba(233, 73, 125, 0.18);
-  border-radius: 10px;
-  padding: 10px 12px;
 }
 
 .portal-section {

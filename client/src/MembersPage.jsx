@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { api, formatDate, formatMoney } from "./api.js";
+import { api, formatDate } from "./api.js";
 import { EventCard, eventMode } from "./EventCard.jsx";
 
 export default function MembersPage() {
@@ -91,7 +91,8 @@ function Portal({ member, onSignOut }) {
         <a href="/" className="admin-bar__brand"><img src="/ladiesonthegreen.png?v=2" alt="Ladies On The Green home" /></a>
         <nav>
           <a href="#events">Events</a>
-          <a href="#offers">Offers</a>
+          {perks.length > 0 && <a href="#offers">Offers</a>}
+          {member.hasBilling && <button type="button" className="admin-link" onClick={openBilling}>Manage billing</button>}
           <button type="button" className="admin-link" onClick={onSignOut}>Sign out</button>
         </nav>
       </header>
@@ -101,26 +102,21 @@ function Portal({ member, onSignOut }) {
           <div>
             <span className="section-kicker">Member Portal</span>
             <h1>Welcome back, {first}.</h1>
-            <p>Your upcoming member events and exclusive offers, all in one place.</p>
-          </div>
-          <div className="portal-card portal-card--status">
-            <span className="section-kicker">Founding Membership</span>
-            {member.status === "past_due" ? (
-              <p className="portal-warning">Your last payment didn&rsquo;t go through. Update your card to keep your membership.</p>
-            ) : (
-              <p className="portal-status-line">
-                {member.plan && member.plan.amount > 0 ? `${formatMoney(member.plan.amount)} / ${member.plan.interval || "year"}` : "Active member"}
-              </p>
-            )}
-            {member.paidThrough && (
-              <p>{member.cancelAtPeriodEnd ? "Membership ends" : "Renews"} {formatDate(member.paidThrough)}</p>
-            )}
-            {member.hasBilling && (
-              <button type="button" className="button button--gold" onClick={openBilling}>Manage billing</button>
-            )}
-            {billingError && <p className="form-status form-status--error">{billingError}</p>}
+            <p>{perks.length > 0 ? "Your upcoming member events and exclusive offers, all in one place." : "Your upcoming member events, all in one place."}</p>
           </div>
         </section>
+
+        {member.status === "past_due" && (
+          <div className="portal-alert" role="alert">
+            <p>Your last payment didn&rsquo;t go through. Please update your card to keep your membership.</p>
+            {member.hasBilling ? (
+              <button type="button" className="button button--gold" onClick={openBilling}>Update my card</button>
+            ) : (
+              <a className="button button--gold" href="mailto:hello@ladiesonthegreen.com">Contact us</a>
+            )}
+          </div>
+        )}
+        {billingError && <p className="form-status form-status--error" role="alert">{billingError}</p>}
 
         <section id="events" className="portal-section">
           <h2>Upcoming events</h2>
@@ -135,14 +131,14 @@ function Portal({ member, onSignOut }) {
           </div>
         </section>
 
-        <section id="offers" className="portal-section">
-          <h2>Member offers</h2>
-          {offers === null && <p>Loading...</p>}
-          {offers && perks.length === 0 && <p className="admin-empty">New member offers are on the way. Check back soon.</p>}
-          <div className="portal-grid">
-            {perks.map((o) => <OfferCard key={o.id} offer={o} />)}
-          </div>
-        </section>
+        {perks.length > 0 && (
+          <section id="offers" className="portal-section">
+            <h2>Member offers</h2>
+            <div className="portal-grid">
+              {perks.map((o) => <OfferCard key={o.id} offer={o} />)}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
