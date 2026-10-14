@@ -28,7 +28,7 @@ export default function AdminPage() {
     <div className="admin">
       <header className="admin-bar">
         <a href="/" className="admin-bar__brand">
-          <img src="/ladiesonthegreen.png" alt="" />
+          <img src="/ladiesonthegreen.png?v=2" alt="" />
           <span>Admin</span>
         </a>
         <nav className="admin-tabs" aria-label="Admin sections">
@@ -76,7 +76,7 @@ function AdminLogin({ onSignedIn }) {
   return (
     <main className="auth-card-page">
       <form className="auth-card" onSubmit={submit}>
-        <img src="/ladiesonthegreen.png" alt="Ladies On The Green" />
+        <img src="/ladiesonthegreen.png?v=2" alt="Ladies On The Green" />
         <h1>Admin</h1>
         <label>
           Password

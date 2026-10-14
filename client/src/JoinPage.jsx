@@ -96,7 +96,7 @@ export default function JoinPage() {
     <>
       <header className="site-header" aria-label="Primary navigation">
         <a className="brand" href="/" aria-label="Ladies On The Green home">
-          <img src="/ladiesonthegreen.png" alt="" />
+          <img src="/ladiesonthegreen.png?v=2" alt="" />
         </a>
         <span aria-hidden="true" />
         <button className="menu-toggle" type="button" onClick={() => setMenuOpen((open) => !open)}>
@@ -177,7 +177,7 @@ export default function JoinPage() {
             <div className="checkout__head">
               <div>
                 <h2 id="checkout-title">Founding Membership</h2>
-                <img src="/ladiesonthegreen.png" alt="Ladies On The Green" />
+                <img src="/ladiesonthegreen.png?v=2" alt="Ladies On The Green" />
               </div>
               <p className="checkout__price">
                 {rate.isFounding && <s className="price-was">${regularRate.amount}.00</s>}

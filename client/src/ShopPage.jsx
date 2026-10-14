@@ -95,7 +95,7 @@ export default function ShopPage() {
     <>
       <header className="site-header" aria-label="Primary navigation">
         <a className="brand" href="/" aria-label="Ladies On The Green home">
-          <img src="/ladiesonthegreen.png" alt="" />
+          <img src="/ladiesonthegreen.png?v=2" alt="" />
         </a>
         <span aria-hidden="true" />
         <button className="menu-toggle" type="button" onClick={() => setMenuOpen((open) => !open)}>

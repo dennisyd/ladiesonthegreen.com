@@ -23,7 +23,7 @@ export default function FoundationPage() {
     <>
       <header className="site-header" aria-label="Primary navigation">
         <a className="brand" href="/" aria-label="Ladies On The Green home">
-          <img src="/ladiesonthegreen.png" alt="" />
+          <img src="/ladiesonthegreen.png?v=2" alt="" />
         </a>
         <span aria-hidden="true" />
         <button
@@ -92,7 +92,7 @@ export default function FoundationPage() {
 
       <footer className="site-footer">
         <div>
-          <img src="/ladiesonthegreen.png" alt="" />
+          <img src="/ladiesonthegreen.png?v=2" alt="" />
           <p>&copy; {new Date().getFullYear()} Ladies On The Green. Golf &amp; Social Club.</p>
         </div>
         <div className="footer-links">

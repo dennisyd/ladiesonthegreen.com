@@ -268,7 +268,7 @@ function App() {
     <>
       <header className="site-header" aria-label="Primary navigation">
         <a className="brand" href="#top" aria-label="Ladies On The Green home" onClick={closeMenu}>
-          <img src="/ladiesonthegreen.png" alt="" />
+          <img src="/ladiesonthegreen.png?v=2" alt="" />
         </a>
         <a className="login-link" href="/members" onClick={closeMenu}>
           <span aria-hidden="true">●</span>
@@ -418,7 +418,7 @@ function App() {
             {galleryEvents.map((event, index) => (
               <article className="gallery-card" key={event.title}>
                 <div className="gallery-card__image">
-                  <img src="/ladiesonthegreen.png" alt="" />
+                  <img src="/ladiesonthegreen.png?v=2" alt="" />
                 </div>
                 <div className="gallery-card__body">
                   <span>{event.tag}</span>
@@ -467,7 +467,7 @@ function App() {
           </div>
           <div className="benefit-panel">
             <div className="benefit-panel__media" aria-hidden="true">
-              <img src="/ladiesonthegreen.png" alt="" />
+              <img src="/ladiesonthegreen.png?v=2" alt="" />
             </div>
             <div>
               <h3>{currentBenefit.title}</h3>
@@ -482,7 +482,7 @@ function App() {
 
         <section className="spotlight" id="spotlight" aria-labelledby="spotlight-title">
           <div className="spotlight__image" aria-hidden="true">
-            <img src="/ladiesonthegreen.png" alt="" />
+            <img src="/ladiesonthegreen.png?v=2" alt="" />
           </div>
           <div className="spotlight__copy">
             <span className="section-kicker">Member Spotlight</span>
@@ -576,7 +576,7 @@ function App() {
 
       <footer className="site-footer">
         <div>
-          <img src="/ladiesonthegreen.png" alt="" />
+          <img src="/ladiesonthegreen.png?v=2" alt="" />
           <p>&copy; {new Date().getFullYear()} Ladies On The Green. Golf & Social Club.</p>
         </div>
         <div className="footer-links">

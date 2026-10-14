@@ -39,7 +39,7 @@ function MemberSignIn() {
   return (
     <main className="auth-card-page">
       <form className="auth-card" onSubmit={submit}>
-        <a href="/"><img src="/ladiesonthegreen.png" alt="Ladies On The Green home" /></a>
+        <a href="/"><img src="/ladiesonthegreen.png?v=2" alt="Ladies On The Green home" /></a>
         <span className="section-kicker">Members only</span>
         <h1>Member Portal</h1>
         <p>Enter the email you used to join and we&rsquo;ll send you a secure sign-in link. No password needed.</p>
@@ -88,7 +88,7 @@ function Portal({ member, onSignOut }) {
   return (
     <div className="portal">
       <header className="portal-bar">
-        <a href="/" className="admin-bar__brand"><img src="/ladiesonthegreen.png" alt="Ladies On The Green home" /></a>
+        <a href="/" className="admin-bar__brand"><img src="/ladiesonthegreen.png?v=2" alt="Ladies On The Green home" /></a>
         <nav>
           <a href="#events">Events</a>
           <a href="#offers">Offers</a>
