@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { currentRate } from "../../shared/membership.js";
 import { api, formatDate, formatMoney, statusLabels } from "./api.js";
 
-import { EventCard, formatEventTime, parseEventDate } from "./EventCard.jsx";
+import { EventCard, eventBadge, eventMode, formatEventTime, formatEventWhen } from "./EventCard.jsx";
 import ShopCatalogAdmin from "./ShopCatalogAdmin.jsx";
 
 const tabs = ["Members", "Follow-ups", "Portal events", "Event tickets", "Shop", "Offers", "Announcements", "Settings"];
@@ -713,7 +713,79 @@ function StockRow({ product, onSave }) {
 
 // ---------------------------------------------------------------- Portal events
 
-const emptyEvent = { title: "", date: "", startTime: "", endTime: "", location: "", description: "", link: "", linkLabel: "", image: "" };
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const DATE_MODES = [
+  ["exact", "An exact date"],
+  ["month", "A month and year (no exact date yet)"],
+  ["year", "A year only"],
+  ["tba", "To be announced (TBA)"]
+];
+
+const emptyEvent = {
+  title: "", dateMode: "exact", date: "", startTime: "", endTime: "", location: "", locationTbd: false,
+  description: "", link: "", linkLabel: "", image: ""
+};
+
+// "When is it?": an exact day, just a month, just a year, or to be announced.
+function EventDateFields({ form, setForm }) {
+  const mode = eventMode(form);
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const parts = /^\d{4}(-\d{2})?$/.test(form.date) ? form.date.split("-") : [];
+  const selYear = parts[0] || String(thisYear);
+  const selMonth = parts[1] || String(now.getMonth() + 1).padStart(2, "0");
+  const years = [...new Set([...Array.from({ length: 8 }, (_, i) => String(thisYear + i)), selYear])].sort();
+
+  function changeMode(next) {
+    let date = "";
+    if (next === "exact") date = mode === "exact" ? form.date : "";
+    if (next === "month") date = `${selYear}-${selMonth}`;
+    if (next === "year") date = selYear;
+    setForm({ ...form, dateMode: next, date, ...(next === "exact" ? {} : { startTime: "", endTime: "" }) });
+  }
+
+  const yearSelect = (value, onChange) => (
+    <select value={value} onChange={(e) => onChange(e.target.value)}>
+      {years.map((y) => <option key={y} value={y}>{y}</option>)}
+    </select>
+  );
+
+  return (
+    <>
+      <div className="admin-row">
+        <label>
+          When is it?
+          <select value={mode} onChange={(e) => changeMode(e.target.value)}>
+            {DATE_MODES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </label>
+        {mode === "exact" && (
+          <label>Date<input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required /></label>
+        )}
+        {mode === "month" && (
+          <div className="admin-row">
+            <label>
+              Month
+              <select value={selMonth} onChange={(e) => setForm({ ...form, date: `${selYear}-${e.target.value}` })}>
+                {MONTH_NAMES.map((name, i) => <option key={name} value={String(i + 1).padStart(2, "0")}>{name}</option>)}
+              </select>
+            </label>
+            <label>Year{yearSelect(selYear, (y) => setForm({ ...form, date: `${y}-${selMonth}` }))}</label>
+          </div>
+        )}
+        {mode === "year" && <label>Year{yearSelect(selYear, (y) => setForm({ ...form, date: y }))}</label>}
+      </div>
+      {mode !== "exact" && (
+        <p className="admin-sub">
+          {mode === "month" && "Members will see just the month and year. It leaves the portal when that month is over."}
+          {mode === "year" && "Members will see just the year. It leaves the portal when that year is over."}
+          {mode === "tba" && "Members will see \u201cDate to be announced.\u201d It stays in the portal until you give it a date, archive it or delete it."}
+          {" "}Switch to an exact date when it is confirmed.
+        </p>
+      )}
+    </>
+  );
+}
 
 function PortalEventsTab() {
   const { data, error, reload } = useApi("/api/admin/events");
@@ -738,7 +810,8 @@ function PortalEventsTab() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const duplicate = (event) => openNew({ ...emptyEvent, ...event, date: "", id: undefined, status: undefined });
+  const duplicate = (event) =>
+    openNew({ ...emptyEvent, ...event, date: eventMode(event) === "exact" ? "" : event.date, id: undefined, status: undefined, isPast: undefined });
 
   function closeEditor() {
     setForm(null);
@@ -806,26 +879,26 @@ function PortalEventsTab() {
 
   if (!data) return <Notice error={error} message={error ? "" : "Loading..."} />;
 
-  const today = data.today;
-  const showing = data.events.filter((e) => e.status === "published" && e.date && e.date >= today);
-  const past = data.events.filter((e) => e.status === "published" && (!e.date || e.date < today));
+  const showing = data.events.filter((e) => e.status === "published" && !e.isPast);
+  const past = data.events.filter((e) => e.status === "published" && e.isPast);
   const archived = data.events.filter((e) => e.status === "archived");
 
   const Row = ({ event, actions }) => {
-    const date = parseEventDate(event.date);
-    const time = formatEventTime(event.startTime, event.endTime);
+    const badge = eventBadge(event);
+    const time = eventMode(event) === "exact" ? formatEventTime(event.startTime, event.endTime) : "";
+    const where = event.locationTbd ? "Location to be determined" : event.location;
     return (
       <li className="event-row">
         <div className="event-row__date">
-          <span>{date ? date.toLocaleDateString("en-US", { month: "short" }) : "—"}</span>
-          <strong>{date ? date.getDate() : "—"}</strong>
+          {badge.top && <span>{badge.top}</span>}
+          <strong className={badge.big.length > 3 ? "is-long" : ""}>{badge.big}</strong>
         </div>
         <div className="event-row__main">
           <strong>{event.title}</strong>
           <span className="admin-sub">
-            {date ? date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : "Needs a date: edit to add one"}
+            {formatEventWhen(event, "short")}
             {time ? ` · ${time}` : ""}
-            {event.location ? ` · ${event.location}` : ""}
+            {where ? ` · ${where}` : ""}
           </span>
         </div>
         <div className="admin-actions">{actions}</div>
@@ -853,17 +926,29 @@ function PortalEventsTab() {
           <form className="admin-card" onSubmit={save}>
             <h2>{editingId ? "Edit event" : "New event"}</h2>
             <label>Title<input value={form.title} onChange={set("title")} required maxLength={120} placeholder="Twilight Nine & Wine" /></label>
+            <EventDateFields form={form} setForm={setForm} />
             <div className="admin-row">
-              <label>Date<input type="date" value={form.date} onChange={set("date")} required /></label>
               <label>
-                Location (optional)
-                <input value={form.location} onChange={set("location")} maxLength={160} placeholder="The Country Club at Woodmore" />
+                Start time (optional)
+                <input type="time" value={form.startTime} onChange={set("startTime")} disabled={eventMode(form) !== "exact"} />
+              </label>
+              <label>
+                End time (optional)
+                <input type="time" value={form.endTime} onChange={set("endTime")} disabled={!form.startTime || eventMode(form) !== "exact"} />
               </label>
             </div>
-            <div className="admin-row">
-              <label>Start time (optional)<input type="time" value={form.startTime} onChange={set("startTime")} /></label>
-              <label>End time (optional)<input type="time" value={form.endTime} onChange={set("endTime")} disabled={!form.startTime} /></label>
-            </div>
+            <label>
+              Location (optional)
+              <input value={form.location} onChange={set("location")} maxLength={160} placeholder="The Country Club at Woodmore" disabled={Boolean(form.locationTbd)} />
+            </label>
+            <label className="admin-check">
+              <input
+                type="checkbox"
+                checked={Boolean(form.locationTbd)}
+                onChange={(e) => setForm({ ...form, locationTbd: e.target.checked, location: e.target.checked ? "" : form.location })}
+              />
+              Location to be determined (TBD)
+            </label>
             <label>
               Description (optional)
               <textarea rows={5} value={form.description} onChange={set("description")} maxLength={3000} placeholder="What to expect, what to bring, who it is for..." />
@@ -893,7 +978,7 @@ function PortalEventsTab() {
           </form>
           <div className="event-editor__preview">
             <span className="admin-sub">Preview: how members will see it</span>
-            <EventCard event={form} featured preview />
+            <EventCard event={form} preview />
           </div>
         </div>
       )}
@@ -933,7 +1018,7 @@ function PortalEventsTab() {
                 actions={
                   <>
                     {link("Edit", () => edit(e))}
-                    {e.date && link("Restore", () => setStatus(e, "published"))}
+                    {link("Restore", () => setStatus(e, "published"))}
                     {link("Duplicate", () => duplicate(e))}
                     {link("Delete", () => remove(e), true)}
                   </>

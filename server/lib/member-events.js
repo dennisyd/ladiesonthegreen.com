@@ -19,6 +19,38 @@ const clean = (value, max) => String(value ?? "").trim().slice(0, max);
 export const todayEastern = (now = new Date()) =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 
+const MODES = ["exact", "month", "year", "tba"];
+const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
+const YEAR = /^\d{4}$/;
+
+// How the date is given: an exact day, just a month, just a year, or "to be
+// announced". Events saved before this existed have no mode: a date means exact,
+// no date means to be announced.
+export const modeOf = (e) => (MODES.includes(e.dateMode) ? e.dateMode : e.date ? "exact" : "tba");
+
+// The last day an event still counts as upcoming; null for to-be-announced
+// events, which stay up until the admin gives them a date, archives or deletes them.
+export function endDateOf(e) {
+  const mode = modeOf(e);
+  if (mode === "exact") return e.date;
+  if (mode === "month") {
+    const [year, month] = e.date.split("-").map(Number);
+    return `${e.date}-${String(new Date(Date.UTC(year, month, 0)).getUTCDate()).padStart(2, "0")}`;
+  }
+  if (mode === "year") return `${e.date}-12-31`;
+  return null;
+}
+
+export const isPast = (e, today = todayEastern()) => {
+  const end = endDateOf(e);
+  return end !== null && end < today;
+};
+
+// Where an event sits in the list: by the end of its period, so a vague
+// "April 2027" or "2027" comes after the exact dates inside it; to be announced last.
+const MODE_RANK = { exact: 0, month: 1, year: 2, tba: 3 };
+const sortKey = (e) => endDateOf(e) ?? "9999-12-31";
+
 const isRealDate = (value) => DATE.test(value) && new Date(`${value}T12:00:00Z`).toISOString().slice(0, 10) === value;
 
 function httpsUrl(value) {
@@ -42,8 +74,21 @@ export function validateEvent(body) {
     linkLabel: clean(body.linkLabel, 40),
     image: clean(body.image, 500)
   };
+  event.dateMode = MODES.includes(body.dateMode) ? body.dateMode : "exact";
+  event.locationTbd = body.locationTbd === true || body.locationTbd === "true";
+  if (event.locationTbd) event.location = "";
   if (!event.title) return { error: "Please add a title." };
-  if (!isRealDate(event.date)) return { error: "Please choose the event date." };
+  if (event.dateMode === "exact" && !isRealDate(event.date)) return { error: "Please choose the event date." };
+  if (event.dateMode === "month" && !MONTH.test(event.date)) return { error: "Please choose the month and year." };
+  if (event.dateMode === "year" && !(YEAR.test(event.date) && event.date >= "2000" && event.date <= "2100")) {
+    return { error: "Please choose the year." };
+  }
+  if (event.dateMode === "tba") event.date = "";
+  // Times only make sense for an exact date.
+  if (event.dateMode !== "exact") {
+    event.startTime = "";
+    event.endTime = "";
+  }
   if (event.startTime && !TIME.test(event.startTime)) return { error: "The start time isn't valid." };
   if (event.endTime && !TIME.test(event.endTime)) return { error: "The end time isn't valid." };
   if (event.endTime && !event.startTime) return { error: "Add a start time before adding an end time." };
@@ -57,10 +102,24 @@ export function validateEvent(body) {
   return { event };
 }
 
-const byDate = (a, b) => (a.date || "").localeCompare(b.date || "") || (a.startTime || "").localeCompare(b.startTime || "");
+const byDate = (a, b) =>
+  sortKey(a).localeCompare(sortKey(b)) ||
+  MODE_RANK[modeOf(a)] - MODE_RANK[modeOf(b)] ||
+  (a.startTime || "").localeCompare(b.startTime || "");
 
-const memberView = ({ id, title, date, startTime, endTime, location, description, link, linkLabel, image }) => ({
-  id, title, date, startTime, endTime, location, description, link, linkLabel, image
+const memberView = (e) => ({
+  id: e.id,
+  title: e.title,
+  dateMode: modeOf(e),
+  date: e.date,
+  startTime: e.startTime,
+  endTime: e.endTime,
+  location: e.location,
+  locationTbd: Boolean(e.locationTbd),
+  description: e.description,
+  link: e.link,
+  linkLabel: e.linkLabel,
+  image: e.image
 });
 
 export function createMemberEvents(dataDir, { requireAdmin, requireMember }) {
@@ -86,17 +145,17 @@ export function createMemberEvents(dataDir, { requireAdmin, requireMember }) {
         data.events.push({
           id: o.id,
           title: clean(o.title, 120),
+          dateMode: date ? "exact" : "tba",
           date,
           startTime: "",
           endTime: "",
           location: "",
+          locationTbd: false,
           description: clean(o.description, 3000),
           link: httpsUrl(o.link || "") ? o.link : "",
           linkLabel: httpsUrl(o.link || "") ? "RSVP & details" : "",
           image: "",
-          // An event with no date can't be placed on the calendar: park it as
-          // archived so the admin can add a date and restore it.
-          status: date && o.active !== false ? "published" : "archived",
+          status: o.active !== false ? "published" : "archived",
           createdAt: o.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });
@@ -116,7 +175,7 @@ export function createMemberEvents(dataDir, { requireAdmin, requireMember }) {
       const { events } = await store.read();
       res.json({
         ok: true,
-        events: events.filter((e) => e.status === "published" && e.date >= today).sort(byDate).map(memberView)
+        events: events.filter((e) => e.status === "published" && !isPast(e, today)).sort(byDate).map(memberView)
       });
     });
 
@@ -124,7 +183,12 @@ export function createMemberEvents(dataDir, { requireAdmin, requireMember }) {
 
     app.get("/api/admin/events", requireAdmin, async (_req, res) => {
       const { events } = await store.read();
-      res.json({ ok: true, today: todayEastern(), events: events.sort(byDate) });
+      const today = todayEastern();
+      res.json({
+        ok: true,
+        today,
+        events: events.sort(byDate).map((e) => ({ ...e, dateMode: modeOf(e), locationTbd: Boolean(e.locationTbd), isPast: isPast(e, today) }))
+      });
     });
 
     app.post("/api/admin/events", requireAdmin, async (req, res) => {

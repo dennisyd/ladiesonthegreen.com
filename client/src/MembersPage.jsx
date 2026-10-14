@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api, formatDate, formatMoney } from "./api.js";
-import { EventCard } from "./EventCard.jsx";
+import { EventCard, eventMode } from "./EventCard.jsx";
 
 export default function MembersPage() {
   const [member, setMember] = useState(undefined); // undefined = checking, null = signed out
@@ -130,7 +130,7 @@ function Portal({ member, onSignOut }) {
           )}
           <div className="event-list">
             {events?.map((event, index) => (
-              <EventCard key={event.id} event={event} featured={index === 0} />
+              <EventCard key={event.id} event={event} featured={index === 0 && eventMode(event) === "exact"} />
             ))}
           </div>
         </section>

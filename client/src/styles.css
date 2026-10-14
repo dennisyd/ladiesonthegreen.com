@@ -3397,3 +3397,9 @@ textarea:focus {
     position: static;
   }
 }
+
+/* Longer date badges such as "2027" or "TBA" */
+.event-card__date strong.is-long,
+.event-row__date strong.is-long {
+  font-size: 1.15rem;
+}
