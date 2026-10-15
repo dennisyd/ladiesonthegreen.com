@@ -3185,6 +3185,7 @@ textarea:focus {
 }
 
 .event-card__main {
+  align-content: start;
   display: grid;
   gap: 10px;
   min-width: 0;
@@ -3252,6 +3253,14 @@ textarea:focus {
   .event-card--featured .event-card__image {
     aspect-ratio: auto;
     flex: 0 0 42%;
+    min-height: 320px;
+    position: relative;
+  }
+
+  /* Fill the box instead of setting the card's height, so tall photos can't stretch it. */
+  .event-card--featured .event-card__image img {
+    inset: 0;
+    position: absolute;
   }
 }
 
@@ -3390,4 +3399,102 @@ textarea:focus {
 .event-card__date strong.is-long,
 .event-row__date strong.is-long {
   font-size: 1.15rem;
+}
+
+/* Event cards open a full-details view */
+.event-card--clickable {
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.event-card--clickable:hover {
+  box-shadow: 0 16px 36px rgba(7, 25, 49, 0.14);
+  transform: translateY(-2px);
+}
+
+.event-card__text--clamp {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  display: -webkit-box;
+  overflow: hidden;
+}
+
+.event-card__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.event-card__actions .event-card__cta {
+  margin-top: 0;
+}
+
+.event-modal {
+  align-items: center;
+  background: rgba(3, 28, 19, 0.74);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 16px;
+  position: fixed;
+  z-index: 200;
+}
+
+.event-modal__panel {
+  background: var(--white);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  max-height: min(92vh, 920px);
+  overflow-y: auto;
+  position: relative;
+  width: min(760px, 100%);
+}
+
+.event-modal__close {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.94);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  color: var(--navy);
+  cursor: pointer;
+  display: flex;
+  font-size: 1.7rem;
+  height: 42px;
+  justify-content: center;
+  line-height: 1;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 42px;
+  z-index: 2;
+}
+
+.event-modal__image {
+  background: var(--mint-2);
+  display: block;
+  max-height: 62vh;
+  object-fit: contain;
+  width: 100%;
+}
+
+.event-modal__body {
+  display: grid;
+  gap: 14px;
+  padding: 24px 28px 30px;
+}
+
+.event-modal__body h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  line-height: 1.15;
+  margin: 0;
+  overflow-wrap: anywhere;
+  padding-right: 44px;
+}
+
+.event-modal__body .event-card__cta {
+  justify-self: start;
 }

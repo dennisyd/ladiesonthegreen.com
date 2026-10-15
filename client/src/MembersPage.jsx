@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api, formatDate } from "./api.js";
-import { EventCard, eventMode } from "./EventCard.jsx";
+import { EventCard, EventDetails, eventMode } from "./EventCard.jsx";
 
 export default function MembersPage() {
   const [member, setMember] = useState(undefined); // undefined = checking, null = signed out
@@ -65,6 +65,7 @@ function MemberSignIn() {
 function Portal({ member, onSignOut }) {
   const [offers, setOffers] = useState(null);
   const [events, setEvents] = useState(null);
+  const [openEvent, setOpenEvent] = useState(null);
   const [billingError, setBillingError] = useState("");
 
   useEffect(() => {
@@ -126,7 +127,7 @@ function Portal({ member, onSignOut }) {
           )}
           <div className="event-list">
             {events?.map((event, index) => (
-              <EventCard key={event.id} event={event} featured={index === 0 && eventMode(event) === "exact"} />
+              <EventCard key={event.id} event={event} featured={index === 0 && eventMode(event) === "exact"} onOpen={setOpenEvent} />
             ))}
           </div>
         </section>
@@ -140,6 +141,8 @@ function Portal({ member, onSignOut }) {
           </section>
         )}
       </main>
+
+      {openEvent && <EventDetails event={openEvent} onClose={() => setOpenEvent(null)} />}
     </div>
   );
 }

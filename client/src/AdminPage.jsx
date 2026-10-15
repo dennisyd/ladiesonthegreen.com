@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { currentRate } from "../../shared/membership.js";
 import { api, formatDate, formatMoney, statusLabels } from "./api.js";
 
-import { EventCard, eventBadge, eventMode, formatEventTime, formatEventWhen } from "./EventCard.jsx";
+import { EventCard, EventDetails, eventBadge, eventMode, formatEventTime, formatEventWhen } from "./EventCard.jsx";
 import ShopCatalogAdmin from "./ShopCatalogAdmin.jsx";
 
 const tabs = ["Members", "Follow-ups", "Portal events", "Event tickets", "Shop", "Offers", "Announcements", "Settings"];
@@ -792,6 +792,7 @@ function PortalEventsTab() {
   const [form, setForm] = useState(null); // null = editor closed
   const [editingId, setEditingId] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [note, setNote] = useState({ error: "", message: "" });
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
@@ -977,8 +978,9 @@ function PortalEventsTab() {
             </div>
           </form>
           <div className="event-editor__preview">
-            <span className="admin-sub">Preview: how members will see it</span>
-            <EventCard event={form} preview />
+            <span className="admin-sub">Preview: how members will see it. Click it to see the full details view.</span>
+            <EventCard event={form} preview onOpen={() => setPreviewOpen(true)} />
+            {previewOpen && <EventDetails event={form} preview onClose={() => setPreviewOpen(false)} />}
           </div>
         </div>
       )}
