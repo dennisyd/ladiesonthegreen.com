@@ -19,7 +19,7 @@ const DEFAULT_WELCOME = {
     "Welcome to Ladies On The Green! Your membership is active, and we are so glad you are here.",
     "",
     "Your member portal is ready: {portal_link}",
-    "Enter this email address there and we will send you a secure sign-in link (no password needed). Inside you will find your upcoming member events and exclusive member offers.",
+    "Enter this email address there and we will send you a one-time sign-in code (no password needed). Inside you will find your upcoming member events and exclusive member offers.",
     "",
     "Your membership renews on {renewal_date}.",
     "",

@@ -48,7 +48,7 @@ export async function checkMailLogin() {
   }
 }
 
-// Member-facing email (sign-in links, reminders, announcements). Without SMTP
+// Member-facing email (sign-in codes, reminders, announcements). Without SMTP
 // configured (local development) the message is printed to the log instead.
 // `from` picks the sender address (admin-written email); replies then go back
 // to that address. System email leaves it out and comes from the site address.

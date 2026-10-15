@@ -10,12 +10,12 @@ import { createMemberMail } from "./lib/member-mail.js";
 import { canUsePortal, newMember, normalizeEmail, portalView } from "./lib/member-model.js";
 import { jsonStore } from "./lib/store.js";
 import { createStripeSync } from "./lib/stripe-sync.js";
+import { createMemberCodes } from "./lib/member-codes.js";
 
 const ADMIN_COOKIE = "lotg_admin";
 const MEMBER_COOKIE = "lotg_member";
 const ADMIN_SESSION_SECONDS = 12 * 60 * 60;
 const MEMBER_SESSION_SECONDS = 30 * 24 * 60 * 60;
-const SIGN_IN_LINK_SECONDS = 30 * 60;
 const MEMBER_STATUSES = ["active", "past_due", "canceled"];
 const SIGNUP_KEEP_DAYS = 30; // unfinished signups are deleted after this long
 const CONTACT_FIELDS = ["name", "phone", "address", "address2", "city", "state", "zip", "country"];
@@ -35,7 +35,7 @@ function csv(rows, columns) {
     .join("\r\n");
 }
 
-export function createMembership(dataDir) {
+export function createMembership(dataDir, { sendSignInEmail = sendEmail } = {}) {
   const members = jsonStore(path.join(dataDir, "members.json"), { members: [] });
   // People who filled in the Join form but haven't paid. They are not members:
   // they only appear in the admin Follow-ups tab, and expire after SIGNUP_KEEP_DAYS.
@@ -46,6 +46,7 @@ export function createMembership(dataDir) {
   const stripeStatus = jsonStore(path.join(dataDir, "stripe-status.json"), {});
 
   const auth = createAuth(dataDir);
+  const signInCodes = createMemberCodes(dataDir, auth.digest);
   const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   // One-off member emails and the automatic welcome email (see lib/member-mail.js).
@@ -66,6 +67,8 @@ export function createMembership(dataDir) {
 
   const allowAdminLogin = createRateLimiter(8, 15 * 60 * 1000);
   const allowMemberLogin = createRateLimiter(5, 15 * 60 * 1000);
+  const allowMemberLoginIp = createRateLimiter(20, 15 * 60 * 1000);
+  const allowMemberCodeVerify = createRateLimiter(30, 15 * 60 * 1000);
 
   const origin = (req) => process.env.SITE_URL || `${req.protocol}://${req.get("host")}`;
 
@@ -236,51 +239,64 @@ export function createMembership(dataDir) {
 
     app.post("/api/members/login", async (req, res) => {
       const email = normalizeEmail(req.body?.email);
-      const generic = { ok: true, message: "If that email belongs to a member, a sign-in link is on its way." };
-      if (!email.includes("@")) return res.status(400).json({ ok: false, error: "Please enter your email." });
-      if (!allowMemberLogin(`${req.ip}|${email}`)) {
+      res.setHeader("Cache-Control", "no-store");
+      if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ ok: false, error: "Please enter a valid email address." });
+      }
+      if (!allowMemberLoginIp(req.ip) || !allowMemberLogin(email)) {
         return res.status(429).json({ ok: false, error: "Too many attempts. Please try again in a few minutes." });
       }
 
       const { members: list } = await members.read();
       const member = list.find((m) => m.email === email);
-      if (canUsePortal(member)) {
-        const token = auth.sign({ t: "signin", mid: member.id }, SIGN_IN_LINK_SECONDS);
-        await sendEmail({
+      if (!member) return res.json({ ok: true, redirect: "/join" });
+      if (!canUsePortal(member)) {
+        return res.status(403).json({ ok: false, error: "Your membership is not active. Please contact us for help or renew your membership." });
+      }
+      const challenge = await signInCodes.issue(member.id);
+      try {
+        await sendSignInEmail({
           to: member.email,
-          subject: "Your Ladies On The Green sign-in link",
+          subject: "Your Ladies On The Green sign-in code",
           text: [
             `Hi ${firstName(member.name)},`,
             "",
-            "Use this link to sign in to the Ladies On The Green member portal. It works for 30 minutes.",
+            "Enter this one-time code on the member sign-in page. It expires in 10 minutes.",
             "",
-            `${origin(req)}/api/members/verify?token=${encodeURIComponent(token)}`,
+            challenge.code,
             "",
-            "If you didn't ask to sign in, you can ignore this email.",
+            "Do not share this code. If you didn't ask to sign in, you can ignore this email.",
             "",
             "Ladies On The Green"
           ].join("\n")
         });
-      } else if (!member) {
-        // Started the Join form but never paid: point them back to it.
-        const signup = (await readSignups()).find((x) => x.email === email);
-        if (signup) await sendEmail(reminderEmail(signup, req));
+      } catch {
+        await signInCodes.revoke(challenge.id);
+        return res.status(503).json({ ok: false, error: "We couldn't send your code. Please try again shortly." });
       }
-      res.json(generic);
+      res.json({ ok: true, challengeId: challenge.id, message: "Your sign-in code is on its way. It expires in 10 minutes." });
     });
 
-    app.get("/api/members/verify", async (req, res) => {
-      const payload = auth.verify(String(req.query.token || ""), "signin");
+    app.post("/api/members/verify-code", async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      if (!allowMemberCodeVerify(req.ip)) {
+        return res.status(429).json({ ok: false, error: "Too many attempts. Please try again in a few minutes." });
+      }
+      const memberId = await signInCodes.consume(String(req.body?.challengeId || ""), String(req.body?.code || "").trim());
+      if (!memberId) return res.status(400).json({ ok: false, error: "That code is incorrect or expired. Try again or request a new code." });
       const { members: list } = await members.read();
-      const member = payload && list.find((m) => m.id === payload.mid);
-      if (!canUsePortal(member)) return res.redirect("/members?signin=expired");
-      setCookie(req, res, MEMBER_COOKIE, auth.sign({ t: "member", mid: member.id }, MEMBER_SESSION_SECONDS), MEMBER_SESSION_SECONDS);
+      const member = list.find((m) => m.id === memberId);
+      if (!canUsePortal(member)) return res.status(403).json({ ok: false, error: "Your membership is not active." });
       await members.update((data) => {
         const m = data.members.find((x) => x.id === member.id);
         if (m) m.lastLoginAt = new Date().toISOString();
       });
-      res.redirect("/members");
+      setCookie(req, res, MEMBER_COOKIE, auth.sign({ t: "member", mid: member.id }, MEMBER_SESSION_SECONDS), MEMBER_SESSION_SECONDS);
+      res.json({ ok: true, member: portalView(member) });
     });
+
+    // Old emailed links no longer create reusable sessions.
+    app.get("/api/members/verify", (_req, res) => res.redirect("/members?signin=expired"));
 
     app.post("/api/members/logout", (req, res) => {
       clearCookie(req, res, MEMBER_COOKIE);
@@ -288,6 +304,7 @@ export function createMembership(dataDir) {
     });
 
     app.get("/api/members/me", requireMember, (req, res) => {
+      res.setHeader("Cache-Control", "private, no-store");
       res.json({ ok: true, member: portalView(req.member) });
     });
 

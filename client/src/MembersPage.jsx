@@ -16,21 +16,40 @@ export default function MembersPage() {
   }
 
   if (member === undefined) return <div className="page-loading">Loading...</div>;
-  if (!member) return <MemberSignIn />;
+  if (!member) return <MemberSignIn onSignedIn={setMember} />;
   return <Portal member={member} onSignOut={signOut} />;
 }
 
-function MemberSignIn() {
+function MemberSignIn({ onSignedIn }) {
   const expired = new URLSearchParams(window.location.search).get("signin") === "expired";
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [challengeId, setChallengeId] = useState(null);
   const [state, setState] = useState({ status: "idle", message: "" });
 
-  async function submit(event) {
-    event.preventDefault();
+  async function sendCode() {
     setState({ status: "loading", message: "" });
     try {
       const data = await api("/api/members/login", { method: "POST", body: { email } });
+      if (data.redirect === "/join") {
+        window.location.assign("/join");
+        return;
+      }
+      setChallengeId(data.challengeId);
+      setCode("");
       setState({ status: "success", message: `${data.message} Check your inbox (and spam folder).` });
+    } catch (err) {
+      setState({ status: "error", message: err.message });
+    }
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+    if (!challengeId) return sendCode();
+    setState({ status: "loading", message: "" });
+    try {
+      const data = await api("/api/members/verify-code", { method: "POST", body: { challengeId, code } });
+      onSignedIn(data.member);
     } catch (err) {
       setState({ status: "error", message: err.message });
     }
@@ -42,17 +61,35 @@ function MemberSignIn() {
         <a href="/"><img src="/ladiesonthegreen.png?v=2" alt="Ladies On The Green home" /></a>
         <span className="section-kicker">Members only</span>
         <h1>Member Portal</h1>
-        <p>Enter the email you used to join and we&rsquo;ll send you a secure sign-in link. No password needed.</p>
-        {expired && (
-          <p className="form-status form-status--error" role="alert">That sign-in link has expired or isn&rsquo;t valid. Request a new one below.</p>
+        <p>{challengeId ? `Enter the six-digit code sent to ${email}. You can check your email on any device.` : "Enter the email you used to join and we’ll send you a one-time sign-in code. No password needed."}</p>
+        {expired && !challengeId && (
+          <p className="form-status form-status--error" role="alert">Please request a one-time code below to sign in.</p>
         )}
-        <label>
-          Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required autoFocus />
-        </label>
+        {challengeId ? (
+          <label key="code">
+            One-time code
+            <input type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} required autoFocus />
+          </label>
+        ) : (
+          <label key="email">
+            Email
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required autoFocus />
+          </label>
+        )}
         <button className="button button--gold" type="submit" disabled={state.status === "loading"}>
-          {state.status === "loading" ? "Sending..." : "Email me a sign-in link"}
+          {state.status === "loading" ? (challengeId ? "Checking..." : "Sending...") : (challengeId ? "Verify Code & Sign In" : "Email Me a Code")}
         </button>
+        {challengeId && (
+          <div className="admin-actions">
+            <button className="admin-link" type="button" onClick={sendCode} disabled={state.status === "loading"}>Send a new code</button>
+            <button className="admin-link" type="button" disabled={state.status === "loading"} onClick={() => {
+              setChallengeId(null);
+              setCode("");
+              setState({ status: "idle", message: "" });
+            }}>Use a different email</button>
+          </div>
+        )}
+        <p>We&rsquo;ll keep you signed in on this browser for 30 days. Sign out when using a shared computer.</p>
         {state.message && (
           <p className={`form-status form-status--${state.status}`} role="status">{state.message}</p>
         )}

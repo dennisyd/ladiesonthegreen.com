@@ -1217,7 +1217,7 @@ function SettingsTab() {
   const checks = [
     ["Stripe connected", data.stripeConfigured, "Add STRIPE_SECRET_KEY to the server settings."],
     ["Stripe payment updates (webhook)", data.webhookConfigured, "Add STRIPE_WEBHOOK_SECRET to the server settings."],
-    ["Email sending", data.mailWorking, data.mailConfigured ? data.mailError : "Add the SMTP settings so sign-in links and reminders can be emailed."],
+    ["Email sending", data.mailWorking, data.mailConfigured ? data.mailError : "Add the SMTP settings so sign-in codes and reminders can be emailed."],
     ["Separate admin password", data.separateAdminPassword, "Using the magazine password. Set ADMIN_PASSWORD to give the dashboard its own."]
   ];
 
@@ -1320,7 +1320,7 @@ function MailSettings() {
         <ul className="admin-offers">
           {data.senders.map((address) => (
             <li key={address}>
-              <div><strong>{address}</strong>{address === data.defaultSender && <span className="admin-sub">The site's own address (sign-in links and reminders)</span>}</div>
+              <div><strong>{address}</strong>{address === data.defaultSender && <span className="admin-sub">The site's own address (sign-in codes and reminders)</span>}</div>
               {address !== data.defaultSender && (
                 <button type="button" className="admin-link admin-link--danger" onClick={() => saveSenders(data.senders.filter((a) => a !== address), `${address} removed.`)}>
                   Remove

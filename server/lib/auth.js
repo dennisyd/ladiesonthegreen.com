@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-// Signed tokens (member sessions, sign-in links, admin sessions). The key comes
+// Signed tokens (member and admin sessions) and sign-in code hashes. The key comes
 // from SESSION_SECRET, or is generated once and kept in server/data so sessions
 // survive restarts without any setup.
 function loadSecret(dataDir) {
@@ -45,7 +45,7 @@ export function createAuth(dataDir) {
     }
   }
 
-  return { sign, verify };
+  return { sign, verify, digest: (value) => hmac(`signin-code:${value}`) };
 }
 
 export function readCookie(req, name) {

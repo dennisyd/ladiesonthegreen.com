@@ -60,7 +60,7 @@ Uploaded PDFs are stored on disk at `server/uploads/magazine/` (gitignored) with
 
 - `/join` — Founding Membership sign-up. Filling in the form does **not** create a member: the details wait in `server/data/signups.json` and the visitor is sent to the Stripe Payment Link for the current price. Only a confirmed payment creates the member (carrying over the form details). Unfinished sign-ups show in `/admin` → Follow-ups, where they can be reminded, marked as paid by hand (cash/check), or deleted; they expire on their own after 30 days. Prices, the founding-rate deadline, and the Payment Links live in `shared/membership.js` (used by both the client and the server).
 - `/admin` — password-protected dashboard: member list with payment status, CSV export, follow-up reminders for people who registered but didn't pay, event ticket registrations, member offers, announcement emails, and a Stripe sync.
-- `/members` — member portal. Members sign in with a one-time link emailed to them (no passwords). Only active (or past-due, so they can fix their card) members get in. Shows their membership, upcoming member events, offers and discount codes, and a "Manage billing" button (Stripe's customer portal).
+- `/members` — member portal. A valid signed-in browser opens the portal directly (30-day session). Otherwise, members enter their email and a six-digit one-time code emailed to them, which can be read on another device. Codes expire in 10 minutes, allow five guesses, and can be used once; resending invalidates the previous code. Only active (or past-due, so they can fix their card) members get in. New emails go to `/join`; inactive memberships get an account-help message. Shows their membership, upcoming member events, offers and discount codes, and a "Manage billing" button (Stripe's customer portal).
 - **Portal events** — managed in `/admin` → Portal events (stored in `server/data/events.json`, photos in `server/uploads/events/`). Each event has a date (an exact day, just a month and year, just a year, or "to be announced"), optional time, a location (or "to be determined"), description, photo and RSVP link, with a live preview. Events show to members until their date passes (to-be-announced ones stay until you give them a date, archive or delete them); **Archive** hides one but keeps it (Restore brings it back), **Delete** removes it for good.
 - **Welcome email for existing members** — `/admin` → Settings lists active members who haven't been sent the welcome email yet; tick who should get it and send. Individual members can be sent or re-sent it from Members → Details.
 
@@ -82,7 +82,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...                  # from the webhook endpoint bel
 SITE_URL=https://ladiesonthegreen.com            # optional; used in emailed links
 ```
 
-The SMTP settings above are also required in production: sign-in links, reminders, and announcements are sent by email. Without SMTP (local development) those emails are printed to the server log instead.
+The SMTP settings above are also required in production: sign-in codes, reminders, and announcements are sent by email. Without SMTP (local development) those emails are printed to the server log instead. Pending sign-in challenges are stored as keyed hashes in `server/data/signin-codes.json`, so they survive a restart. Old sign-in links now ask the member to request a code.
 
 ### Stripe setup (one time)
 
