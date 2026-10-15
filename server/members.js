@@ -737,6 +737,7 @@ export function createMembership(dataDir) {
     mountWebhook,
     mountRoutes,
     requireAdmin,
+    requireMember,
     stripe,
     addWebhookHandler: (handler) => webhookHandlers.push(handler)
   };

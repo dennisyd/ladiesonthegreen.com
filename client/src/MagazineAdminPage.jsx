@@ -10,7 +10,7 @@ export default function MagazineAdminPage() {
     fetch("/api/magazine")
       .then((res) => res.json())
       .then((data) => {
-        if (data.ok) setCurrent(data);
+        if (data.ok && data.filename) setCurrent(data);
       })
       .catch(() => {});
   }, []);
@@ -43,7 +43,7 @@ export default function MagazineAdminPage() {
 
       setCurrent(data);
       setStatus("success");
-      setMessage(`"${data.title}" is now live on /magazine.`);
+      setMessage(`"${data.title}" has been saved. Publication remains on hold until the issue is confirmed final.`);
       form.reset();
     } catch (error) {
       setStatus("error");
@@ -57,8 +57,9 @@ export default function MagazineAdminPage() {
         <span className="section-kicker">Ladies On The Green</span>
         <h1>Magazine Upload</h1>
         <p>
-          Upload a PDF to replace the issue currently shown at{" "}
-          <a href="/magazine">/magazine</a>. Only one issue is live at a time.
+          Upload a PDF to replace the stored issue for{" "}
+          <a href="/magazine">/magazine</a>. Uploading does not publish the magazine.
+          Members will see the coming-soon notice until the issue is confirmed final.
         </p>
 
         {current && (

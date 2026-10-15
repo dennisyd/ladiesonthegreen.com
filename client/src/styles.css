@@ -1655,6 +1655,24 @@ textarea:focus {
   color: var(--pink);
 }
 
+.magazine-status h2 {
+  color: var(--green);
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  margin: 24px 0;
+  max-width: 1000px;
+  overflow-wrap: anywhere;
+}
+
+.magazine-access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
 .magazine-viewer {
   display: grid;
   gap: 20px;

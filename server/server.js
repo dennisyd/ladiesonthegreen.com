@@ -5,6 +5,7 @@ import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { magazineMetadata, requireFinalMagazine } from "./lib/magazine-release.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -195,13 +196,7 @@ const magazineUpload = multer({
   }
 });
 
-app.get("/api/magazine", async (_req, res) => {
-  const meta = await readMagazineMeta();
-  if (!meta) {
-    return res.status(404).json({ ok: false, error: "No issue has been uploaded yet." });
-  }
-  res.json({ ok: true, ...meta, url: `/uploads/magazine/${meta.filename}` });
-});
+app.get("/api/magazine", membership.requireMember, magazineMetadata(readMagazineMeta));
 
 app.post("/api/magazine/upload", (req, res) => {
   magazineUpload.single("file")(req, res, async (err) => {
@@ -250,6 +245,9 @@ shop.mountRoutes(app);
 app.use("/api", (_req, res) => {
   res.status(404).json({ ok: false, error: "Not found." });
 });
+
+// Apply access checks before the general uploads directory can serve a PDF.
+app.use("/uploads/magazine", membership.requireMember, requireFinalMagazine);
 
 app.use(
   "/uploads",

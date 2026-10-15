@@ -49,10 +49,22 @@ export default function MagazinePage() {
         const metaRes = await fetch("/api/magazine");
         const meta = await metaRes.json();
 
+        if (cancelled) return;
+        if (metaRes.status === 401 || metaRes.status === 403) {
+          setStatus("members-only");
+          setMessage("MEMBERS ONLY");
+          return;
+        }
+
         if (!metaRes.ok) {
           throw new Error(meta.error || "No issue is available yet.");
         }
         if (cancelled) return;
+        if (meta.comingSoon) {
+          setStatus("coming-soon");
+          setMessage(meta.message);
+          return;
+        }
         setTitle(meta.title);
         setMessage("Rendering pages...");
 
@@ -186,8 +198,14 @@ export default function MagazinePage() {
         </div>
 
         {status !== "ready" && (
-          <div className={`magazine-status magazine-status--${status}`}>
-            <p>{message}</p>
+          <div className={`magazine-status magazine-status--${status}`} role="status">
+            {status === "members-only" || status === "coming-soon" ? <h2>{message}</h2> : <p>{message}</p>}
+            {status === "members-only" && (
+              <div className="magazine-access-actions">
+                <a className="button button--primary" href="/members">Member Sign In</a>
+                <a className="button button--secondary" href="/join">Become A Member</a>
+              </div>
+            )}
           </div>
         )}
 

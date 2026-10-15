@@ -45,8 +45,8 @@ Use `SMTP_PORT=465` or `SMTP_SECURE=true` when your mail provider requires SSL.
 
 ## Digital magazine (flipbook)
 
-- `/magazine` — public page-turning viewer. Renders the PDF entirely in the browser (pdf.js), page by page, inside a flipbook (react-pageflip). No server-side conversion needed.
-- `/magazine/admin` — password-gated upload form. Uploading a PDF replaces the issue shown at `/magazine`; only one issue is live at a time, and the previous file is deleted automatically.
+- `/magazine` — members-only magazine. Visitors see **MEMBERS ONLY** with a member sign-in link. Signed-in members see **INAUGURAL FALL ISSUE COMING SOON** while `MAGAZINE_IS_FINAL` in `shared/magazine.js` is false. Keep it false until the owner explicitly confirms the issue is final; uploading a PDF does not publish it. Both magazine metadata and PDF files require member authentication, and unreleased PDFs cannot be read directly.
+- `/magazine/admin` — password-gated upload form. Uploading a PDF replaces the stored issue; only one issue is stored at a time, and the previous file is deleted automatically. Once explicitly released, members read it in the browser with the page-turning viewer.
 
 Set an admin password before starting the server, or uploads are refused:
 
