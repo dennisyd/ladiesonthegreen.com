@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { currentRate, regularRate } from "../../shared/membership.js";
+import { FOUNDING_DEADLINE_LABEL, currentRate, regularRate } from "../../shared/membership.js";
 import { SHOP_IN_NAV } from "../../shared/shop.js";
 
 // Prices, the founding-rate deadline and the Stripe Payment Links live in
@@ -159,7 +159,7 @@ export default function JoinPage() {
                 ${rate.amount} <span>/ year</span>
               </p>
               {rate.isFounding && (
-                <p className="join-copy__deadline">The ${rate.amount} annual deal expires October 15. Then ${regularRate.amount}/year.</p>
+                <p className="join-copy__deadline">The ${rate.amount} annual deal expires {FOUNDING_DEADLINE_LABEL}. Then ${regularRate.amount}/year.</p>
               )}
               <p>
                 Join our inaugural membership community and enjoy priority access, preferred pricing, exclusive privileges, and experiences curated especially for LOTG members.

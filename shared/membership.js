@@ -1,15 +1,17 @@
 // Membership pricing and Stripe Payment Links, shared by the Join page (client)
 // and the server (application emails, Stripe payment tracking).
 
-// Founding Membership: $99/year through October 15, 2026 (shown against a
-// crossed-out $149), then $149/year from midnight Eastern on October 16.
+// Founding Membership: $99/year through October 31, 2026 (shown against a
+// crossed-out $149), then $149/year from midnight Eastern on November 1.
+// To extend or end the offer, change the date below; the "expires" wording on the
+// Join page and in reminder emails follows it.
 // Each price has its own Stripe Payment Link (recurring yearly price). If a link
 // is empty, the Join form still saves the application, it just skips payment.
-export const FOUNDING_RATE_ENDS = new Date("2026-10-16T00:00:00-04:00");
+export const FOUNDING_RATE_ENDS = new Date("2026-11-01T00:00:00-04:00");
 export const foundingRate = { amount: 99, paymentUrl: "https://buy.stripe.com/aFaeVd0bV3aUf5Rbpwdby0E" };
 export const regularRate = { amount: 149, paymentUrl: "" };
 
-// Last day of the founding rate, e.g. "October 15" (the day before the switch, Eastern).
+// Last day of the founding rate, e.g. "October 31" (the day before the switch, Eastern).
 export const FOUNDING_DEADLINE_LABEL = new Date(FOUNDING_RATE_ENDS.getTime() - 1).toLocaleDateString("en-US", {
   month: "long",
   day: "numeric",
