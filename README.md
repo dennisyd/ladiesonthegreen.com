@@ -56,6 +56,10 @@ MAGAZINE_ADMIN_PASSWORD=choose_a_password
 
 Uploaded PDFs are stored on disk at `server/uploads/magazine/` (gitignored) with metadata in `server/data/magazine.json` (gitignored) — both persist across deploys as long as you don't wipe the VPS filesystem, but they are **not** part of the git repo or the deploy pull. Back up `server/uploads/` and `server/data/` separately if the current issue matters.
 
+## Pages and menu
+
+The main menu is one shared list in `client/src/siteNav.js`, used by every public page, so a change there changes the menu everywhere. Besides the home page, the public pages are `/about` (About Us), `/girls-on-the-green` (Girls on the Green | NextGen), `/foundation`, `/magazine`, `/shop` and `/join`. Their wording is in `client/src/AboutPage.jsx` and `client/src/GirlsOnTheGreenPage.jsx`.
+
 ## Members, payments, and admin
 
 - `/join` — Founding Membership sign-up. Filling in the form does **not** create a member: the details wait in `server/data/signups.json` and the visitor is sent to the Stripe Payment Link for the current price. Only a confirmed payment creates the member (carrying over the form details). Unfinished sign-ups show in `/admin` → Follow-ups, where they can be reminded, marked as paid by hand (cash/check), or deleted; they expire on their own after 30 days. Prices, the founding-rate deadline, and the Payment Links live in `shared/membership.js` (used by both the client and the server).

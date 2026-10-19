@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { navItems } from "./siteNav.js";
 import { FOUNDING_DEADLINE_LABEL, currentRate, regularRate } from "../../shared/membership.js";
-import { SHOP_IN_NAV } from "../../shared/shop.js";
 
 // Prices, the founding-rate deadline and the Stripe Payment Links live in
 // shared/membership.js so the server tracks payments against the same links.
@@ -18,17 +18,6 @@ const memberExperience = [
   "Access to our private member community for conversations, connections, invitations, and opportunities",
   "Special member surprises and privileges throughout the year"
 ];
-
-const navItems = [
-  { label: "Home", href: "/" },
-  { label: "Events", href: "/#events" },
-  { label: "Membership", href: "/#membership" },
-  { label: "Magazine", href: "/magazine" },
-  { label: "Foundation", href: "/foundation" },
-  ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
-  { label: "About Us", href: "/#about" }
-];
-
 export default function JoinPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const rate = currentRate();

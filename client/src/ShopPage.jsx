@@ -1,19 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { navItems } from "./siteNav.js";
 import { MAX_PER_ITEM, SHIPPING_CENTS, SHOP_IN_NAV, formatCents } from "../../shared/shop.js";
 import { api } from "./api.js";
 
 const CART_KEY = "lotg_cart";
-
-const navItems = [
-  { label: "Home", href: "/" },
-  { label: "Events", href: "/#events" },
-  { label: "Membership", href: "/#membership" },
-  { label: "Magazine", href: "/magazine" },
-  { label: "Foundation", href: "/foundation" },
-  { label: "Shop", href: "/shop" },
-  { label: "About Us", href: "/#about" }
-];
-
 function loadCart() {
   try {
     const saved = JSON.parse(window.localStorage.getItem(CART_KEY) || "{}");

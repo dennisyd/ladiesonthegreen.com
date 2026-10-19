@@ -1,17 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { SHOP_IN_NAV } from "../../shared/shop.js";
-
-const navItems = [
-  { label: "Home", href: "/" },
-  { label: "Become A Member", href: "/join" },
-  { label: "Events", href: "/#events" },
-  { label: "Membership", href: "/#membership" },
-  { label: "Magazine", href: "/magazine" },
-  { label: "Foundation", href: "/foundation" },
-  ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
-  { label: "About Us", href: "/#about" }
-];
-
+import { navItems } from "./siteNav.js";
 export default function FoundationPage() {
   const [menuOpen, setMenuOpen] = useState(false);
 

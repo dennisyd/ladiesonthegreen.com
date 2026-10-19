@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 import JoinPage from "./JoinPage.jsx";
-import { SHOP_IN_NAV } from "../../shared/shop.js";
+import { navItems as siteNavItems } from "./siteNav.js";
 
 // Code-split: the flipbook viewer pulls in pdf.js + react-pageflip (~2MB),
 // which only the /magazine routes need, so keep them out of every other
@@ -12,6 +12,8 @@ const MagazineAdminPage = lazy(() => import("./MagazineAdminPage.jsx"));
 const AdminPage = lazy(() => import("./AdminPage.jsx"));
 const MembersPage = lazy(() => import("./MembersPage.jsx"));
 const ShopPage = lazy(() => import("./ShopPage.jsx"));
+const AboutPage = lazy(() => import("./AboutPage.jsx"));
+const GirlsOnTheGreenPage = lazy(() => import("./GirlsOnTheGreenPage.jsx"));
 const FoundationPage = lazy(() => import("./FoundationPage.jsx"));
 
 const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
@@ -120,16 +122,11 @@ const heroSlides = [
   { type: "image", src: "/hero-4.jpg", alt: "Ladies On The Green members seated together at the clubhouse" }
 ];
 
-const navItems = [
-  { label: "Home", href: "#top" },
-  { label: "Become A Member", href: "/join" },
-  { label: "Events", href: "#events" },
-  { label: "Membership", href: "#membership" },
-  { label: "Magazine", href: "/magazine" },
-  { label: "Foundation", href: "/foundation" },
-  ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
-  { label: "About Us", href: "#about" }
-];
+// The shared menu uses site-wide paths; on the home page its items scroll in place.
+const navItems = siteNavItems.map((item) => ({
+  ...item,
+  href: item.href === "/" ? "#top" : item.href.replace(/^\/#/, "#")
+}));
 
 const galleryEvents = [
   {
@@ -544,34 +541,6 @@ function App() {
             </p>
           </form>
         </section>
-
-        <section className="about" id="about" aria-labelledby="about-title">
-          <div className="section-kicker">About Us</div>
-          <div className="about__grid">
-            <div className="about__heading">
-              <h2 id="about-title">Ladies on the Green®</h2>
-              <p className="about__tagline">More Than Golf. A Lifestyle. A Community.</p>
-            </div>
-            <div className="about__copy">
-              <p>
-                Founded by Martine “Dee” Dennis, Founder &amp; CEO, Ladies on the Green® is a private golf and lifestyle collective connecting accomplished women through golf, friendship, networking, and elevated experiences.
-              </p>
-              <p>
-                More than a membership, we are a community where women build meaningful relationships, explore new opportunities, and thrive together on and beyond the fairway.
-              </p>
-              <p>
-                Our members enjoy curated golf, racquet, social, wellness, travel, and charitable experiences, with select events reserved exclusively for members. All skill levels are welcome.
-              </p>
-              <p className="about__network"><strong>Our Strength Is Our Network.</strong></p>
-            </div>
-          </div>
-          <div className="about__invitation">
-            <h3>Your Place in the Collective Awaits</h3>
-            <p>Experience the connections, opportunities, and privileges of belonging.</p>
-            <a className="button button--gold" href="/join">Become a Member Today!</a>
-            <p className="about__closing">Come for the golf. Stay for the friendships. Leave inspired.</p>
-          </div>
-        </section>
       </main>
 
       <footer className="site-footer">
@@ -597,7 +566,9 @@ const routes = {
   "/magazine/admin": MagazineAdminPage,
   "/admin": AdminPage,
   "/members": MembersPage,
-  "/shop": ShopPage
+  "/shop": ShopPage,
+  "/about": AboutPage,
+  "/girls-on-the-green": GirlsOnTheGreenPage
 };
 const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
 const PageComponent = routes[pathname];

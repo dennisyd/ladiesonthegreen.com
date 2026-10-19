@@ -1,21 +1,10 @@
 import React, { forwardRef, useEffect, useRef, useState } from "react";
-import { SHOP_IN_NAV } from "../../shared/shop.js";
+import { navItems } from "./siteNav.js";
 import HTMLFlipBook from "react-pageflip";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
-
-const navItems = [
-  { label: "Home", href: "/" },
-  { label: "Events", href: "/#events" },
-  { label: "Membership", href: "/#membership" },
-  { label: "Magazine", href: "/magazine" },
-  { label: "Foundation", href: "/foundation" },
-  ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
-  { label: "About Us", href: "/#about" }
-];
-
 const Page = forwardRef(function Page({ src, alt }, ref) {
   return (
     <div className="magazine-page" ref={ref}>

@@ -3516,3 +3516,149 @@ textarea:focus {
 .event-modal__body .event-card__cta {
   justify-self: start;
 }
+
+/* ------------------------------------------------------------------
+   Content pages: About Us and Girls on the Green | NextGen
+   ------------------------------------------------------------------ */
+
+.page-hero {
+  background: linear-gradient(135deg, var(--navy-deep), var(--green-dark));
+  color: var(--cream);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  min-height: clamp(360px, 46vw, 540px);
+}
+
+.page-hero__text {
+  align-content: center;
+  display: grid;
+  gap: 16px;
+  padding: clamp(36px, 6vw, 84px) clamp(22px, 5vw, 76px);
+}
+
+.page-hero__eyebrow {
+  color: var(--gold);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.page-hero h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  line-height: 1.04;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.page-hero__sub {
+  color: var(--sand, #e6d3a6);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.page-hero__tagline {
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+  font-style: italic;
+  line-height: 1.35;
+  margin: 8px 0 0;
+}
+
+.page-hero__image {
+  min-height: 260px;
+  position: relative;
+}
+
+.page-hero__image img {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+}
+
+.page-article {
+  margin-inline: auto;
+  max-width: 780px;
+  padding: clamp(48px, 7vw, 96px) clamp(20px, 4vw, 48px) clamp(24px, 4vw, 48px);
+}
+
+.page-article p {
+  color: var(--ink);
+  font-size: 1.12rem;
+  line-height: 1.85;
+  margin: 0 0 1.4em;
+}
+
+.page-article > p:first-child {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+  line-height: 1.6;
+}
+
+.page-article .page-article__statement {
+  border-left: 4px solid var(--gold);
+  color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+  font-style: italic;
+  line-height: 1.5;
+  padding-left: 22px;
+}
+
+.page-link {
+  color: var(--green);
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.page-article .page-quote {
+  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 3.4vw, 2.5rem);
+  font-style: italic;
+  line-height: 1.3;
+  margin: clamp(32px, 5vw, 56px) 0 0;
+  padding: clamp(24px, 4vw, 40px) 0;
+  text-align: center;
+}
+
+.page-cta {
+  margin-inline: auto;
+  max-width: 780px;
+  padding: 0 clamp(20px, 4vw, 48px) clamp(64px, 9vw, 112px);
+}
+
+.page-cta .about__invitation {
+  margin-top: 0;
+}
+
+.page-cta__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+@media (max-width: 860px) {
+  .page-hero {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .page-hero__image {
+    min-height: 240px;
+    order: -1;
+  }
+}
