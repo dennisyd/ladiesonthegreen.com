@@ -3713,3 +3713,8 @@ textarea:focus {
 .gotg-form > p:not(.form-status) {
   margin: 0;
 }
+
+.page-hero--simple {
+  grid-template-columns: 1fr;
+  min-height: 0;
+}

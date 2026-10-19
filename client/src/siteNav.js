@@ -5,7 +5,7 @@ import { SHOP_IN_NAV } from "../../shared/shop.js";
 // home page itself turns them into in-page links.
 export const navItems = [
   { label: "Home", href: "/" },
-  { label: "Events", href: "/#events" },
+  { label: "Events", href: "/events" },
   { label: "Girls on the Green", href: "/girls-on-the-green" },
   { label: "Magazine", href: "/magazine" },
   { label: "Foundation", href: "/foundation" },
