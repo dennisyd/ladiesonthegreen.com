@@ -19,19 +19,20 @@ export default function GirlsOnTheGreenPage() {
       <SiteHeader currentPath="/girls-on-the-green" />
 
       <main id="top">
-        <section className="page-hero" aria-labelledby="nextgen-heading">
+        <section className="page-hero page-hero--banner" aria-labelledby="nextgen-heading">
+          <figure className="page-banner">
+            <img
+              src="/nextgen-banner.jpg"
+              alt="Girls on the Green: six young women in golf outfits walking together and laughing on a golf course"
+              width="1024"
+              height="381"
+            />
+          </figure>
           <div className="page-hero__text">
             <span className="page-hero__eyebrow">For the girls</span>
             <h1 id="nextgen-heading">Girls on the Green | NextGen</h1>
             <p className="page-hero__sub">An Initiative of Ladies on the Green®</p>
             <p className="page-hero__tagline">Learn the Game. Build Your Network. Find Your Circle.</p>
-          </div>
-          <div className="page-hero__image">
-            <img
-              src="/nextgen-hero.jpg"
-              alt="A smiling young woman on a golf course with her golf bag"
-              style={{ objectPosition: "center 30%" }}
-            />
           </div>
         </section>
 

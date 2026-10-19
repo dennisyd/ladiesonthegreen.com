@@ -3662,3 +3662,46 @@ textarea:focus {
     order: -1;
   }
 }
+
+/* Banner-style hero (Girls on the Green): the wide photo, then the title block, centred */
+.page-hero--banner {
+  display: block;
+  min-height: 0;
+  padding: clamp(28px, 5vw, 60px) clamp(16px, 4vw, 48px) clamp(40px, 6vw, 76px);
+  text-align: center;
+}
+
+/* Never wider than the photo's real size (1024px), so it stays sharp */
+.page-banner {
+  border: 1px solid rgba(216, 179, 75, 0.4);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  margin: 0 auto;
+  max-width: 1024px;
+  overflow: hidden;
+}
+
+.page-banner img {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.page-hero--banner .page-hero__text {
+  justify-items: center;
+  margin: clamp(28px, 4vw, 48px) auto 0;
+  max-width: 820px;
+  padding: 0;
+}
+
+.page-hero--banner h1 {
+  font-size: clamp(1.9rem, 3.8vw, 3rem);
+}
+
+/* On phones the banner would shrink to a thin strip, so show its middle (title and the closest faces) larger */
+@media (max-width: 640px) {
+  .page-banner img {
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+  }
+}
