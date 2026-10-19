@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { SiteFooter, SiteHeader } from "./SiteChrome.jsx";
 
 const paragraphs = [
@@ -10,6 +10,34 @@ const paragraphs = [
 ];
 
 export default function GirlsOnTheGreenPage() {
+  const [state, setState] = useState({ status: "idle", message: "" });
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const { name, email, phone, age, affiliation, experience, message } = Object.fromEntries(new FormData(form).entries());
+    const details = [
+      phone && `Phone: ${phone}`,
+      age && `Age: ${age}`,
+      affiliation && `College/workplace: ${affiliation}`,
+      `Golf experience: ${experience}`
+    ].filter(Boolean).join("\n");
+    setState({ status: "loading", message: "Sending..." });
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, interest: "Girls on the Green | NextGen", message: `${message}\n\n${details}` })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Something went wrong.");
+      form.reset();
+      setState({ status: "success", message: data.message });
+    } catch (error) {
+      setState({ status: "error", message: error.message || "Please try again in a moment." });
+    }
+  }
+
   useEffect(() => {
     document.title = "Girls on the Green | NextGen | Ladies on the Green®";
   }, []);
@@ -43,11 +71,47 @@ export default function GirlsOnTheGreenPage() {
           <p className="page-quote">More than golf. Connecting generations. Creating opportunities.</p>
         </article>
 
-        <section className="page-cta" aria-label="Get in touch">
-          <div className="page-cta__row">
-            <a className="button button--gold" href="/#contact">Get in touch</a>
-            <a className="button button--outline" href="/about">About Ladies on the Green®</a>
-          </div>
+        <section className="page-cta" id="get-in-touch" aria-labelledby="gotg-contact-heading">
+          <form className="join-form gotg-form" onSubmit={handleSubmit}>
+            <h2 id="gotg-contact-heading">Get in touch</h2>
+            <p>Tell us a little about yourself and we will email you back about Girls on the Green | NextGen.</p>
+            <label>
+              Name
+              <input name="name" type="text" autoComplete="name" required />
+            </label>
+            <label>
+              Email
+              <input name="email" type="email" autoComplete="email" required />
+            </label>
+            <label>
+              Phone (optional)
+              <input name="phone" type="tel" autoComplete="tel" />
+            </label>
+            <label>
+              Age
+              <input name="age" type="text" inputMode="numeric" />
+            </label>
+            <label>
+              College or workplace (optional)
+              <input name="affiliation" type="text" />
+            </label>
+            <label>
+              Golf experience
+              <select name="experience" defaultValue="Brand new to golf">
+                <option>Brand new to golf</option>
+                <option>Some experience</option>
+                <option>Play regularly</option>
+              </select>
+            </label>
+            <label>
+              Message
+              <textarea name="message" rows="4" required />
+            </label>
+            <button className="button button--gold" type="submit" disabled={state.status === "loading"}>
+              {state.status === "loading" ? "Sending..." : "Send message"}
+            </button>
+            <p className={`form-status form-status--${state.status}`} role="status">{state.message}</p>
+          </form>
         </section>
       </main>
 
