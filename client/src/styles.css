@@ -3168,6 +3168,7 @@ textarea:focus {
   display: block;
   height: 100%;
   object-fit: cover;
+  object-position: center top; /* flyers keep their title; the rest crops from the bottom */
   width: 100%;
 }
 
@@ -3278,6 +3279,7 @@ textarea:focus {
   /* Fill the box instead of setting the card's height, so tall photos can't stretch it. */
   .event-card--featured .event-card__image img {
     inset: 0;
+    object-fit: contain; /* show the whole flyer, nothing cut off */
     position: absolute;
   }
 }
