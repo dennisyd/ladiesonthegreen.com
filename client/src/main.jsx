@@ -3,8 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./styles.css";
 import JoinPage from "./JoinPage.jsx";
 import { navItems as siteNavItems } from "./siteNav.js";
-import { EventCards } from "./EventsPage.jsx";
-import { featuredEvents } from "./eventsData.js";
+import { EventCards, EventsLoading, useSiteEvents } from "./EventsPage.jsx";
 
 // Code-split: the flipbook viewer pulls in pdf.js + react-pageflip (~2MB),
 // which only the /magazine routes need, so keep them out of every other
@@ -70,6 +69,7 @@ const partners = ["Courses", "Clinics", "Brands", "Local Hosts"];
 function App() {
   const [formState, setFormState] = useState({ status: "idle", message: "" });
   const [menuOpen, setMenuOpen] = useState(false);
+  const siteEvents = useSiteEvents();
   const [activeBenefit, setActiveBenefit] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
   const heroVideoRef = useRef(null);
@@ -253,7 +253,8 @@ function App() {
             <span className="section-kicker">Featured Events</span>
             <h2 id="events-title">Golf experiences made to be seen, shared, and remembered.</h2>
           </div>
-          <EventCards events={featuredEvents.slice(0, 1)} />
+          <EventsLoading events={siteEvents} />
+          {Array.isArray(siteEvents) && <EventCards events={siteEvents.slice(0, 1)} />}
           <div className="page-cta__row">
             <a className="button button--outline" href="/events">See all events ↘</a>
           </div>

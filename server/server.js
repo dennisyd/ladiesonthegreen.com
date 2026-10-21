@@ -20,6 +20,7 @@ if (existsSync(envFile) && typeof process.loadEnvFile === "function") {
 // Imported after the .env file is loaded: these read process.env at load time.
 const { contactTo, createTransporter } = await import("./lib/mailer.js");
 const { createMembership } = await import("./members.js");
+const { createSiteEvents } = await import("./lib/site-events.js");
 const { createShop } = await import("./shop.js");
 const { currentRate } = await import("../shared/membership.js");
 
@@ -241,6 +242,7 @@ app.post("/api/magazine/upload", (req, res) => {
 
 membership.mountRoutes(app);
 shop.mountRoutes(app);
+createSiteEvents(path.join(__dirname, "data"), { requireAdmin: membership.requireAdmin }).mountRoutes(app);
 
 app.use("/api", (_req, res) => {
   res.status(404).json({ ok: false, error: "Not found." });

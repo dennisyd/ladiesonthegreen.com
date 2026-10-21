@@ -13,7 +13,7 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const LOCAL_IMAGE = /^\/uploads\/events\/[A-Za-z0-9_.-]+$/;
 
-const clean = (value, max) => String(value ?? "").trim().slice(0, max);
+export const clean = (value, max) => String(value ?? "").trim().slice(0, max);
 
 // Today's date in the club's time zone, as YYYY-MM-DD.
 export const todayEastern = (now = new Date()) =>
@@ -53,7 +53,7 @@ const sortKey = (e) => endDateOf(e) ?? "9999-12-31";
 
 const isRealDate = (value) => DATE.test(value) && new Date(`${value}T12:00:00Z`).toISOString().slice(0, 10) === value;
 
-function httpsUrl(value) {
+export function httpsUrl(value) {
   try {
     const url = new URL(value);
     return url.protocol === "https:" && !url.username && !url.password;
@@ -102,7 +102,7 @@ export function validateEvent(body) {
   return { event };
 }
 
-const byDate = (a, b) =>
+export const byDate = (a, b) =>
   sortKey(a).localeCompare(sortKey(b)) ||
   MODE_RANK[modeOf(a)] - MODE_RANK[modeOf(b)] ||
   (a.startTime || "").localeCompare(b.startTime || "");

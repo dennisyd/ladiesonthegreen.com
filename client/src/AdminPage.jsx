@@ -2,10 +2,11 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { currentRate } from "../../shared/membership.js";
 import { api, formatDate, formatMoney, statusLabels } from "./api.js";
 
+import { EventCards } from "./EventsPage.jsx";
 import { EventCard, EventDetails, eventBadge, eventMode, formatEventTime, formatEventWhen } from "./EventCard.jsx";
 import ShopCatalogAdmin from "./ShopCatalogAdmin.jsx";
 
-const tabs = ["Members", "Follow-ups", "Portal events", "Event tickets", "Shop", "Offers", "Announcements", "Settings"];
+const tabs = ["Members", "Follow-ups", "Site events", "Portal events", "Event tickets", "Shop", "Offers", "Announcements", "Settings"];
 
 export default function AdminPage() {
   const [signedIn, setSignedIn] = useState(null); // null = checking
@@ -43,6 +44,7 @@ export default function AdminPage() {
       <main className="admin-main">
         {tab === "Members" && <MembersTab />}
         {tab === "Follow-ups" && <FollowUpsTab />}
+        {tab === "Site events" && <SiteEventsTab />}
         {tab === "Portal events" && <PortalEventsTab />}
         {tab === "Event tickets" && <EventsTab />}
         {tab === "Shop" && <ShopTab />}
@@ -721,13 +723,18 @@ const DATE_MODES = [
   ["tba", "To be announced (TBA)"]
 ];
 
+const emptySiteEvent = {
+  title: "", tagline: "", dateMode: "exact", date: "", startTime: "", endTime: "", location: "", locationTbd: false,
+  extraDetails: "", description: "", link: "", linkLabel: "", pastNote: "", image: "", tallImage: true
+};
+
 const emptyEvent = {
   title: "", dateMode: "exact", date: "", startTime: "", endTime: "", location: "", locationTbd: false,
   description: "", link: "", linkLabel: "", image: ""
 };
 
 // "When is it?": an exact day, just a month, just a year, or to be announced.
-function EventDateFields({ form, setForm }) {
+function EventDateFields({ form, setForm, site = false }) {
   const mode = eventMode(form);
   const now = new Date();
   const thisYear = now.getFullYear();
@@ -777,9 +784,9 @@ function EventDateFields({ form, setForm }) {
       </div>
       {mode !== "exact" && (
         <p className="admin-sub">
-          {mode === "month" && "Members will see just the month and year. It leaves the portal when that month is over."}
-          {mode === "year" && "Members will see just the year. It leaves the portal when that year is over."}
-          {mode === "tba" && "Members will see \u201cDate to be announced.\u201d It stays in the portal until you give it a date, archive it or delete it."}
+          {mode === "month" && (site ? "Visitors will see just the month and year. It moves to past events when that month is over." : "Members will see just the month and year. It leaves the portal when that month is over.")}
+          {mode === "year" && (site ? "Visitors will see just the year. It moves to past events when that year is over." : "Members will see just the year. It leaves the portal when that year is over.")}
+          {mode === "tba" && (site ? "Visitors will see \u201cDate to be announced.\u201d It stays listed as upcoming until you give it a date, archive it or delete it." : "Members will see \u201cDate to be announced.\u201d It stays in the portal until you give it a date, archive it or delete it.")}
           {" "}Switch to an exact date when it is confirmed.
         </p>
       )}
@@ -788,7 +795,18 @@ function EventDateFields({ form, setForm }) {
 }
 
 function PortalEventsTab() {
-  const { data, error, reload } = useApi("/api/admin/events");
+  return <EventsManager base="/api/admin/events" />;
+}
+
+// Events on the public website (the Events page and the home page); no rebuild needed.
+function SiteEventsTab() {
+  return <EventsManager base="/api/admin/site-events" site />;
+}
+
+function EventsManager({ base, site = false }) {
+  const blank = site ? emptySiteEvent : emptyEvent;
+  const who = site ? "visitors" : "members";
+  const { data, error, reload } = useApi(base);
   const [form, setForm] = useState(null); // null = editor closed
   const [editingId, setEditingId] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -797,7 +815,7 @@ function PortalEventsTab() {
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
-  function openNew(from = emptyEvent) {
+  function openNew(from = blank) {
     setEditingId(null);
     setForm({ ...from });
     setNote({ error: "", message: "" });
@@ -806,13 +824,13 @@ function PortalEventsTab() {
 
   function edit(event) {
     setEditingId(event.id);
-    setForm({ ...emptyEvent, ...event });
+    setForm({ ...blank, ...event });
     setNote({ error: "", message: "" });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   const duplicate = (event) =>
-    openNew({ ...emptyEvent, ...event, date: eventMode(event) === "exact" ? "" : event.date, id: undefined, status: undefined, isPast: undefined });
+    openNew({ ...blank, ...event, date: eventMode(event) === "exact" ? "" : event.date, id: undefined, status: undefined, isPast: undefined });
 
   function closeEditor() {
     setForm(null);
@@ -823,8 +841,8 @@ function PortalEventsTab() {
     e.preventDefault();
     setBusy(true);
     try {
-      await api(editingId ? `/api/admin/events/${editingId}` : "/api/admin/events", { method: editingId ? "PUT" : "POST", body: form });
-      setNote({ error: "", message: editingId ? "Event updated." : "Event added. It is showing in the member portal now." });
+      await api(editingId ? `${base}/${editingId}` : base, { method: editingId ? "PUT" : "POST", body: form });
+      setNote({ error: "", message: editingId ? "Event updated." : (site ? "Event added. It is showing on the website now." : "Event added. It is showing in the member portal now.") });
       closeEditor();
       reload();
     } catch (err) {
@@ -836,10 +854,10 @@ function PortalEventsTab() {
 
   async function setStatus(event, status) {
     try {
-      await api(`/api/admin/events/${event.id}/status`, { method: "PATCH", body: { status } });
+      await api(`${base}/${event.id}/status`, { method: "PATCH", body: { status } });
       setNote({
         error: "",
-        message: status === "archived" ? `"${event.title}" is archived and no longer shown to members.` : `"${event.title}" is showing in the portal again.`
+        message: status === "archived" ? `"${event.title}" is archived and no longer shown to ${who}.` : `"${event.title}" is showing again.`
       });
       reload();
     } catch (err) {
@@ -850,7 +868,7 @@ function PortalEventsTab() {
   async function remove(event) {
     if (!window.confirm(`Delete "${event.title}" permanently? This can't be undone. To just hide it, use Archive instead.`)) return;
     try {
-      await api(`/api/admin/events/${event.id}`, { method: "DELETE" });
+      await api(`${base}/${event.id}`, { method: "DELETE" });
       if (editingId === event.id) closeEditor();
       setNote({ error: "", message: `"${event.title}" was deleted.` });
       reload();
@@ -867,7 +885,7 @@ function PortalEventsTab() {
     try {
       const body = new FormData();
       body.append("image", file);
-      const res = await fetch("/api/admin/events/image", { method: "POST", body, credentials: "same-origin" });
+      const res = await fetch(`${base}/image`, { method: "POST", body, credentials: "same-origin" });
       const result = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(result.error || "The photo could not be uploaded.");
       setForm((f) => ({ ...f, image: result.image }));
@@ -915,8 +933,12 @@ function PortalEventsTab() {
     <section>
       <div className="admin-section-head">
         <div>
-          <h2>Portal events</h2>
-          <p>Events shown to members in the member portal. An event stays up until its date passes. Archive hides one but keeps it; Delete removes it for good.</p>
+          <h2>{site ? "Site events" : "Portal events"}</h2>
+          <p>
+            {site
+              ? "Events shown on the public website (the Events page and the home page). They go live as soon as you save, with no rebuild. Past events stay listed as Past Events. Archive hides one but keeps it; Delete removes it for good."
+              : "Events shown to members in the member portal. An event stays up until its date passes. Archive hides one but keeps it; Delete removes it for good."}
+          </p>
         </div>
         {!form && <button type="button" className="button button--gold" onClick={() => openNew()}>Add event</button>}
       </div>
@@ -927,7 +949,13 @@ function PortalEventsTab() {
           <form className="admin-card" onSubmit={save}>
             <h2>{editingId ? "Edit event" : "New event"}</h2>
             <label>Title<input value={form.title} onChange={set("title")} required maxLength={120} placeholder="Twilight Nine & Wine" /></label>
-            <EventDateFields form={form} setForm={setForm} />
+            {site && (
+              <label>
+                Tagline (optional)
+                <input value={form.tagline} onChange={set("tagline")} maxLength={200} placeholder="Learn · Play · Connect" />
+              </label>
+            )}
+            <EventDateFields form={form} setForm={setForm} site={site} />
             <div className="admin-row">
               <label>
                 Start time (optional)
@@ -950,6 +978,12 @@ function PortalEventsTab() {
               />
               Location to be determined (TBD)
             </label>
+            {site && (
+              <label>
+                Extra details, one per line (optional)
+                <textarea rows={3} value={form.extraDetails} onChange={set("extraDetails")} placeholder={"$79 per person · All skill levels welcome\nLimited to 20 spots"} />
+              </label>
+            )}
             <label>
               Description (optional)
               <textarea rows={5} value={form.description} onChange={set("description")} maxLength={3000} placeholder="What to expect, what to bring, who it is for..." />
@@ -964,6 +998,18 @@ function PortalEventsTab() {
                 <input value={form.linkLabel} onChange={set("linkLabel")} maxLength={40} placeholder="RSVP & details" disabled={!form.link} />
               </label>
             </div>
+            {site && (
+              <>
+                <label>
+                  Note shown after it has passed (optional)
+                  <input value={form.pastNote} onChange={set("pastNote")} maxLength={120} placeholder="Sold out · This event has taken place" />
+                </label>
+                <label className="admin-check">
+                  <input type="checkbox" checked={form.tallImage !== false} onChange={(e) => setForm({ ...form, tallImage: e.target.checked })} />
+                  Photo is a tall flyer (turn off for a wide photo)
+                </label>
+              </>
+            )}
             <div className="event-editor__photo">
               <span>Photo (optional)</span>
               <div className="member-detail__actions">
@@ -978,17 +1024,26 @@ function PortalEventsTab() {
             </div>
           </form>
           <div className="event-editor__preview">
-            <span className="admin-sub">Preview: how members will see it. Click it to see the full details view.</span>
-            <EventCard event={form} preview onOpen={() => setPreviewOpen(true)} />
-            {previewOpen && <EventDetails event={form} preview onClose={() => setPreviewOpen(false)} />}
+            {site ? (
+              <>
+                <span className="admin-sub">Preview: how it will look on the website.</span>
+                <EventCards events={[form]} preview />
+              </>
+            ) : (
+              <>
+                <span className="admin-sub">Preview: how members will see it. Click it to see the full details view.</span>
+                <EventCard event={form} preview onOpen={() => setPreviewOpen(true)} />
+                {previewOpen && <EventDetails event={form} preview onClose={() => setPreviewOpen(false)} />}
+              </>
+            )}
           </div>
         </div>
       )}
 
       <div className="admin-group">
-        <h3>Showing in the portal <span>{showing.length}</span></h3>
+        <h3>{site ? "Upcoming on the website" : "Showing in the portal"} <span>{showing.length}</span></h3>
         {showing.length === 0 ? (
-          <p className="admin-empty">Nothing is showing. Members see &ldquo;No upcoming events&rdquo;. Add an event to get started.</p>
+          <p className="admin-empty">Nothing is showing. Add an event to get started.</p>
         ) : (
           <ul className="event-rows">
             {showing.map((e) => (
@@ -1000,7 +1055,7 @@ function PortalEventsTab() {
 
       {past.length > 0 && (
         <div className="admin-group">
-          <h3>Past events <span>{past.length} no longer shown to members</span></h3>
+          <h3>Past events <span>{past.length} {site ? "listed as past events" : "no longer shown to members"}</span></h3>
           <ul className="event-rows">
             {past.map((e) => (
               <Row key={e.id} event={e} actions={<>{link("Duplicate", () => duplicate(e))}{link("Archive", () => setStatus(e, "archived"))}{link("Delete", () => remove(e), true)}</>} />
