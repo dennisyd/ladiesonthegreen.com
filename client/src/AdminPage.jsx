@@ -44,7 +44,7 @@ export default function AdminPage() {
       <main className="admin-main">
         {tab === "Members" && <MembersTab />}
         {tab === "Follow-ups" && <FollowUpsTab />}
-        {tab === "Site events" && <SiteEventsTab />}
+        {tab === "Site events" && <SiteEventsTab onCopied={() => setTab("Portal events")} />}
         {tab === "Portal events" && <PortalEventsTab />}
         {tab === "Event tickets" && <EventsTab />}
         {tab === "Shop" && <ShopTab />}
@@ -799,11 +799,11 @@ function PortalEventsTab() {
 }
 
 // Events on the public website (the Events page and the home page); no rebuild needed.
-function SiteEventsTab() {
-  return <EventsManager base="/api/admin/site-events" site />;
+function SiteEventsTab({ onCopied }) {
+  return <EventsManager base="/api/admin/site-events" site onCopied={onCopied} />;
 }
 
-function EventsManager({ base, site = false }) {
+function EventsManager({ base, site = false, onCopied }) {
   const blank = site ? emptySiteEvent : emptyEvent;
   const who = site ? "visitors" : "members";
   const { data, error, reload } = useApi(base);
@@ -872,6 +872,28 @@ function EventsManager({ base, site = false }) {
       if (editingId === event.id) closeEditor();
       setNote({ error: "", message: `"${event.title}" was deleted.` });
       reload();
+    } catch (err) {
+      setNote({ error: err.message, message: "" });
+    }
+  }
+
+  // A time saver: makes a member-portal copy of a website event so it can be edited
+  // there (for example to add the location only members should see).
+  async function copyToPortal(event) {
+    try {
+      let image = "";
+      if (event.image) {
+        const blob = await (await fetch(event.image)).blob();
+        const body = new FormData();
+        body.append("image", blob, "photo");
+        const res = await fetch("/api/admin/events/image", { method: "POST", body, credentials: "same-origin" });
+        const result = await res.json().catch(() => ({}));
+        if (res.ok) image = result.image;
+      }
+      const { title, dateMode, date, startTime, endTime, location, locationTbd, description, link, linkLabel } = event;
+      await api("/api/admin/events", { method: "POST", body: { title, dateMode, date, startTime, endTime, location, locationTbd, description, link, linkLabel, image } });
+      window.alert(`"${event.title}" was copied to Portal events. Edit that copy there; the website event is unchanged.`);
+      onCopied?.();
     } catch (err) {
       setNote({ error: err.message, message: "" });
     }
@@ -1047,7 +1069,7 @@ function EventsManager({ base, site = false }) {
         ) : (
           <ul className="event-rows">
             {showing.map((e) => (
-              <Row key={e.id} event={e} actions={<>{link("Edit", () => edit(e))}{link("Duplicate", () => duplicate(e))}{link("Archive", () => setStatus(e, "archived"))}{link("Delete", () => remove(e), true)}</>} />
+              <Row key={e.id} event={e} actions={<>{link("Edit", () => edit(e))}{site && link("Copy to portal", () => copyToPortal(e))}{link("Duplicate", () => duplicate(e))}{link("Archive", () => setStatus(e, "archived"))}{link("Delete", () => remove(e), true)}</>} />
             ))}
           </ul>
         )}
@@ -1058,7 +1080,7 @@ function EventsManager({ base, site = false }) {
           <h3>Past events <span>{past.length} {site ? "listed as past events" : "no longer shown to members"}</span></h3>
           <ul className="event-rows">
             {past.map((e) => (
-              <Row key={e.id} event={e} actions={<>{link("Duplicate", () => duplicate(e))}{link("Archive", () => setStatus(e, "archived"))}{link("Delete", () => remove(e), true)}</>} />
+              <Row key={e.id} event={e} actions={<>{site && link("Copy to portal", () => copyToPortal(e))}{link("Duplicate", () => duplicate(e))}{link("Archive", () => setStatus(e, "archived"))}{link("Delete", () => remove(e), true)}</>} />
             ))}
           </ul>
         </div>
