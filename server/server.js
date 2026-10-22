@@ -1,4 +1,6 @@
 import express from "express";
+import helmet from "helmet";
+import { createRateLimiter, safeEqual } from "./lib/auth.js";
 import multer from "multer";
 import path from "node:path";
 import fs from "node:fs/promises";
@@ -35,6 +37,33 @@ const shop = createShop(path.join(__dirname, "data"), {
 membership.addWebhookHandler(shop.handleEvent);
 
 app.disable("x-powered-by");
+
+// Security headers. The CSP only lets the page load its own scripts; images may come
+// from any https address (admin-pasted photo links), and checkout forms may go to Stripe.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:", "https:"],
+        mediaSrc: ["'self'", "blob:"],
+        fontSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+        workerSrc: ["'self'", "blob:"],
+        frameAncestors: ["'self'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'", "https://buy.stripe.com", "https://checkout.stripe.com"]
+      }
+    },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    hsts: { maxAge: 15552000, includeSubDomains: false },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false // emails and link previews load our images from other sites
+  })
+);
 app.set("trust proxy", 1); // behind Nginx: real client IP + https detection for secure cookies
 membership.mountWebhook(app); // needs the raw body, so before express.json
 app.use(express.json({ limit: "32kb" }));
@@ -168,6 +197,7 @@ app.post("/api/membership", async (req, res) => {
 const uploadsDir = path.join(__dirname, "uploads", "magazine");
 const magazineMetaPath = path.join(__dirname, "data", "magazine.json");
 const magazineAdminPassword = process.env.MAGAZINE_ADMIN_PASSWORD;
+const allowMagazineUpload = createRateLimiter(8, 15 * 60 * 1000);
 
 await fs.mkdir(uploadsDir, { recursive: true });
 await fs.mkdir(path.dirname(magazineMetaPath), { recursive: true });
@@ -213,7 +243,10 @@ app.post("/api/magazine/upload", (req, res) => {
       });
     }
 
-    if (req.body.password !== magazineAdminPassword) {
+    if (!allowMagazineUpload(req.ip)) {
+      return res.status(429).json({ ok: false, error: "Too many attempts. Please wait a few minutes." });
+    }
+    if (!safeEqual(req.body.password ?? "", magazineAdminPassword)) {
       if (req.file) await fs.unlink(req.file.path).catch(() => {});
       return res.status(401).json({ ok: false, error: "Incorrect password." });
     }
