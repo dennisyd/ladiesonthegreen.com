@@ -243,7 +243,10 @@ function App() {
                 Our members enjoy curated golf, racquet, social, wellness, travel, and charitable experiences, with select events reserved exclusively for members. Whether you're new to golf or an experienced player, all skill levels are welcome.
               </p>
               <p className="about__network"><strong>Our Strength Is Our Network.</strong></p>
-              <a className="button button--gold" href="/join">Become a Member Today.</a>
+              <div className="about__welcome-actions">
+                <a className="button button--gold" href="/join">Become a Member Today.</a>
+                <a className="about__welcome-link" href="/join#welcome">Explore the Collective Experience ↗</a>
+              </div>
             </div>
           </div>
         </section>

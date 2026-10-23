@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { navItems } from "./siteNav.js";
+import WelcomeExperience from "./WelcomeExperience.jsx";
 import { FOUNDING_DEADLINE_LABEL, currentRate, regularRate } from "../../shared/membership.js";
 
 // Prices, the founding-rate deadline and the Stripe Payment Links live in
@@ -18,6 +19,7 @@ const memberExperience = [
   "Access to our private member community for conversations, connections, invitations, and opportunities",
   "Special member surprises and privileges throughout the year"
 ];
+
 export default function JoinPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const rate = currentRate();
@@ -102,44 +104,15 @@ export default function JoinPage() {
       </header>
 
       <main className="join-page">
+        <WelcomeExperience />
         <div className="join-page__grid">
           <section className="join-copy" aria-labelledby="join-title">
-            <span className="section-kicker">Ladies on the Green®</span>
-            <h1 id="join-title">Membership</h1>
-            <p className="join-copy__lede">
-              A curated collective of accomplished women connecting through golf, lifestyle, travel, and unforgettable experiences.
-            </p>
-            <p>
-              From local greens to iconic destinations, membership opens the door to new experiences, meaningful relationships, and a community designed for women who want to play, connect, and experience more.
-            </p>
+            <h2 id="join-title" className="join-copy__signup-title">Your next experience begins here.</h2>
 
-            <h2>Your Member Experience</h2>
-            <p>
-              Membership has its privileges. As a Ladies on the Green&reg; member, you&rsquo;ll enjoy preferred access, exclusive benefits, and curated experiences designed to help you play more, connect more, and experience more.
-            </p>
+            <h3>Your Member Experience</h3>
             <ul className="join-copy__list">
-              {memberExperience.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
+              {memberExperience.map((item) => <li key={item}>{item}</li>)}
             </ul>
-
-            <h2>Play. Connect. Travel. Grow.</h2>
-            <p>
-              Our curated calendar of golf experiences brings women together through lessons, practice, local rounds, wellness, friendly competition, networking, travel, and experiences beyond the fairway.
-            </p>
-
-            <h2>Golf Trips</h2>
-            <p>
-              Take your game beyond your home course. Explore iconic destinations, play memorable courses, and experience golf through the lens of friendship, travel, and connection with Ladies on the Green&reg;.
-            </p>
-
-            <h2>Our Strength Is Our Network</h2>
-            <p>
-              Build your circle through authentic connections with accomplished women from diverse professions, industries, and backgrounds &mdash; beyond the boardroom, on the fairway, over dinner, on the racquet court, and while experiencing the world together.
-            </p>
-            <p className="join-copy__quote">
-              This isn&rsquo;t just a golf membership. It&rsquo;s your invitation to connect, play, travel, and experience more.
-            </p>
 
             <div className="join-copy__offer">
               <span className="section-kicker">Founding Membership</span>
@@ -155,11 +128,6 @@ export default function JoinPage() {
               </p>
               <a className="button button--gold" href="#signup">Become A Founding Member</a>
             </div>
-
-            <p className="join-copy__closing">
-              Come for the golf. Stay for the friendships. Leave inspired.&reg;
-              <span>From local greens to iconic destinations, your next experience begins here.</span>
-            </p>
           </section>
 
           <aside className="checkout" id="signup" aria-labelledby="checkout-title">
