@@ -1,4 +1,4 @@
-import { eventPaymentLinks, membershipPaymentUrls } from "../../shared/membership.js";
+import { eventPaymentLinks, membershipPaymentUrls, membershipTierForPaymentUrl } from "../../shared/membership.js";
 import { newMember, normalizeEmail } from "./member-model.js";
 
 // Stripe subscription status -> member status. "incomplete" (first payment not
@@ -45,7 +45,8 @@ export function createStripeSync({ stripe, members, registrations, signups, onAc
   // Which of our products a checkout was for, or null if it isn't ours.
   async function classify(session) {
     const url = await paymentLinkUrl(idOf(session.payment_link));
-    if (membershipPaymentUrls.includes(url)) return { kind: "membership" };
+    const tier = membershipTierForPaymentUrl(url);
+    if (tier) return { kind: "membership", tier };
     if (url && eventPaymentLinks[url]) return { kind: "event", name: eventPaymentLinks[url] };
     return null;
   }
@@ -63,7 +64,7 @@ export function createStripeSync({ stripe, members, registrations, signups, onAc
   // recognised as a membership may create a member or match one by email; plain
   // subscription/invoice events must match a subscription or customer we know,
   // so other businesses on the same Stripe account never leak in.
-  async function applySubscription(sub, { email, name, phone, payment, fromCheckout = false } = {}) {
+  async function applySubscription(sub, { email, name, phone, payment, fromCheckout = false, membershipTier } = {}) {
     const customerId = idOf(sub.customer);
     const customerEmail = normalizeEmail(email || sub.customer?.email);
     const status = STATUS[sub.status];
@@ -96,6 +97,7 @@ export function createStripeSync({ stripe, members, registrations, signups, onAc
       }
       member.stripeCustomerId = customerId;
       member.stripeSubscriptionId = sub.id;
+      if (membershipTier) member.membershipTier = membershipTier;
       const price = sub.items?.data?.[0]?.price;
       if (price?.unit_amount != null) {
         member.plan = { amount: price.unit_amount / 100, interval: price.recurring?.interval || null };
@@ -163,7 +165,8 @@ export function createStripeSync({ stripe, members, registrations, signups, onAc
       name: details.name,
       phone: details.phone,
       payment: { at: iso(session.created), amount: (session.amount_total ?? 0) / 100 },
-      fromCheckout: true
+      fromCheckout: true,
+      membershipTier: kind.tier
     });
     return "membership";
   }

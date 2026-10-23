@@ -140,6 +140,7 @@ function Portal({ member, onSignOut }) {
           <div>
             <span className="section-kicker">Member Portal</span>
             <h1>Welcome back, {first}.</h1>
+            <p>{member.membershipTier === "prestige" ? "Founding Prestige Membership" : "Social Membership"}</p>
             <p>{perks.length > 0 ? "Your upcoming member events and exclusive offers, all in one place." : "Your upcoming member events, all in one place."}</p>
           </div>
         </section>

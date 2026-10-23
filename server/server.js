@@ -24,7 +24,7 @@ const { contactTo, createTransporter } = await import("./lib/mailer.js");
 const { createMembership } = await import("./members.js");
 const { createSiteEvents } = await import("./lib/site-events.js");
 const { createShop } = await import("./shop.js");
-const { currentRate } = await import("../shared/membership.js");
+const { membershipRate, membershipTiers } = await import("../shared/membership.js");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -125,19 +125,25 @@ app.post("/api/contact", async (req, res) => {
 });
 
 app.post("/api/membership", async (req, res) => {
-  const { email, name, address, address2, city, state, zip, country, phone } = req.body ?? {};
+  const { email, name, address, address2, city, state, zip, country, phone, membershipTier = "social" } = req.body ?? {};
 
   if (!email || !name || !address || !city || !state || !zip) {
     return res.status(400).json({ ok: false, error: "Please complete all required fields." });
   }
 
+  if (!Object.hasOwn(membershipTiers, membershipTier)) {
+    return res.status(400).json({ ok: false, error: "Please choose a valid membership." });
+  }
+  const rate = membershipRate(membershipTier);
+
   try {
-    await membership.recordApplication({ email, name, address, address2, city, state, zip, country, phone });
+    await membership.recordApplication({ email, name, address, address2, city, state, zip, country, phone, membershipTier });
   } catch (error) {
     console.error("Failed to save membership application", error);
   }
 
-  console.log("New Ladies On The Green founding membership application", {
+  console.log("New Ladies On The Green membership application", {
+    membershipTier,
     name,
     email,
     phone,
@@ -164,9 +170,9 @@ app.post("/api/membership", async (req, res) => {
       to: contactTo,
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       replyTo: email,
-      subject: `New founding membership application: ${name}`,
+      subject: `New ${rate.name} application: ${name}`,
       text: [
-        `New founding membership application ($${currentRate().amount} / year)`,
+        `New ${rate.name} application ($${rate.amount} / year)`,
         "",
         `Name: ${name}`,
         `Email: ${email}`,
@@ -189,7 +195,7 @@ app.post("/api/membership", async (req, res) => {
 
   return res.status(200).json({
     ok: true,
-    message: "Thank you! Your details are in. We will email you shortly with your payment link."
+    message: "Thank you! Your details are saved. Continue to secure payment to complete your membership."
   });
 });
 

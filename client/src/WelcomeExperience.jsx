@@ -6,6 +6,8 @@ const experiences = [
     title: "Golf, Elevated",
     subtitle: "Learn. Play. Grow.",
     image: "/welcome/golf-clinic.jpeg",
+    width: 619,
+    height: 619,
     alt: "A golf instructor helping a woman practice her swing during a group clinic",
     paragraphs: [
       "Whether you’re picking up a club for the first time or refining your game, our goal is to make quality golf instruction approachable, enjoyable, and accessible.",
@@ -19,6 +21,8 @@ const experiences = [
     title: "The Privilege of Partnership",
     subtitle: "More Connections. More Possibilities.",
     image: "/welcome/golf-partnerships.jpeg",
+    width: 451,
+    height: 357,
     alt: "A diverse group of women enjoying time together on the golf course",
     paragraphs: [
       "Your membership extends beyond the golf course.",
@@ -31,6 +35,8 @@ const experiences = [
     title: "The Social Collective",
     subtitle: "Where Connections Become Friendships.",
     image: "/welcome/social-collective.jpeg",
+    width: 582,
+    height: 388,
     alt: "Women sharing a toast and conversation around a brunch table",
     paragraphs: [
       "Some of life’s most meaningful connections happen away from the fairway.",
@@ -43,6 +49,8 @@ const experiences = [
     title: "Wellness & Lifestyle",
     subtitle: "Restore. Recharge. Reconnect.",
     image: "/welcome/beach-wellness.jpeg",
+    width: 612,
+    height: 408,
     alt: "A group enjoying a wellness and movement session beside the water on the beach",
     paragraphs: [
       "We believe an elevated lifestyle includes caring for the mind, body, and spirit.",
@@ -55,6 +63,8 @@ const experiences = [
     title: "Destinations & Discoveries",
     subtitle: "Travel Beautifully. Connect Meaningfully.",
     image: "/welcome/golf-destinations.jpeg",
+    width: 670,
+    height: 447,
     alt: "Four women golfers overlooking a coastal golf course and turquoise water",
     paragraphs: [
       "From memorable golf weekends to international destinations, our curated travel experiences bring together women who appreciate adventure, culture, relaxation, and exceptional company.",
@@ -67,6 +77,8 @@ const experiences = [
     title: "Serve. Lead. Love.",
     subtitle: "Connection With Purpose.",
     image: "/welcome/girls-on-the-green.jpeg",
+    width: 692,
+    height: 461,
     alt: "A woman helping a young girl learn to swing a golf club",
     paragraphs: [
       "Our Collective is built on the belief that true influence is measured not only by the connections we make, but also by the lives we touch.",
@@ -80,6 +92,8 @@ const experiences = [
     title: "The Founding Prestige Experience",
     subtitle: "An Elevated Level of Belonging.",
     image: "/hero-4.jpg",
+    width: 2048,
+    height: 1152,
     alt: "Ladies On The Green members gathered together at the clubhouse",
     paragraphs: [
       "For women who desire a more exclusive experience, Founding Prestige membership offers enhanced access to the Collective.",
@@ -123,7 +137,7 @@ export default function WelcomeExperience() {
               <div className="welcome-accordion__panel" id={panelId} role="region" aria-labelledby={buttonId} hidden={!open}>
                 {open && (
                   <div className="welcome-accordion__body">
-                    <img src={experience.image} alt={experience.alt} loading="lazy" decoding="async" />
+                    <img src={experience.image} alt={experience.alt} width={experience.width} height={experience.height} loading="lazy" decoding="async" />
                     <div className="welcome-accordion__copy">
                       {experience.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                       {experience.link && <a href={experience.link.href}>{experience.link.label}</a>}

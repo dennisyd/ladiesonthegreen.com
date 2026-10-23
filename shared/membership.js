@@ -9,7 +9,22 @@
 // is empty, the Join form still saves the application, it just skips payment.
 export const FOUNDING_RATE_ENDS = new Date("2026-11-01T00:00:00-04:00");
 export const foundingRate = { amount: 99, paymentUrl: "https://buy.stripe.com/aFaeVd0bV3aUf5Rbpwdby0E" };
-export const regularRate = { amount: 149, paymentUrl: "" };
+export const regularRate = { amount: 149, paymentUrl: "https://buy.stripe.com/3cI3cve2LeTC2j53X4dby0F" };
+export const prestigeRate = { amount: 350, paymentUrl: "https://buy.stripe.com/3cI5kD3o7aDm4rd9hodby0G" };
+
+export const membershipTiers = {
+  social: { name: "Social Membership" },
+  prestige: { name: "Founding Prestige Membership" }
+};
+
+export function membershipRate(tier = "social", now = new Date()) {
+  if (!Object.hasOwn(membershipTiers, tier)) throw new Error("Please choose a valid membership.");
+  return {
+    ...(tier === "prestige" ? { ...prestigeRate, isFounding: false } : currentRate(now)),
+    tier,
+    name: membershipTiers[tier].name
+  };
+}
 
 // Last day of the founding rate, e.g. "October 31" (the day before the switch, Eastern).
 export const FOUNDING_DEADLINE_LABEL = new Date(FOUNDING_RATE_ENDS.getTime() - 1).toLocaleDateString("en-US", {
@@ -29,8 +44,15 @@ export function currentRate(now = new Date()) {
 export const membershipPaymentUrls = [
   foundingRate.paymentUrl,
   regularRate.paymentUrl,
+  prestigeRate.paymentUrl,
   "https://buy.stripe.com/7sY8wPgaT9zie1Nalsdby0B" // original $89/year (archived)
 ].filter(Boolean);
+
+// Determine the purchased tier from the payment link, never the browser's choice.
+export function membershipTierForPaymentUrl(url) {
+  if (!membershipPaymentUrls.includes(url)) return null;
+  return url === prestigeRate.paymentUrl ? "prestige" : "social";
+}
 
 // One-off event tickets sold through Payment Links: URL -> event name.
 export const eventPaymentLinks = {

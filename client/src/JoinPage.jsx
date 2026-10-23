@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { navItems } from "./siteNav.js";
 import WelcomeExperience from "./WelcomeExperience.jsx";
-import { FOUNDING_DEADLINE_LABEL, currentRate, regularRate } from "../../shared/membership.js";
+import MembershipOptions from "./MembershipOptions.jsx";
+import { FOUNDING_DEADLINE_LABEL, FOUNDING_RATE_ENDS, membershipRate, regularRate } from "../../shared/membership.js";
 
 // Prices, the founding-rate deadline and the Stripe Payment Links live in
 // shared/membership.js so the server tracks payments against the same links.
 
 const memberExperience = [
   "Members-only golf, racquet, social, wellness, and charitable experiences",
-  "Priority and early access to clinics, events, golf trips, and limited-capacity experiences",
   "Exclusive member privileges, preferred offers, and partner benefits",
   "Complimentary quarterly digital access to The Collective, the Ladies on the Green® golf and lifestyle magazine",
   "Golf lessons, practice sessions, and intimate small-group instruction",
@@ -22,18 +22,38 @@ const memberExperience = [
 
 export default function JoinPage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const rate = currentRate();
-  const membershipPaymentUrl = rate.paymentUrl;
+  const [tier, setTier] = useState(() => new URLSearchParams(window.location.search).get("tier") === "prestige" ? "prestige" : "social");
+  const [pricingNow, setPricingNow] = useState(() => new Date());
+  const rate = membershipRate(tier, pricingNow);
   const [formState, setFormState] = useState({ status: "idle", message: "" });
 
   useEffect(() => {
+    const delay = FOUNDING_RATE_ENDS.getTime() - Date.now();
+    if (delay <= 0) return;
+    const timer = setTimeout(() => setPricingNow(new Date()), Math.min(delay, 2147483647));
+    return () => clearTimeout(timer);
+  }, [pricingNow]);
+
+  function chooseTier(value) {
+    if (formState.status === "loading") return;
+    setTier(value);
+    setFormState({ status: "idle", message: "" });
+  }
+
+  useEffect(() => {
     document.title = "Become A Member | Ladies On The Green";
+    const target = window.location.hash.slice(1);
+    if (["welcome", "membership-options", "signup"].includes(target)) {
+      document.getElementById(target)?.scrollIntoView();
+    }
   }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const payload = Object.fromEntries(new FormData(form).entries());
+    // Recheck the date on submit in case this tab was left open overnight.
+    const membershipPaymentUrl = membershipRate(payload.membershipTier).paymentUrl;
 
     setFormState({ status: "loading", message: "Saving your details..." });
 
@@ -105,6 +125,7 @@ export default function JoinPage() {
 
       <main className="join-page">
         <WelcomeExperience />
+        <MembershipOptions tier={tier} onChange={chooseTier} now={pricingNow} disabled={formState.status === "loading"} />
         <div className="join-page__grid">
           <section className="join-copy" aria-labelledby="join-title">
             <h2 id="join-title" className="join-copy__signup-title">Your next experience begins here.</h2>
@@ -112,10 +133,15 @@ export default function JoinPage() {
             <h3>Your Member Experience</h3>
             <ul className="join-copy__list">
               {memberExperience.map((item) => <li key={item}>{item}</li>)}
+              {tier === "prestige" && <>
+                <li>Priority registration for select golf clinics, events, and travel experiences</li>
+                <li>VIP gatherings, curated introductions, and special partner privileges</li>
+                <li>A signature welcome gift, two printed magazine editions annually, and a featured member spotlight</li>
+              </>}
             </ul>
 
             <div className="join-copy__offer">
-              <span className="section-kicker">Founding Membership</span>
+              <span className="section-kicker">{rate.name}</span>
               <p className="join-copy__price">
                 {rate.isFounding && <s className="price-was">${regularRate.amount}</s>}
                 ${rate.amount} <span>/ year</span>
@@ -124,16 +150,16 @@ export default function JoinPage() {
                 <p className="join-copy__deadline">The ${rate.amount} annual deal expires {FOUNDING_DEADLINE_LABEL}. Then ${regularRate.amount}/year.</p>
               )}
               <p>
-                Join our inaugural membership community and enjoy priority access, preferred pricing, exclusive privileges, and experiences curated especially for LOTG members.
+                {tier === "prestige" ? "Enjoy an elevated level of belonging with enhanced access, VIP connections, and a more personalized Collective experience." : "Join our community for golf, friendship, wellness, travel, and experiences curated especially for LOTG members."}
               </p>
-              <a className="button button--gold" href="#signup">Become A Founding Member</a>
+              <a className="button button--gold" href="#signup">Join {rate.name}</a>
             </div>
           </section>
 
           <aside className="checkout" id="signup" aria-labelledby="checkout-title">
             <div className="checkout__head">
               <div>
-                <h2 id="checkout-title">Founding Membership</h2>
+                <h2 id="checkout-title">{rate.name}</h2>
                 <img src="/ladiesonthegreen.png?v=2" alt="Ladies On The Green" />
               </div>
               <p className="checkout__price">
@@ -144,6 +170,16 @@ export default function JoinPage() {
             </div>
 
             <form className="checkout__form" onSubmit={handleSubmit}>
+              <fieldset>
+                <legend>Your membership</legend>
+                <label>
+                  Membership type
+                  <select name="membershipTier" value={tier} onChange={(event) => chooseTier(event.target.value)} disabled={formState.status === "loading"}>
+                    <option value="social">Social Membership — ${membershipRate("social", pricingNow).amount}/year</option>
+                    <option value="prestige">Founding Prestige Membership — $350/year</option>
+                  </select>
+                </label>
+              </fieldset>
               <fieldset>
                 <legend>Contact <span className="checkout__req-note">* Required</span></legend>
                 <label>
@@ -179,7 +215,7 @@ export default function JoinPage() {
               <div className="checkout__summary">
                 <h3>Summary</h3>
                 <div className="checkout__line">
-                  <span>Ladies on the Green Founding Membership</span>
+                  <span>Ladies on the Green {rate.name}</span>
                   <strong>
                     {rate.isFounding && <s className="price-was">${regularRate.amount}.00</s>}
                     ${rate.amount}.00<small>Yearly</small>

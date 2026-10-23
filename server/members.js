@@ -2,7 +2,7 @@ import express from "express";
 import crypto from "node:crypto";
 import path from "node:path";
 import Stripe from "stripe";
-import { FOUNDING_DEADLINE_LABEL, currentRate, regularRate } from "../shared/membership.js";
+import { FOUNDING_DEADLINE_LABEL, currentRate, regularRate, membershipRate } from "../shared/membership.js";
 import { clearCookie, createAuth, createRateLimiter, readCookie, safeEqual, setCookie } from "./lib/auth.js";
 import { checkMailLogin, mailConfigured, sendEmail } from "./lib/mailer.js";
 import { createMemberEvents } from "./lib/member-events.js";
@@ -113,6 +113,7 @@ export function createMembership(dataDir, { sendSignInEmail = sendEmail } = {}) 
   // submits again just gets their contact details refreshed.
   async function recordApplication(fields) {
     const email = normalizeEmail(fields.email);
+    const rate = membershipRate(fields.membershipTier || "social");
     const isMember = await members.update((data) => {
       const existing = data.members.find((m) => m.email === email);
       if (!existing) return false;
@@ -131,13 +132,15 @@ export function createMembership(dataDir, { sendSignInEmail = sendEmail } = {}) 
           if (fields[key]) existing[key] = clean(fields[key]);
         }
         existing.registeredAt = existing.updatedAt = new Date().toISOString();
-        existing.rateAtSignup = currentRate().amount;
+        existing.rateAtSignup = rate.amount;
+        existing.membershipTier = rate.tier;
         return;
       }
       data.signups.push(
         newMember({
           ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, clean(v)])),
-          rateAtSignup: currentRate().amount
+          rateAtSignup: rate.amount,
+          membershipTier: rate.tier
         })
       );
     });
@@ -146,21 +149,22 @@ export function createMembership(dataDir, { sendSignInEmail = sendEmail } = {}) 
   // --- Emails -------------------------------------------------------------
 
   function reminderEmail(member, req) {
-    const rate = currentRate();
+    const rate = membershipRate(member.membershipTier || "social");
     return {
       to: member.email,
       subject: rate.isFounding
         ? `Your $${rate.amount} founding membership is waiting`
-        : "Finish joining Ladies On The Green",
+        : `Finish joining Ladies On The Green — ${rate.name}`,
       text: [
         `Hi ${firstName(member.name)},`,
         "",
         "Thank you for starting your Ladies On The Green membership. Your spot is confirmed once payment is complete.",
+        `Selected membership: ${rate.name} — $${rate.amount}/year.`,
         "",
         ...(rate.isFounding
           ? [`The $${rate.amount} annual founding rate expires ${FOUNDING_DEADLINE_LABEL}. After that, membership is $${regularRate.amount}/year.`, ""]
           : []),
-        `Complete your membership here: ${origin(req)}/join`,
+        `Complete your membership here: ${origin(req)}/join?tier=${rate.tier}#signup`,
         "",
         "Questions? Just reply to this email.",
         "",

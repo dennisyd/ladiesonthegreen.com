@@ -395,6 +395,7 @@ function MemberDetail({ member, onChanged }) {
         <dt>Phone</dt><dd>{member.phone || "—"}</dd>
         <dt>Address</dt><dd>{address || "—"}</dd>
         <dt>Price at signup</dt><dd>{member.rateAtSignup ? formatMoney(member.rateAtSignup) : "—"}</dd>
+        <dt>Membership</dt><dd>{member.membershipTier === "prestige" ? "Founding Prestige Membership" : "Social Membership"}</dd>
         <dt>Activated</dt><dd>{formatDate(member.activatedAt)}</dd>
         <dt>Last payment</dt><dd>{member.lastPaymentAt ? `${formatMoney(member.lastPaymentAmount)} on ${formatDate(member.lastPaymentAt)}` : "—"}</dd>
         <dt>Reminders sent</dt><dd>{member.reminders?.count || 0}{member.reminders?.lastAt ? ` (last ${formatDate(member.reminders.lastAt)})` : ""}</dd>
@@ -513,12 +514,13 @@ function FollowUpsTab() {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Name</th><th>Started</th><th>Reminders</th><th aria-label="Actions" /></tr>
+              <tr><th>Name</th><th>Membership</th><th>Started</th><th>Reminders</th><th aria-label="Actions" /></tr>
             </thead>
             <tbody>
               {unpaid.map((m) => (
                 <tr key={m.id}>
                   <td><strong>{m.name}</strong><span className="admin-sub">{m.email}{m.phone ? ` · ${m.phone}` : ""}</span></td>
+                  <td>{m.membershipTier === "prestige" ? "Founding Prestige" : "Social"}<span className="admin-sub">{formatMoney(m.rateAtSignup || currentRate().amount)}/year</span></td>
                   <td>{formatDate(m.registeredAt)}</td>
                   <td>{m.reminders?.count ? `${m.reminders.count} (last ${formatDate(m.reminders.lastAt)})` : "None yet"}</td>
                   <td>
