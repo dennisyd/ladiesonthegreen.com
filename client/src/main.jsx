@@ -225,6 +225,16 @@ function App() {
                 aria-label="Ladies On The Green: golf, friendship, and lifestyle highlights"
               />
             </div>
+            <div className="film__frame film__frame--second">
+              <video
+                src="/collective-experience-2.mp4"
+                poster="/collective-experience-2-poster.jpg"
+                controls
+                playsInline
+                preload="none"
+                aria-label="Ladies On The Green Collective: community, golf, and club highlights"
+              />
+            </div>
           </div>
         </section>
 

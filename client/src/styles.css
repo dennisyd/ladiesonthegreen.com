@@ -587,6 +587,10 @@ p {
   overflow: hidden;
 }
 
+.film__frame--second {
+  margin-top: 28px;
+}
+
 .film__frame video {
   display: block;
   height: 100%;
