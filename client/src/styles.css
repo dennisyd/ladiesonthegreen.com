@@ -22,6 +22,24 @@
   box-sizing: border-box;
 }
 
+body.landing-page {
+  --pink: var(--gold);
+}
+
+.landing-page .button--primary {
+  box-shadow: 0 16px 34px rgba(216, 179, 75, 0.25);
+}
+
+.landing-page input:focus,
+.landing-page select:focus,
+.landing-page textarea:focus {
+  outline-color: rgba(216, 179, 75, 0.2);
+}
+
+.landing-page .form-status--error {
+  color: #8a6814;
+}
+
 html {
   scroll-behavior: smooth;
 }

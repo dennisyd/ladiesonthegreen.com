@@ -412,6 +412,7 @@ const PageComponent = routes[pathname];
 const root = createRoot(document.getElementById("root"));
 
 if (!PageComponent) {
+  document.body.classList.add("landing-page");
   root.render(<App />);
 } else {
   root.render(
