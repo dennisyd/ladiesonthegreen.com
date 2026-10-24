@@ -25,6 +25,7 @@ const heroSlides = [
   { type: "image", src: "/hero-golf-yellow-landscape.png", position: "64% top", alt: "Woman in yellow beside her golf bag and Ladies On The Green branding" },
   { type: "image", src: "/hero-sunset-friends-landscape.png", position: "50% center", alt: "Three diverse women looking out at the sunset together on the beach" },
   { type: "video", src: "/golf-video.mp4?v=2", alt: "" },
+  { type: "video", src: "/collective-experience-2.mp4", alt: "" },
   { type: "image", src: "/hero-4.jpg", alt: "Ladies On The Green members seated together at the clubhouse" }
 ];
 
@@ -72,7 +73,7 @@ function App() {
   const siteEvents = useSiteEvents();
   const [activeBenefit, setActiveBenefit] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
-  const heroVideoRef = useRef(null);
+  const heroVideoRefs = useRef([]);
   const currentBenefit = benefitTabs[activeBenefit];
 
   useEffect(() => {
@@ -87,7 +88,10 @@ function App() {
   }, [heroIndex]);
 
   useEffect(() => {
-    const video = heroVideoRef.current;
+    heroVideoRefs.current.forEach((item, index) => {
+      if (item && index !== heroIndex) item.pause();
+    });
+    const video = heroVideoRefs.current[heroIndex];
     if (!video) return;
     if (heroSlides[heroIndex].type === "video") {
       try {
@@ -168,7 +172,7 @@ function App() {
                 <video
                   className={index === heroIndex ? "hero__slide is-active" : "hero__slide"}
                   key={slide.src}
-                  ref={heroVideoRef}
+                  ref={(video) => { heroVideoRefs.current[index] = video; }}
                   src={slide.src}
                   muted
                   playsInline
@@ -223,16 +227,6 @@ function App() {
                 playsInline
                 preload="none"
                 aria-label="Ladies On The Green: golf, friendship, and lifestyle highlights"
-              />
-            </div>
-            <div className="film__frame film__frame--second">
-              <video
-                src="/collective-experience-2.mp4"
-                poster="/collective-experience-2-poster.jpg"
-                controls
-                playsInline
-                preload="none"
-                aria-label="Ladies On The Green Collective: community, golf, and club highlights"
               />
             </div>
           </div>
