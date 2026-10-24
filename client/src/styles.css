@@ -347,6 +347,7 @@ nav a {
   text-transform: uppercase;
 }
 
+.landing-page .film .section-kicker,
 .landing-page .events .section-kicker,
 .landing-page .moments .section-kicker {
   font-size: clamp(1.6rem, 3.5vw, 2.75rem);
