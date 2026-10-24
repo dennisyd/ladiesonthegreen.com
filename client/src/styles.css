@@ -347,6 +347,10 @@ nav a {
   text-transform: uppercase;
 }
 
+.landing-page .about .section-kicker {
+  font-size: 1.17rem;
+}
+
 .landing-page .film .section-kicker,
 .landing-page .events .section-kicker,
 .landing-page .moments .section-kicker {
