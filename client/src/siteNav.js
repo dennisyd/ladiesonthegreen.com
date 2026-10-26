@@ -10,8 +10,8 @@ export const navItems = [
   {
     label: "Foundation",
     children: [
-      { label: "Secure the Bag", href: "/foundation" },
-      { label: "Girls on the Green", href: "/girls-on-the-green" }
+      { label: "Girls on the Green", href: "/girls-on-the-green" },
+      { label: "Secure the Bag", href: "/foundation" }
     ]
   },
   ...(SHOP_IN_NAV ? [{ label: "Shop", href: "/shop" }] : []),
