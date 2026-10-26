@@ -28,7 +28,7 @@ export const QUESTIONNAIRE = {
         { id: "lastName", label: "Last name", type: "text", required: true, max: 80 },
         { id: "email", label: "Email address", type: "email", required: true, max: 200 },
         { id: "state", label: "Where are you located?", type: "state", required: true, hint: "Start typing to find your state." },
-        { id: "city", label: "City or town", type: "text", max: 120, sub: true },
+        { id: "city", label: "City or town", type: "text", max: 120, sub: true, showIf: { id: "state", filled: true } },
         {
           id: "relationship", label: "Which best describes your relationship with Ladies on the Green®?", type: "radio", required: true,
           options: ["I am a paid member", "I am interested in becoming a member", "I am interested in attending golf and social events"]
@@ -119,4 +119,8 @@ export const otherKey = (id) => `${id}Other`;
 
 export const allQuestions = () => QUESTIONNAIRE.sections.flatMap((section) => section.questions);
 
-export const isVisible = (question, answers) => !question.showIf || answers[question.showIf.id] === question.showIf.equals;
+export const isVisible = (question, answers) => {
+  const rule = question.showIf;
+  if (!rule) return true;
+  return rule.filled ? Boolean(answers[rule.id]) : answers[rule.id] === rule.equals;
+};

@@ -147,7 +147,7 @@ function Choices({ question, answers, setAnswer }) {
 function Question({ question, number, answers, setAnswer }) {
   const id = `q-${question.id}`;
   return (
-    <div className="qn-question">
+    <div className={`qn-question${question.showIf ? " qn-question--reveal" : ""}`}>
       <div className="qn-question__head">
         <label className="qn-question__label" id={`${question.id}-label`} htmlFor={["radio", "checkbox"].includes(question.type) ? undefined : id}>
           <span className="qn-question__number">{number}</span>

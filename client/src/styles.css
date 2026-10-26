@@ -4637,3 +4637,21 @@ textarea:focus {
 #questionnaire {
   scroll-margin-top: 80px;
 }
+
+/* Follow-up questions (City, referrer) ease in so they get noticed. */
+.qn-question--reveal {
+  animation: qn-reveal 0.45s ease-out;
+}
+
+@keyframes qn-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qn-question--reveal {
+    animation: none;
+  }
+}
