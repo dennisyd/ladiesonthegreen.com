@@ -71,7 +71,7 @@ export const QUESTIONNAIRE = {
         },
         {
           id: "budget", label: "What is your approximate monthly budget for golf?", type: "radio",
-          options: ["Under $100", "$100–$199", "$200–$299", "$300–$499", "$500 or more"]
+          options: ["No budget for golf right now", "Under $100", "$100–$199", "$200–$299", "$300–$499", "$500 or more"]
         }
       ]
     },
