@@ -48,27 +48,67 @@ export function validateAnswers(input) {
   return { answers };
 }
 
+// One answer as text, with "Other" replaced by what the person typed.
+export function displayAnswer(question, answers) {
+  const value = answers[question.id];
+  if (!value || (Array.isArray(value) && !value.length)) return "";
+  return (Array.isArray(value) ? value : [value]).map((v) => (v === OTHER ? `Other: ${answers[otherKey(question.id)]}` : v)).join("; ");
+}
+
 // A plain-text summary: each question followed by the answer.
 export function summarize(answers) {
   const lines = [QUESTIONNAIRE.title, ""];
   for (const section of QUESTIONNAIRE.sections) {
     const rows = [];
     for (const q of section.questions) {
-      const value = answers[q.id];
-      if (!value || (Array.isArray(value) && !value.length)) continue;
-      const shown = (Array.isArray(value) ? value : [value]).map((v) => (v === OTHER ? `Other: ${answers[otherKey(q.id)]}` : v));
-      rows.push(`${q.label}`, `  ${shown.join("; ")}`);
+      const shown = displayAnswer(q, answers);
+      if (shown) rows.push(`${q.label}`, `  ${shown}`);
     }
     if (rows.length) lines.push(section.title.toUpperCase(), ...rows, "");
   }
   return lines.join("\n");
 }
 
-export function createQuestionnaire(dataDir) {
+export function createQuestionnaire(dataDir, { requireAdmin }) {
   const store = jsonStore(path.join(dataDir, "questionnaire.json"), { responses: [] });
   const allow = createRateLimiter(10, 60 * 60 * 1000);
 
+  const csvCell = (value) => {
+    const text = value == null ? "" : String(value);
+    return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  };
+
   function mountRoutes(app) {
+    // Admin: every response, newest first.
+    app.get("/api/admin/questionnaire", requireAdmin, async (_req, res) => {
+      const { responses } = await store.read();
+      res.json({ ok: true, responses: responses.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt)) });
+    });
+
+    app.get("/api/admin/questionnaire.csv", requireAdmin, async (_req, res) => {
+      const { responses } = await store.read();
+      const questions = allQuestions();
+      const rows = [
+        ["Submitted", ...questions.map((q) => q.label)],
+        ...responses
+          .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
+          .map((r) => [r.submittedAt, ...questions.map((q) => displayAnswer(q, r.answers))])
+      ];
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="lotg-questionnaire-${new Date().toISOString().slice(0, 10)}.csv"`);
+      res.send("﻿" + rows.map((line) => line.map(csvCell).join(",")).join("\r\n"));
+    });
+
+    app.delete("/api/admin/questionnaire/:id", requireAdmin, async (req, res) => {
+      const removed = await store.update((data) => {
+        const before = data.responses.length;
+        data.responses = data.responses.filter((r) => r.id !== req.params.id);
+        return data.responses.length < before;
+      });
+      if (!removed) return res.status(404).json({ ok: false, error: "Response not found." });
+      res.json({ ok: true });
+    });
+
     app.post("/api/questionnaire", async (req, res) => {
       if (!allow(req.ip)) {
         return res.status(429).json({ ok: false, error: "Too many submissions from this connection. Please try again later." });

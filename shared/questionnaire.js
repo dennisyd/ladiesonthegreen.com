@@ -80,7 +80,7 @@ export const QUESTIONNAIRE = {
       questions: [
         {
           id: "eventFrequency", label: "How often would you attend Ladies on the Green® events?", type: "radio", required: true,
-          options: ["Monthly", "Quarterly", "Seasonally", "Depending on the event", "When available"]
+          options: ["Monthly", "Quarterly", "Seasonally", "Depends on the Event", "When available"]
         },
         {
           id: "experiences", label: "Which experiences interest you most?", type: "checkbox", required: true, other: true,

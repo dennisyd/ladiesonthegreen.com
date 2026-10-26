@@ -5,8 +5,9 @@ import { api, formatDate, formatMoney, statusLabels } from "./api.js";
 import { EventCards } from "./EventsPage.jsx";
 import { EventCard, EventDetails, eventBadge, eventMode, formatEventTime, formatEventWhen } from "./EventCard.jsx";
 import ShopCatalogAdmin from "./ShopCatalogAdmin.jsx";
+import QuestionnaireAdmin from "./QuestionnaireAdmin.jsx";
 
-const tabs = ["Members", "Follow-ups", "Site events", "Portal events", "Event tickets", "Shop", "Offers", "Announcements", "Settings"];
+const tabs = ["Members", "Follow-ups", "Questionnaire", "Site events", "Portal events", "Event tickets", "Shop", "Offers", "Announcements", "Settings"];
 
 export default function AdminPage() {
   const [signedIn, setSignedIn] = useState(null); // null = checking
@@ -44,6 +45,7 @@ export default function AdminPage() {
       <main className="admin-main">
         {tab === "Members" && <MembersTab />}
         {tab === "Follow-ups" && <FollowUpsTab />}
+        {tab === "Questionnaire" && <QuestionnaireAdmin />}
         {tab === "Site events" && <SiteEventsTab onCopied={() => setTab("Portal events")} />}
         {tab === "Portal events" && <PortalEventsTab />}
         {tab === "Event tickets" && <EventsTab />}

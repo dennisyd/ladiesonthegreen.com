@@ -4655,3 +4655,60 @@ textarea:focus {
     animation: none;
   }
 }
+
+/* Admin: Questionnaire tab */
+.qn-admin-toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.qn-admin-toolbar input[type="search"] {
+  flex: 1 1 240px;
+}
+
+.qn-admin-toolbar select {
+  flex: 0 1 190px;
+  width: auto;
+}
+
+.qn-admin-detail {
+  display: grid;
+  gap: 18px;
+  padding: 6px 0 10px;
+}
+
+.qn-admin-detail h4 {
+  color: var(--green);
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.qn-admin-detail dl {
+  display: grid;
+  gap: 4px 20px;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 1.6fr);
+  margin: 0;
+}
+
+.qn-admin-detail dt {
+  color: var(--muted);
+}
+
+.qn-admin-detail dd {
+  font-weight: 600;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .qn-admin-detail dl {
+    grid-template-columns: 1fr;
+  }
+
+  .qn-admin-detail dd {
+    margin-bottom: 8px;
+  }
+}

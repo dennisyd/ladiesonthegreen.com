@@ -283,7 +283,7 @@ app.post("/api/magazine/upload", (req, res) => {
 membership.mountRoutes(app);
 shop.mountRoutes(app);
 createSiteEvents(path.join(__dirname, "data"), { requireAdmin: membership.requireAdmin }).mountRoutes(app);
-createQuestionnaire(path.join(__dirname, "data")).mountRoutes(app);
+createQuestionnaire(path.join(__dirname, "data"), { requireAdmin: membership.requireAdmin }).mountRoutes(app);
 
 app.use("/api", (_req, res) => {
   res.status(404).json({ ok: false, error: "Not found." });
