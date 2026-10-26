@@ -23,6 +23,7 @@ if (existsSync(envFile) && typeof process.loadEnvFile === "function") {
 const { contactTo, createTransporter } = await import("./lib/mailer.js");
 const { createMembership } = await import("./members.js");
 const { createSiteEvents } = await import("./lib/site-events.js");
+const { createQuestionnaire } = await import("./lib/questionnaire.js");
 const { createShop } = await import("./shop.js");
 const { membershipRate, membershipTiers } = await import("../shared/membership.js");
 
@@ -282,6 +283,7 @@ app.post("/api/magazine/upload", (req, res) => {
 membership.mountRoutes(app);
 shop.mountRoutes(app);
 createSiteEvents(path.join(__dirname, "data"), { requireAdmin: membership.requireAdmin }).mountRoutes(app);
+createQuestionnaire(path.join(__dirname, "data")).mountRoutes(app);
 
 app.use("/api", (_req, res) => {
   res.status(404).json({ ok: false, error: "Not found." });

@@ -14,6 +14,7 @@ const AdminPage = lazy(() => import("./AdminPage.jsx"));
 const MembersPage = lazy(() => import("./MembersPage.jsx"));
 const ShopPage = lazy(() => import("./ShopPage.jsx"));
 const AboutPage = lazy(() => import("./AboutPage.jsx"));
+const QuestionnairePage = lazy(() => import("./QuestionnairePage.jsx"));
 const EventsPage = lazy(() => import("./EventsPage.jsx"));
 const GirlsOnTheGreenPage = lazy(() => import("./GirlsOnTheGreenPage.jsx"));
 const FoundationPage = lazy(() => import("./FoundationPage.jsx"));
@@ -407,6 +408,7 @@ const routes = {
   "/members": MembersPage,
   "/shop": ShopPage,
   "/events": EventsPage,
+  "/questions": QuestionnairePage,
   "/about": AboutPage,
   "/girls-on-the-green": GirlsOnTheGreenPage
 };
