@@ -180,6 +180,11 @@ function Question({ question, number, answers, setAnswer }) {
   );
 }
 
+function goToQuestionnaire(e) {
+  e.preventDefault();
+  document.getElementById("questionnaire")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 const CONTACTS = [
   { label: "Membership", email: "membership@ladiesonthegreen.com" },
   { label: "Partnerships", email: "partnerships@ladiesonthegreen.com" }
@@ -261,6 +266,9 @@ export default function QuestionnairePage() {
                   </li>
                 ))}
               </ul>
+              <a className="button button--gold contact-us__button" href="#questionnaire" onClick={goToQuestionnaire}>
+                Take Our Questionnaire ↓
+              </a>
             </div>
             <figure className="contact-us__photo">
               <img src="/connect-hey.jpg" alt="Hey! Let's connect. The Ladies on the Green clubhouse at golden hour." width="800" height="600" />
@@ -268,10 +276,7 @@ export default function QuestionnairePage() {
                 className="contact-us__cta"
                 href="#questionnaire"
                 aria-label="Take our questionnaire"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById("questionnaire")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
+                onClick={goToQuestionnaire}
               />
             </figure>
           </div>
