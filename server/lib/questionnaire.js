@@ -68,6 +68,15 @@ export function summarize(answers) {
   return lines.join("\n");
 }
 
+// Who gets the emailed copy: the club's contact address, Martine, and anyone listed in
+// QUESTIONNAIRE_NOTIFY_TO (comma separated) in the server's .env, without repeats.
+const ALWAYS_NOTIFY = ["martine.dennis@gmail.com"];
+
+export function notifyRecipients(extra = process.env.QUESTIONNAIRE_NOTIFY_TO || "") {
+  const list = [contactTo, ...ALWAYS_NOTIFY, ...extra.split(",")].map((e) => String(e || "").trim()).filter(Boolean);
+  return list.filter((e, i) => list.findIndex((x) => x.toLowerCase() === e.toLowerCase()) === i);
+}
+
 export function createQuestionnaire(dataDir, { requireAdmin }) {
   const store = jsonStore(path.join(dataDir, "questionnaire.json"), { responses: [] });
   const allow = createRateLimiter(10, 60 * 60 * 1000);
@@ -128,7 +137,7 @@ export function createQuestionnaire(dataDir, { requireAdmin }) {
         const name = `${answers.firstName} ${answers.lastName}`;
         transporter
           .sendMail({
-            to: contactTo,
+            to: notifyRecipients(),
             from: process.env.SMTP_FROM || process.env.SMTP_USER,
             replyTo: answers.email,
             subject: `New interest questionnaire from ${name}`,
