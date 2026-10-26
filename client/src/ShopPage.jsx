@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { navItems } from "./siteNav.js";
+import { NavLinks } from "./SiteChrome.jsx";
 import { MAX_PER_ITEM, SHIPPING_CENTS, SHOP_IN_NAV, formatCents } from "../../shared/shop.js";
 import { api } from "./api.js";
 
@@ -92,9 +92,7 @@ export default function ShopPage() {
           {menuOpen ? "Close" : "Menu"}
         </button>
         <nav className={menuOpen ? "is-open" : ""}>
-          {navItems.map((item) => (
-            <a href={item.href} key={item.href} aria-current={item.href === "/shop" ? "page" : undefined}>{item.label}</a>
-          ))}
+          <NavLinks currentPath="/shop" />
         </nav>
         <div className="header-actions">
           <a className="header-cta" href="#cart">Cart ({itemCount})</a>

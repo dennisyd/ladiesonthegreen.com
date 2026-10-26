@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { navItems } from "./siteNav.js";
+import { NavLinks } from "./SiteChrome.jsx";
 import WelcomeExperience from "./WelcomeExperience.jsx";
 import MembershipOptions from "./MembershipOptions.jsx";
 import { FOUNDING_DEADLINE_LABEL, FOUNDING_RATE_ENDS, membershipRate, regularRate } from "../../shared/membership.js";
@@ -114,9 +114,7 @@ export default function JoinPage() {
           {menuOpen ? "Close" : "Menu"}
         </button>
         <nav className={menuOpen ? "is-open" : ""}>
-          {navItems.map((item) => (
-            <a href={item.href} key={item.href}>{item.label}</a>
-          ))}
+          <NavLinks />
         </nav>
         <div className="header-actions">
           <a className="header-cta" href="/join" aria-current="page">Become A Member ↘</a>

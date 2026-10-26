@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useRef, useState } from "react";
-import { navItems } from "./siteNav.js";
+import { NavLinks } from "./SiteChrome.jsx";
 import HTMLFlipBook from "react-pageflip";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -171,9 +171,7 @@ export default function MagazinePage() {
           {menuOpen ? "Close" : "Menu"}
         </button>
         <nav className={menuOpen ? "is-open" : ""}>
-          {navItems.map((item) => (
-            <a href={item.href} key={item.href} onClick={closeMenu}>{item.label}</a>
-          ))}
+          <NavLinks onNavigate={closeMenu} />
         </nav>
         <div className="header-actions">
           <a className="header-cta" href="/join" onClick={closeMenu}>Become A Member ↘</a>

@@ -223,7 +223,7 @@ export default function QuestionnairePage() {
 
   return (
     <>
-      <SiteHeader currentPath="/questions" />
+      <SiteHeader currentPath="/connect" />
 
       <main id="top" className="qn">
         <section className="page-hero page-hero--simple" aria-labelledby="qn-heading">

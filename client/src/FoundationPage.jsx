@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { navItems } from "./siteNav.js";
+import { NavLinks } from "./SiteChrome.jsx";
 export default function FoundationPage() {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -24,15 +24,7 @@ export default function FoundationPage() {
           {menuOpen ? "Close" : "Menu"}
         </button>
         <nav id="foundation-navigation" className={menuOpen ? "is-open" : ""}>
-          {navItems.map((item) => (
-            <a
-              href={item.href}
-              key={item.href}
-              aria-current={item.href === "/foundation" ? "page" : undefined}
-            >
-              {item.label}
-            </a>
-          ))}
+          <NavLinks currentPath="/foundation" />
         </nav>
         <div className="header-actions">
           <a className="header-cta" href="/join">Become A Member ↘</a>

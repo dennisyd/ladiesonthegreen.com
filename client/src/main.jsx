@@ -4,6 +4,7 @@ import "./styles.css";
 import JoinPage from "./JoinPage.jsx";
 import { navItems as siteNavItems } from "./siteNav.js";
 import { EventCards, EventsLoading, useSiteEvents } from "./EventsPage.jsx";
+import { NavLinks } from "./SiteChrome.jsx";
 
 // Code-split: the flipbook viewer pulls in pdf.js + react-pageflip (~2MB),
 // which only the /magazine routes need, so keep them out of every other
@@ -31,10 +32,9 @@ const heroSlides = [
 ];
 
 // The shared menu uses site-wide paths; on the home page its items scroll in place.
-const navItems = siteNavItems.map((item) => ({
-  ...item,
-  href: item.href === "/" ? "#top" : item.href.replace(/^\/#/, "#")
-}));
+const navItems = siteNavItems.map((item) =>
+  item.href ? { ...item, href: item.href === "/" ? "#top" : item.href.replace(/^\/#/, "#") } : item
+);
 
 const benefitTabs = [
   {
@@ -154,9 +154,7 @@ function App() {
           {menuOpen ? "Close" : "Menu"}
         </button>
         <nav className={menuOpen ? "is-open" : ""}>
-          {navItems.map((item) => (
-            <a href={item.href} key={item.href} onClick={closeMenu}>{item.label}</a>
-          ))}
+          <NavLinks items={navItems} onNavigate={closeMenu} />
         </nav>
         <div className="header-actions">
           <a className="circle-link" href="/events" onClick={closeMenu} aria-label="Explore events">›</a>
@@ -408,6 +406,7 @@ const routes = {
   "/members": MembersPage,
   "/shop": ShopPage,
   "/events": EventsPage,
+  "/connect": QuestionnairePage,
   "/questions": QuestionnairePage,
   "/about": AboutPage,
   "/girls-on-the-green": GirlsOnTheGreenPage

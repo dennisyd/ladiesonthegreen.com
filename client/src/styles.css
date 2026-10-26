@@ -4406,3 +4406,98 @@ textarea:focus {
     padding-left: 0;
   }
 }
+
+/* Menu dropdown (Foundation) */
+.nav-drop {
+  position: relative;
+}
+
+.nav-drop__toggle {
+  background: none;
+  border: 0;
+  color: var(--navy);
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+  text-transform: inherit;
+  white-space: nowrap;
+}
+
+.nav-drop__toggle[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-underline-offset: 6px;
+}
+
+.nav-drop__menu {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  display: none;
+  left: 50%;
+  min-width: 220px;
+  padding: 8px;
+  position: absolute;
+  top: 100%;
+  transform: translateX(-50%);
+  z-index: 50;
+}
+
+.nav-drop__menu::before {
+  content: "";
+  height: 14px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: -14px;
+}
+
+.nav-drop__menu a {
+  border-radius: 10px;
+  display: block;
+  padding: 12px 14px;
+}
+
+.nav-drop__menu a:hover,
+.nav-drop__menu a:focus-visible,
+.nav-drop__menu a[aria-current="page"] {
+  background: var(--mint-2);
+}
+
+.nav-drop.is-open .nav-drop__menu {
+  display: block;
+}
+
+@media (hover: hover) and (min-width: 1161px) {
+  .nav-drop:hover .nav-drop__menu,
+  .nav-drop:focus-within .nav-drop__menu {
+    display: block;
+  }
+}
+
+/* In the collapsed (phone) menu the options sit underneath, indented. */
+@media (max-width: 1160px) {
+  .nav-drop__toggle {
+    border-bottom: 1px solid var(--line);
+    padding: 14px 0;
+    text-align: left;
+    width: 100%;
+  }
+
+  .nav-drop__menu {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    left: auto;
+    min-width: 0;
+    padding: 0 0 0 18px;
+    position: static;
+    transform: none;
+  }
+
+  .nav-drop__menu::before {
+    display: none;
+  }
+}

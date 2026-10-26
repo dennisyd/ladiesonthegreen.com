@@ -4,6 +4,50 @@ import { navItems } from "./siteNav.js";
 // Header and footer for the simple content pages (About Us, Girls on the Green).
 // `currentPath` marks that page's link in the menu.
 
+// The menu links, with dropdowns for items that have `children`. `currentPath` marks the
+// page you are on; `onNavigate` lets a page close its mobile menu after a click.
+export function NavLinks({ items = navItems, currentPath, onNavigate }) {
+  const [openLabel, setOpenLabel] = useState(null);
+  return items.map((item) =>
+    item.children ? (
+      <div
+        className={`nav-drop${openLabel === item.label ? " is-open" : ""}`}
+        key={item.label}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) setOpenLabel(null);
+        }}
+      >
+        <button
+          type="button"
+          className="nav-drop__toggle"
+          aria-haspopup="true"
+          aria-expanded={openLabel === item.label}
+          aria-current={item.children.some((c) => c.href === currentPath) ? "page" : undefined}
+          onClick={() => setOpenLabel(openLabel === item.label ? null : item.label)}
+        >
+          {item.label} <span aria-hidden="true">▾</span>
+        </button>
+        <div className="nav-drop__menu">
+          {item.children.map((child) => (
+            <a
+              href={child.href}
+              key={child.href}
+              aria-current={child.href === currentPath ? "page" : undefined}
+              onClick={onNavigate}
+            >
+              {child.label}
+            </a>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <a href={item.href} key={item.href} aria-current={item.href === currentPath ? "page" : undefined} onClick={onNavigate}>
+        {item.label}
+      </a>
+    )
+  );
+}
+
 export function SiteHeader({ currentPath }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -23,11 +67,7 @@ export function SiteHeader({ currentPath }) {
         {menuOpen ? "Close" : "Menu"}
       </button>
       <nav id="site-navigation" className={menuOpen ? "is-open" : ""}>
-        {navItems.map((item) => (
-          <a href={item.href} key={item.href} aria-current={item.href === currentPath ? "page" : undefined}>
-            {item.label}
-          </a>
-        ))}
+        <NavLinks currentPath={currentPath} />
       </nav>
       <div className="header-actions">
         <a className="header-cta" href="/join">Become A Member ↘</a>
