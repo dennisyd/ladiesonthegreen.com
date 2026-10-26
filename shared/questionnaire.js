@@ -39,7 +39,7 @@ export const QUESTIONNAIRE = {
       title: "Your Golf Journey",
       questions: [
         {
-          id: "yearsPlayed", label: "How many years have you played golf?", type: "radio", required: true, other: true,
+          id: "yearsPlayed", label: "How many years have you played golf?", type: "radio", required: true,
           options: ["Less than 1 year", "1–3 years", "4–7 years", "8 or more years"]
         },
         { id: "attraction", label: "What attracts you most to the game of golf?", type: "textarea", max: 2000 },
@@ -62,15 +62,15 @@ export const QUESTIONNAIRE = {
       title: "Playing Preferences",
       questions: [
         {
-          id: "playFrequency", label: "How often would you like to play golf?", type: "radio", required: true, other: true,
+          id: "playFrequency", label: "How often would you like to play golf?", type: "radio", required: true,
           options: ["Weekly", "Twice a month", "Monthly", "Quarterly", "When my schedule allows"]
         },
         {
-          id: "playDays", label: "What days do you prefer to play golf?", type: "checkbox", required: true, other: true,
+          id: "playDays", label: "What days do you prefer to play golf?", type: "checkbox", required: true,
           hint: "Select all that apply.", options: ["Weekdays", "Weekends", "Flexible"]
         },
         {
-          id: "budget", label: "What is your approximate monthly budget for golf?", type: "radio", other: true,
+          id: "budget", label: "What is your approximate monthly budget for golf?", type: "radio",
           options: ["Under $100", "$100–$199", "$200–$299", "$300–$499", "$500 or more"]
         }
       ]
@@ -79,7 +79,7 @@ export const QUESTIONNAIRE = {
       title: "Events & Experiences",
       questions: [
         {
-          id: "eventFrequency", label: "How often would you attend Ladies on the Green® events?", type: "radio", required: true, other: true,
+          id: "eventFrequency", label: "How often would you attend Ladies on the Green® events?", type: "radio", required: true,
           options: ["Monthly", "Quarterly", "Seasonally", "When available"]
         },
         {
