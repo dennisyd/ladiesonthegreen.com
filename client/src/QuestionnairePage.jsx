@@ -180,6 +180,11 @@ function Question({ question, number, answers, setAnswer }) {
   );
 }
 
+const CONTACTS = [
+  { label: "Membership", email: "membership@ladiesonthegreen.com" },
+  { label: "Partnerships", email: "partnerships@ladiesonthegreen.com" }
+];
+
 export default function QuestionnairePage() {
   const [answers, setAnswers] = useState({});
   const [website, setWebsite] = useState("");
@@ -226,6 +231,35 @@ export default function QuestionnairePage() {
       <SiteHeader currentPath="/connect" />
 
       <main id="top" className="qn">
+        <section className="contact-us" aria-labelledby="contact-us-heading">
+          <div className="contact-us__marquee" aria-hidden="true">
+            <div className="contact-us__track">
+              {Array.from({ length: 8 }, (_, i) => (
+                <span key={i}>Contact Us</span>
+              ))}
+            </div>
+          </div>
+          <h2 id="contact-us-heading" className="sr-only">Contact us</h2>
+          <div className="contact-us__body">
+            <div className="contact-us__text">
+              <p>
+                Questions about membership, or ideas for working together? Reach the right team directly. We read every message
+                and reply as soon as we can.
+              </p>
+              <ul>
+                {CONTACTS.map((c) => (
+                  <li key={c.label}>
+                    <strong>{c.label}</strong> <span aria-hidden="true">|</span> <a href={`mailto:${c.email}`}>{c.email}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <figure className="contact-us__photo">
+              <img src="/moments-clubhouse.jpg" alt="The clubhouse at golden hour" loading="lazy" />
+            </figure>
+          </div>
+        </section>
+
         <section className="page-hero page-hero--simple" aria-labelledby="qn-heading">
           <div className="page-hero__text">
             <span className="page-hero__eyebrow">Ladies on the Green®</span>
