@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { SiteFooter, SiteHeader } from "./SiteChrome.jsx";
-import { OTHER, QUESTIONNAIRE, US_STATES, isVisible, otherKey } from "../../shared/questionnaire.js";
+import { OTHER, QUESTIONNAIRE, US_STATES, isValidEmail, isVisible, otherKey } from "../../shared/questionnaire.js";
 
 // Pick a state by typing: the list narrows to states starting with what was typed
 // (then any that contain it); arrow keys and Enter also work.
@@ -208,12 +208,20 @@ export default function QuestionnairePage() {
         return;
       }
     }
+    const email = (answers.email || "").trim();
+    if (!isValidEmail(email)) {
+      setState({ status: "error", message: "Please enter a valid email address, like name@example.com." });
+      const field = document.getElementById("q-email");
+      field?.scrollIntoView({ behavior: "smooth", block: "center" });
+      field?.focus();
+      return;
+    }
     setState({ status: "loading", message: "Sending..." });
     try {
       const response = await fetch("/api/questionnaire", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers, website })
+        body: JSON.stringify({ answers: { ...answers, email }, website })
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Something went wrong. Please try again.");
@@ -284,7 +292,7 @@ export default function QuestionnairePage() {
             <a className="button button--gold" href="/">Back to the home page</a>
           </section>
         ) : (
-          <form className="qn-form" onSubmit={submit} noValidate={false}>
+          <form className="qn-form" onSubmit={submit} noValidate>
             <p className="qn-note">Questions marked <span className="qn-required">*</span> are required.</p>
 
             {QUESTIONNAIRE.sections.map((section, index) => (

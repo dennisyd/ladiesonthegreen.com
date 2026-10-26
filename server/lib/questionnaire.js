@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import { OTHER, QUESTIONNAIRE, US_STATES, allQuestions, isVisible, otherKey } from "../../shared/questionnaire.js";
+import { OTHER, QUESTIONNAIRE, US_STATES, allQuestions, isValidEmail, isVisible, otherKey } from "../../shared/questionnaire.js";
 import { createRateLimiter } from "./auth.js";
 import { contactTo, createTransporter } from "./mailer.js";
 import { jsonStore } from "./store.js";
@@ -8,7 +8,6 @@ import { jsonStore } from "./store.js";
 // Answers to the Golf & Social Interest Questionnaire (/questions). Each one is saved to
 // server/data/questionnaire.json and emailed to the club's contact address.
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const clean = (value, max) => String(value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 
 // Checks the submitted answers against the question list. Returns { answers } with
@@ -32,7 +31,7 @@ export function validateAnswers(input) {
       const text = clean(value, q.max ?? 300);
       if (q.required && !text) return { error: `Please answer: ${label}.` };
       if (!text) continue;
-      if (q.type === "email" && !EMAIL.test(text)) return { error: "Please enter a valid email address." };
+      if (q.type === "email" && !isValidEmail(text)) return { error: "Please enter a valid email address, like name@example.com." };
       if (q.type === "state" && !US_STATES.includes(text)) return { error: "Please choose your state from the list." };
       if (q.type === "radio" && text !== OTHER && !q.options.includes(text)) return { error: `Please check your answer to "${label}".` };
       if (q.type === "radio" && text === OTHER && !q.other) return { error: `Please check your answer to "${label}".` };

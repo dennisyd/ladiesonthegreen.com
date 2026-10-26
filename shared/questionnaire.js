@@ -124,3 +124,9 @@ export const isVisible = (question, answers) => {
   if (!rule) return true;
   return rule.filled ? Boolean(answers[rule.id]) : answers[rule.id] === rule.equals;
 };
+
+// A properly formed address: name@domain.tld, with no spaces, doubled or edge dots,
+// and a domain of letters, numbers and hyphens ending in a letters-only extension.
+const EMAIL_PATTERN = /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,24}$/;
+
+export const isValidEmail = (value) => typeof value === "string" && value.length <= 254 && EMAIL_PATTERN.test(value);
