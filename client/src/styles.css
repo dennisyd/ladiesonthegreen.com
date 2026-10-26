@@ -4609,3 +4609,31 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* The "Take our questionnaire" button is part of the picture, so a link sits over it. */
+.contact-us__photo {
+  position: relative;
+}
+
+.contact-us__photo img {
+  aspect-ratio: 4 / 3;
+  height: auto;
+}
+
+.contact-us__cta {
+  border-radius: 999px;
+  height: 8%;
+  left: 29%;
+  position: absolute;
+  top: 87%;
+  width: 46.5%;
+}
+
+.contact-us__cta:hover,
+.contact-us__cta:focus-visible {
+  box-shadow: 0 0 0 3px var(--gold);
+}
+
+#questionnaire {
+  scroll-margin-top: 80px;
+}

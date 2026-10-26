@@ -255,12 +255,21 @@ export default function QuestionnairePage() {
               </ul>
             </div>
             <figure className="contact-us__photo">
-              <img src="/moments-clubhouse.jpg" alt="The clubhouse at golden hour" loading="lazy" />
+              <img src="/connect-hey.jpg" alt="Hey! Let's connect. The Ladies on the Green clubhouse at golden hour." width="800" height="600" />
+              <a
+                className="contact-us__cta"
+                href="#questionnaire"
+                aria-label="Take our questionnaire"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("questionnaire")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              />
             </figure>
           </div>
         </section>
 
-        <section className="page-hero page-hero--simple" aria-labelledby="qn-heading">
+        <section className="page-hero page-hero--simple" id="questionnaire" aria-labelledby="qn-heading">
           <div className="page-hero__text">
             <span className="page-hero__eyebrow">Ladies on the Green®</span>
             <h1 id="qn-heading">{QUESTIONNAIRE.title}</h1>
