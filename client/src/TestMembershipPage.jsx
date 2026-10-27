@@ -30,6 +30,29 @@ const programs = [
   { number: "04", title: "New destinations", copy: "Golf getaways and travel experiences worth looking forward to." }
 ];
 
+const memberBenefits = [
+  { title: "Group lessons", copy: "Learn and grow your game through golf instruction and small-group experiences." },
+  { title: "Swing sessions", copy: "Make practice more fun with time at the range and women who encourage your progress." },
+  { title: "Signature events", copy: "Connect through curated golf, social, and networking gatherings." },
+  { title: "Local rounds", copy: "Find more reasons to get out and play through member outings and play days." },
+  { title: "Wellness experiences", copy: "Make room for movement, balance, and moments that restore you." },
+  { title: "Prestige experiences", copy: "Enjoy priority access to select experiences and VIP gatherings with Prestige Membership.", prestige: true },
+  { title: "Private community", copy: "Keep the conversation going through member connections, invitations, and shared opportunities." },
+  { title: "Golf getaways", copy: "Explore new courses and destinations through curated travel opportunities." },
+  { title: "Partner privileges", copy: "Discover select offers and benefits from golf and lifestyle partners." }
+];
+
+function BenefitSpark() {
+  return (
+    <svg className="test-membership__spark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      {Array.from({ length: 16 }, (_, index) => (
+        <line key={index} x1="32" y1="5" x2="32" y2="21" transform={`rotate(${index * 22.5} 32 32)`} />
+      ))}
+      <circle cx="32" cy="32" r="3.5" />
+    </svg>
+  );
+}
+
 export default function TestMembershipPage() {
   const social = membershipRate("social");
   const prestige = membershipRate("prestige");
@@ -131,6 +154,25 @@ export default function TestMembershipPage() {
               ))}
             </div>
           </div>
+        </section>
+
+        <section className="test-membership__benefits" aria-labelledby="test-benefits-title">
+          <div className="test-membership__benefits-head">
+            <span className="test-membership__kicker">Your member experience</span>
+            <h2 id="test-benefits-title">What you’ll get</h2>
+            <p>Room to learn, play, connect, and enjoy everything around the game.</p>
+          </div>
+          <div className="test-membership__benefit-grid">
+            {memberBenefits.map((benefit) => (
+              <article className="test-membership__benefit" key={benefit.title}>
+                <BenefitSpark />
+                <h3>{benefit.title}</h3>
+                <p>{benefit.copy}</p>
+                {benefit.prestige && <span className="test-membership__benefit-tag">Prestige Membership</span>}
+              </article>
+            ))}
+          </div>
+          <p className="test-membership__benefits-note">Experiences and partner offers vary by membership and availability. Some require separate registration or payment.</p>
         </section>
 
         <section className="test-membership__tiers" id="membership" aria-labelledby="test-tiers-title">

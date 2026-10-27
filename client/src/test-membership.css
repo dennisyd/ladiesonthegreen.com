@@ -425,6 +425,103 @@
   font-size: 1.25rem;
 }
 
+.test-membership__benefits {
+  background: radial-gradient(circle at 50% -35%, rgba(214, 182, 103, 0.16), transparent 58%),
+    linear-gradient(145deg, #0c3929, #08291f 70%);
+  border-top: 1px solid rgba(214, 182, 103, 0.38);
+  color: #f8f6ec;
+  padding: clamp(85px, 9vw, 145px) clamp(26px, 7vw, 112px) clamp(70px, 8vw, 120px);
+}
+
+.test-membership__benefits-head {
+  margin: 0 auto;
+  max-width: 800px;
+  text-align: center;
+}
+
+.test-membership__benefits .test-membership__kicker {
+  color: #e3cb8a;
+}
+
+.test-membership__benefits h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3.2rem, 5vw, 5.7rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 1.07;
+  margin: 15px 0 22px;
+}
+
+.test-membership__benefits-head p {
+  color: #d0ddce;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.test-membership__benefit-grid {
+  column-gap: clamp(42px, 6vw, 110px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: clamp(55px, 6vw, 92px) auto 0;
+  max-width: 1400px;
+  row-gap: clamp(55px, 6vw, 92px);
+}
+
+.test-membership__benefit {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.test-membership__spark {
+  color: var(--tm-gold);
+  fill: currentColor;
+  height: 47px;
+  margin-bottom: 21px;
+  overflow: visible;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2.2;
+  width: 47px;
+}
+
+.test-membership__benefit h3 {
+  font-size: clamp(1.13rem, 1.5vw, 1.45rem);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  margin: 0 0 11px;
+}
+
+.test-membership__benefit p {
+  color: #d2ded3;
+  font-size: 0.96rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 325px;
+}
+
+.test-membership__benefit-tag {
+  border: 1px solid rgba(214, 182, 103, 0.5);
+  border-radius: 999px;
+  color: #e8d396;
+  font-size: 0.64rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  margin-top: 14px;
+  padding: 6px 10px;
+  text-transform: uppercase;
+}
+
+.test-membership__benefits-note {
+  color: #abc1b1;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  margin: clamp(62px, 7vw, 100px) auto 0;
+  max-width: 900px;
+  text-align: center;
+}
+
 .test-membership__tiers {
   padding-block: clamp(85px, 10vw, 155px);
 }
@@ -702,6 +799,10 @@
   .test-membership__programs-photo {
     min-height: 400px;
   }
+
+  .test-membership__benefit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 600px) {
@@ -732,8 +833,13 @@
   }
 
   .test-membership__pillars,
-  .test-membership__tier-grid {
+  .test-membership__tier-grid,
+  .test-membership__benefit-grid {
     grid-template-columns: 1fr;
+  }
+
+  .test-membership__benefit-grid {
+    row-gap: 49px;
   }
 
   .test-membership__pillar {
