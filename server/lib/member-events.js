@@ -176,7 +176,10 @@ export function createMemberEvents(dataDir, { requireAdmin, requireMember }) {
       const { events } = await store.read();
       res.json({
         ok: true,
-        events: events.filter((e) => e.status === "published" && !isPast(e, today)).sort(byDate).map(memberView)
+        events: events
+          .filter((e) => e.status === "published" && !isPast(e, today))
+          .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || byDate(a, b))
+          .map(memberView)
       });
     });
 

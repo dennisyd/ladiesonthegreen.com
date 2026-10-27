@@ -3551,6 +3551,15 @@ textarea:focus {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
 }
 
+.event-list__spotlight {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.event-list__spotlight .event-card {
+  height: 100%;
+}
+
 .event-card {
   background: var(--white);
   border: 1px solid var(--line);

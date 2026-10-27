@@ -33,10 +33,12 @@ test("admin can feature one of two same-day portal events", async (t) => {
   const second = (await request("/api/admin/events", "POST", { title: "Evening round", date: "2027-05-10", startTime: "17:00" })).data.event;
   assert.equal((await request(`/api/admin/events/${second.id}/featured`, "PATCH", { featured: true })).status, 200);
   let memberEvents = (await request("/api/members/events")).data.events;
+  assert.equal(memberEvents[0].id, second.id);
   assert.deepEqual(memberEvents.filter((event) => event.featured).map((event) => event.id), [second.id]);
 
   await request(`/api/admin/events/${first.id}/featured`, "PATCH", { featured: true });
   memberEvents = (await request("/api/members/events")).data.events;
+  assert.equal(memberEvents[0].id, first.id);
   assert.deepEqual(memberEvents.filter((event) => event.featured).map((event) => event.id), [first.id]);
 
   await request(`/api/admin/events/${first.id}/status`, "PATCH", { status: "archived" });

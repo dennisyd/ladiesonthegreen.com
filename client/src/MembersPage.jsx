@@ -123,9 +123,8 @@ function Portal({ member, onSignOut }) {
   const perks = offers || [];
   const first = member.name.split(/\s+/)[0] || "member";
   const featuredEvent = events?.find((event) => event.featured);
-  const orderedEvents = featuredEvent
-    ? [featuredEvent, ...events.filter((event) => event.id !== featuredEvent.id)]
-    : events;
+  const spotlightEvent = featuredEvent || (events?.[0] && eventMode(events[0]) === "exact" ? events[0] : null);
+  const otherEvents = spotlightEvent ? events.filter((event) => event.id !== spotlightEvent.id) : events;
 
   return (
     <div className="portal">
@@ -168,9 +167,12 @@ function Portal({ member, onSignOut }) {
             <p className="admin-empty">No upcoming events right now. We&rsquo;ll let you know as soon as the next one is announced.</p>
           )}
           <div className="event-list">
-            {orderedEvents?.map((event, index) => (
-              <EventCard key={event.id} event={event} featured={index === 0 && (Boolean(featuredEvent) || eventMode(event) === "exact")} onOpen={setOpenEvent} />
-            ))}
+            {spotlightEvent && (
+              <div className="event-list__spotlight">
+                <EventCard event={spotlightEvent} featured onOpen={setOpenEvent} />
+              </div>
+            )}
+            {otherEvents?.map((event) => <EventCard key={event.id} event={event} onOpen={setOpenEvent} />)}
           </div>
         </section>
 
