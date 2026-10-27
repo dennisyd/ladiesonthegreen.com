@@ -131,7 +131,7 @@ export function EventCard({ event, featured = false, preview = false, onOpen }) 
           <strong className={badge.big.length > 3 ? "is-long" : ""}>{badge.big}</strong>
         </div>
         <div className="event-card__main">
-          {featured && <span className="event-card__tag">Next up</span>}
+          {featured && <span className="event-card__tag">{event.featured ? "Featured event" : "Next up"}</span>}
           <h3>{event.title || "Event title"}</h3>
           <EventMeta event={event} />
           {event.description && <p className="event-card__text event-card__text--clamp">{event.description}</p>}

@@ -873,7 +873,7 @@ function EventsManager({ base, site = false, onCopied }) {
     setBusy(true);
     try {
       await api(`${base}/${event.id}/featured`, { method: "PATCH", body: { featured } });
-      setNote({ error: "", message: featured ? `"${event.title}" is now featured on the home page.` : `"${event.title}" is no longer featured on the home page.` });
+      setNote({ error: "", message: featured ? `"${event.title}" is now featured ${site ? "on the home page" : "in the member portal"}.` : `"${event.title}" is no longer featured ${site ? "on the home page" : "in the member portal"}.` });
       reload();
     } catch (err) {
       setNote({ error: err.message, message: "" });
@@ -952,7 +952,7 @@ function EventsManager({ base, site = false, onCopied }) {
           <strong className={badge.big.length > 3 ? "is-long" : ""}>{badge.big}</strong>
         </div>
         <div className="event-row__main">
-          <strong>{event.title}{site && event.featured && !event.isPast && event.status === "published" && <span className="event-row__featured">Featured on home page</span>}</strong>
+          <strong>{event.title}{event.featured && !event.isPast && event.status === "published" && <span className="event-row__featured">Featured {site ? "on home page" : "in portal"}</span>}</strong>
           <span className="admin-sub">
             {formatEventWhen(event, "short")}
             {time ? ` · ${time}` : ""}
@@ -976,7 +976,7 @@ function EventsManager({ base, site = false, onCopied }) {
           <p>
             {site
               ? "Events shown on the public website (the Events page and the home page). They go live as soon as you save. Choose Feature on home for the event you want highlighted; only one can be featured at a time. Past events stay listed as Past Events. Archive hides one but keeps it; Delete removes it for good."
-              : "Events shown to members in the member portal. An event stays up until its date passes. Archive hides one but keeps it; Delete removes it for good."}
+              : "Events shown to members in the member portal. Choose Feature in portal for the event you want highlighted; only one can be featured at a time. An event stays up until its date passes. Archive hides one but keeps it; Delete removes it for good."}
           </p>
         </div>
         {!form && <button type="button" className="button button--gold" onClick={() => openNew()}>Add event</button>}
@@ -1086,7 +1086,7 @@ function EventsManager({ base, site = false, onCopied }) {
         ) : (
           <ul className="event-rows">
             {showing.map((e) => (
-              <Row key={e.id} event={e} actions={<>{site && <button type="button" className="admin-link" onClick={() => setFeatured(e, !e.featured)} disabled={busy}>{e.featured ? "Remove feature" : "Feature on home"}</button>}{link("Edit", () => edit(e))}{site && link("Copy to portal", () => copyToPortal(e))}{link("Duplicate", () => duplicate(e))}{link("Archive", () => setStatus(e, "archived"))}{link("Delete", () => remove(e), true)}</>} />
+              <Row key={e.id} event={e} actions={<><button type="button" className="admin-link" onClick={() => setFeatured(e, !e.featured)} disabled={busy}>{e.featured ? "Remove feature" : site ? "Feature on home" : "Feature in portal"}</button>{link("Edit", () => edit(e))}{site && link("Copy to portal", () => copyToPortal(e))}{link("Duplicate", () => duplicate(e))}{link("Archive", () => setStatus(e, "archived"))}{link("Delete", () => remove(e), true)}</>} />
             ))}
           </ul>
         )}
