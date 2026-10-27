@@ -123,6 +123,7 @@ const publicView = (e, today) => ({
   pastNote: e.pastNote || "",
   image: e.image,
   tallImage: e.tallImage !== false,
+  featured: Boolean(e.featured),
   isPast: isPast(e, today)
 });
 
@@ -156,7 +157,7 @@ export function createSiteEvents(dataDir, { requireAdmin }) {
       const { event, error } = validateSiteEvent(req.body || {});
       if (error) return res.status(400).json({ ok: false, error });
       const now = new Date().toISOString();
-      const created = { id: crypto.randomUUID(), ...event, status: "published", createdAt: now, updatedAt: now };
+      const created = { id: crypto.randomUUID(), ...event, featured: false, status: "published", createdAt: now, updatedAt: now };
       await store.update((data) => {
         data.events.push(created);
       });
@@ -171,6 +172,7 @@ export function createSiteEvents(dataDir, { requireAdmin }) {
         if (!existing) return null;
         const oldImage = existing.image;
         Object.assign(existing, event, { updatedAt: new Date().toISOString() });
+        if (isPast(existing, todayEastern())) existing.featured = false;
         if (oldImage !== existing.image) await dropImage(oldImage, data);
         return existing;
       });
@@ -187,11 +189,39 @@ export function createSiteEvents(dataDir, { requireAdmin }) {
         const existing = data.events.find((e) => e.id === req.params.id);
         if (!existing) return null;
         existing.status = status;
+        if (status === "archived") existing.featured = false;
         existing.updatedAt = new Date().toISOString();
         return existing;
       });
       if (!updated) return res.status(404).json({ ok: false, error: "Event not found." });
       res.json({ ok: true, event: updated });
+    });
+
+    app.patch("/api/admin/site-events/:id/featured", requireAdmin, async (req, res) => {
+      if (typeof req.body?.featured !== "boolean") {
+        return res.status(400).json({ ok: false, error: "Featured must be true or false." });
+      }
+      const result = await store.update((data) => {
+        const existing = data.events.find((e) => e.id === req.params.id);
+        if (!existing) return { error: "Event not found.", status: 404 };
+        if (req.body.featured && (existing.status !== "published" || isPast(existing, todayEastern()))) {
+          return { error: "Only a published upcoming event can be featured.", status: 400 };
+        }
+        const now = new Date().toISOString();
+        if (req.body.featured) {
+          for (const event of data.events) {
+            if (event.featured) {
+              event.featured = false;
+              event.updatedAt = now;
+            }
+          }
+        }
+        existing.featured = req.body.featured;
+        existing.updatedAt = now;
+        return { event: existing };
+      });
+      if (result.error) return res.status(result.status).json({ ok: false, error: result.error });
+      res.json({ ok: true, event: result.event });
     });
 
     app.delete("/api/admin/site-events/:id", requireAdmin, async (req, res) => {

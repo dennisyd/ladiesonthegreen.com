@@ -73,6 +73,11 @@ function App() {
   const [formState, setFormState] = useState({ status: "idle", message: "" });
   const [menuOpen, setMenuOpen] = useState(false);
   const siteEvents = useSiteEvents();
+  const homeEvent = Array.isArray(siteEvents)
+    ? siteEvents.find((event) => event.featured && !event.isPast)
+      || siteEvents.find((event) => !event.isPast)
+      || siteEvents[0]
+    : null;
   const [activeBenefit, setActiveBenefit] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
   const heroVideoRefs = useRef([]);
@@ -261,7 +266,7 @@ function App() {
             <h2 id="events-title">Golf experiences made to be seen, shared, and remembered.</h2>
           </div>
           <EventsLoading events={siteEvents} />
-          {Array.isArray(siteEvents) && <EventCards events={siteEvents.slice(0, 1)} />}
+          {homeEvent && <EventCards events={[homeEvent]} />}
           <div className="page-cta__row">
             <a className="button button--outline" href="/events">See all events ↘</a>
           </div>
