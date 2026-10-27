@@ -19,6 +19,7 @@ const QuestionnairePage = lazy(() => import("./QuestionnairePage.jsx"));
 const EventsPage = lazy(() => import("./EventsPage.jsx"));
 const GirlsOnTheGreenPage = lazy(() => import("./GirlsOnTheGreenPage.jsx"));
 const FoundationPage = lazy(() => import("./FoundationPage.jsx"));
+const TestMembershipPage = lazy(() => import("./TestMembershipPage.jsx"));
 
 const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
 
@@ -398,6 +399,7 @@ function App() {
 }
 
 const routes = {
+  "/test": TestMembershipPage,
   "/join": JoinPage,
   "/foundation": FoundationPage,
   "/magazine": MagazinePage,
