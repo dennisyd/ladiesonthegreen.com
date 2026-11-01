@@ -66,5 +66,9 @@
 .submission-review__images figure { margin: 0; }
 .submission-review__images figcaption { font-size: 12px; padding: 6px 0; }
 .submission-review select { margin: 12px; padding: 10px; }
+.submission-review__time { display: block; margin: 8px 0 0 18px; font-size: 13px; font-weight: 400; color: var(--muted); }
+.submission-review__delete { display: inline-block; padding: 10px 16px; border: 1px solid #b65c5c; border-radius: 6px; color: #9c2727; background: #fff8f8; cursor: pointer; }
+.submission-review__delete:hover { background: #fbe7e7; }
+.submission-review__delete:disabled { opacity: .6; cursor: wait; }
 @media (max-width: 850px) { .submission-layout { gap: 30px; padding: 40px 22px 65px; } .submission-card { padding: 26px; } .submission-aside h2 { font-size: 29px; } }
 @media (max-width: 650px) { .submission-intro { padding: 30px 24px 48px; } .submission-back { margin-bottom: 30px; } .submission-intro p { font-size: 16px; } .submission-layout { display: block; padding: 25px 16px 50px; } .submission-aside { padding: 8px; } .submission-aside ol { display: none; } .submission-card { margin-top: 20px; padding: 24px 18px; } .submission-fields { grid-template-columns: 1fr; } .submission-previews { grid-template-columns: repeat(2,minmax(0,1fr)); } .submission-intro__note { line-height: 1.7; } }

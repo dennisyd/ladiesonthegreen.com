@@ -70,6 +70,20 @@ export function mountSubmissions(app, dataDir, requireAdmin) {
     });
     res.status(found ? 200 : 404).json(found ? { ok: true } : { error: "Submission not found." });
   });
+  app.delete("/api/admin/submissions/:id", requireAdmin, async (req, res) => {
+    const removed = await store.update((data) => {
+      const index = data.submissions.findIndex((s) => s.id === req.params.id);
+      if (index < 0) return null;
+      return data.submissions.splice(index, 1)[0];
+    });
+    if (!removed) return res.status(404).json({ error: "Submission not found." });
+    const files = [...removed.photos, removed.portrait].filter(Boolean);
+    await Promise.all(files.map(async (file) => {
+      try { await fs.unlink(path.join(imageDir, file.filename)); }
+      catch (error) { if (error.code !== "ENOENT") console.error("Could not clean up a deleted submission image", error); }
+    }));
+    res.json({ ok: true });
+  });
   app.get("/api/admin/submissions/:id/images/:filename", requireAdmin, async (req, res) => {
     const submission = (await store.read()).submissions.find((s) => s.id === req.params.id);
     const file = submission && [...submission.photos, submission.portrait].filter(Boolean).find((f) => f.filename === req.params.filename);

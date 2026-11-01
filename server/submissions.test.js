@@ -50,4 +50,13 @@ test("article submissions persist, enforce separate photo limits, and keep contr
   assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form() })).status, 201);
   assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form() })).status, 201);
   assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form() })).status, 429);
+  assert.equal((await fetch(`${url}/api/admin/submissions/${id}`, { method: "DELETE" })).status, 401);
+  assert.equal((await fetch(imageUrl, { headers })).status, 200);
+  assert.equal((await fetch(`${url}/api/admin/submissions/${id}`, { method: "DELETE", headers })).status, 200);
+  assert.equal((await fetch(imageUrl, { headers })).status, 404);
+  assert.equal((await fs.readdir(path.join(root, "submission-images"))).length, 0);
+  const remaining = await (await fetch(`${url}/api/admin/submissions`, { headers })).json();
+  assert.equal(remaining.submissions.length, 2);
+  assert.ok(remaining.submissions.every((s) => s.id !== id && Number.isFinite(Date.parse(s.receivedAt))));
+  assert.equal((await fetch(`${url}/api/admin/submissions/${id}`, { method: "DELETE", headers })).status, 404);
 });
