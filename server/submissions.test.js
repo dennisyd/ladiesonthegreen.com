@@ -1,0 +1,53 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import express from "express";
+import { mountSubmissions } from "./lib/submissions.js";
+
+test("article submissions persist, enforce separate photo limits, and keep contributor data private", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "lotg-submissions-"));
+  const app = express(); app.use(express.json());
+  mountSubmissions(app, root, (req, res, next) => req.headers.authorization === "admin" ? next() : res.sendStatus(401));
+  const server = await new Promise((resolve) => { const s = app.listen(0, "127.0.0.1", () => resolve(s)); });
+  t.after(async () => { await new Promise((r) => server.close(r)); await fs.rm(root, { recursive: true, force: true }); });
+  const url = `http://127.0.0.1:${server.address().port}`;
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jfZkAAAAASUVORK5CYII=", "base64");
+  const form = (photoCount = 0, portraitCount = 0) => {
+    const body = new FormData();
+    for (const [k, v] of Object.entries({ firstName: "Test", lastName: "Writer", email: "writer@example.com", city: "Miami", state: "Florida", title: "A day on the green", article: "First paragraph.\n\nSecond paragraph." })) body.append(k, v);
+    for (let i = 0; i < photoCount; i++) body.append("photos", new Blob([png], { type: "image/png" }), `photo${i}.png`);
+    for (let i = 0; i < portraitCount; i++) body.append("portrait", new Blob([png], { type: "image/png" }), "portrait.png");
+    return body;
+  };
+  assert.equal((await fetch(`${url}/api/admin/submissions`)).status, 401);
+  const bad = form(); bad.set("email", "invalid");
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: bad })).status, 400);
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form(6) })).status, 400);
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form(0, 2) })).status, 400);
+  const fake = form(); fake.append("photos", new Blob(["<svg onload='alert(1)'/>"], { type: "image/png" }), "fake.png");
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: fake })).status, 400);
+  const large = form(); large.append("photos", new Blob([new Uint8Array(5 * 1024 * 1024 + 1)], { type: "image/png" }), "large.png");
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: large })).status, 400);
+  const response = await fetch(`${url}/api/submissions`, { method: "POST", body: form(5, 1) });
+  assert.equal(response.status, 201);
+  const { id } = await response.json();
+  const headers = { authorization: "admin" };
+  const { submissions } = await (await fetch(`${url}/api/admin/submissions`, { headers })).json();
+  const item = submissions[0];
+  assert.equal(item.photos.length, 5); assert.ok(item.portrait); assert.equal(item.article, "First paragraph.\n\nSecond paragraph.");
+  const imageUrl = `${url}/api/admin/submissions/${id}/images/${item.portrait.filename}`;
+  assert.equal((await fetch(imageUrl)).status, 401);
+  const image = await fetch(imageUrl, { headers }); assert.equal(image.status, 200); assert.equal(image.headers.get("cache-control"), "private, no-store");
+  assert.deepEqual(Buffer.from(await image.arrayBuffer()), png);
+  assert.equal((await fetch(`${url}/api/admin/submissions/${id}/images/missing.png`, { headers })).status, 404);
+  assert.equal((await fetch(`${url}/api/admin/submissions/${id}`, { method: "PATCH", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ status: "selected" }) })).status, 200);
+  const saved = JSON.parse(await fs.readFile(path.join(root, "submissions.json"), "utf8"));
+  assert.equal(saved.submissions[0].status, "selected");
+  assert.equal((await fs.readdir(path.join(root, "submission-images"))).length, 6);
+  // Attempts seven and eight succeed without images; subsequent attempts are throttled.
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form() })).status, 201);
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form() })).status, 201);
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form() })).status, 429);
+});

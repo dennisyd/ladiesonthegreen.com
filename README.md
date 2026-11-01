@@ -115,6 +115,15 @@ Run `node --test server/shop.test.js` to check product management and ordering, 
 
 Members, offers, event registrations, and announcement history are JSON files in `server/data/` (gitignored, alongside the magazine metadata). They persist across deploys but are not in git — back up `server/data/` regularly.
 
+## Magazine article submissions
+
+- Public form: `/submission`, linked from the magazine page. Collects first/last name, email, city/state, article title and text, up to five optional article photos, and one separate optional contributor portrait.
+- JPG, PNG and WebP images are limited to 5 MB each. The server enforces limits, validates image signatures, and rate limits submission attempts.
+- Review entries in **Admin → Submissions**, or `/admin?tab=submissions`. Expand an article to read it, view/download images, and set its internal review status. Submission does not automatically publish content or email the contributor.
+- Articles are stored in `server/data/submissions.json`; images are stored privately in `server/data/submission-images/`. Preserve and back up `server/data/` across deployments. Images and contributor details require admin authentication.
+- Deploy both the server and client: pull changes, run `npm install` and `npm run build`, then `pm2 restart ladiesonthegreen`. Allow multipart requests of at least 35 MB in the Nginx HTTPS server block (`client_max_body_size 35m;`, or preserve a higher existing limit), then validate and reload Nginx. This permits five 5 MB photos plus one 5 MB portrait in a single submission.
+- Verification: `node --test server/submissions.test.js`.
+
 ## VPS deployment outline
 
 1. Push this folder to GitHub.
@@ -137,6 +146,7 @@ Example Nginx server block:
 ```nginx
 server {
     server_name ladiesonthegreen.com www.ladiesonthegreen.com;
+    client_max_body_size 35m;
 
     location / {
         proxy_pass http://127.0.0.1:3000;

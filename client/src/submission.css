@@ -1,0 +1,70 @@
+.submission-page { background: #f7f5ee; }
+.submission-intro { background: radial-gradient(ellipse at 95% 10%, #34664b 0, transparent 55%), #0a3d2a; color: #fff; padding: 44px 6vw 76px; position: relative; overflow: hidden; }
+.submission-intro::after { content: ""; position: absolute; width: 510px; height: 510px; border: 1px solid #d8b34b55; border-radius: 50%; right: -150px; top: 80px; box-shadow: 0 0 0 48px #d8b34b0c, 0 0 0 96px #d8b34b08; pointer-events: none; }
+.submission-intro__inner { max-width: 1200px; margin: auto; position: relative; z-index: 1; }
+.submission-back { display: block; font-size: 13px; color: #e2eadc; margin-bottom: 46px; width: fit-content; }
+.submission-intro .section-kicker { color: #e1c66d; }
+.submission-intro h1 { font-family: Georgia, serif; font-weight: 400; font-size: clamp(48px, 7vw, 88px); letter-spacing: -.04em; line-height: 1.07; margin: 22px 0; }
+.submission-intro h1 em { color: #ebd78f; font-weight: 400; }
+.submission-intro p { max-width: 590px; font-size: 18px; line-height: 1.8; color: #e4ece3; }
+.submission-intro__note { border-top: 1px solid #ffffff30; padding-top: 22px; margin-top: 30px; font-size: 13px; letter-spacing: .025em; width: fit-content; }
+.submission-intro__note span { color: #e1c66d; margin-right: 12px; }
+.submission-layout { max-width: 1320px; margin: auto; display: grid; grid-template-columns: minmax(230px, .7fr) minmax(0, 1.5fr); gap: 65px; padding: 70px 40px 100px; align-items: start; }
+.submission-aside { padding: 20px 0; }
+.submission-aside h2 { font: 400 36px/1.2 Georgia, serif; color: #0a3d2a; margin: 20px 0; }
+.submission-aside p { color: #5d6860; font-size: 15px; line-height: 1.85; }
+.submission-aside ol { list-style: none; padding: 0; margin: 35px 0; counter-reset: steps; }
+.submission-aside li { counter-increment: steps; position: relative; padding: 0 0 26px 40px; }
+.submission-aside li::before { content: "0" counter(steps); position: absolute; left: 0; top: 1px; font-size: 12px; color: #806827; }
+.submission-aside li strong { display: block; font-size: 14px; color: #0a3d2a; margin-bottom: 7px; }
+.submission-aside li span { display: block; font-size: 13px; color: #5d6860; line-height: 1.7; }
+.submission-aside .submission-fine { border-top: 1px solid #dcded3; padding-top: 24px; font-size: 12px; }
+.submission-card { min-width: 0; background: white; border: 1px solid #e1e4d9; border-radius: 16px; box-shadow: 0 18px 55px #0a3d2a09; padding: 42px; }
+.submission-card fieldset { border: 0; min-width: 0; padding: 0; margin: 0 0 36px; }
+.submission-card fieldset + fieldset { border-top: 1px solid #e4e6dd; padding-top: 32px; }
+.submission-card legend { color: #0a3d2a; font: 400 25px/1.3 Georgia, serif; padding: 0; margin-bottom: 18px; }
+.submission-card legend > span { display: inline-flex; align-items: center; justify-content: center; background: #eef3e9; color: #41654b; border-radius: 50%; height: 32px; width: 32px; font: 12px system-ui; margin-right: 10px; }
+.submission-section-note, .submission-help { color: #647064; font-size: 13px; line-height: 1.7; margin: 0 0 22px; }
+.submission-help { font-size: 12px; margin: 10px 0 0; }
+.submission-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.submission-wide { grid-column: 1 / -1; }
+.submission-card label, .submission-label { display: block; color: #294536; font-weight: 600; font-size: 13px; }
+.submission-card input:not([type=file]), .submission-card textarea { width: 100%; border: 1px solid #ced7cb; border-radius: 7px; background: #fdfefa; color: #172b20; font: inherit; font-size: 15px; line-height: 1.6; padding: 13px 14px; margin-top: 9px; }
+.submission-card textarea { font-size: 15px; line-height: 1.85; resize: vertical; min-height: 280px; }
+.submission-card fieldset > label + label { margin-top: 22px; }
+.submission-card input:focus, .submission-card textarea:focus { outline: 2px solid #628d70; outline-offset: 2px; }
+.submission-label { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.submission-label > span { font-weight: 400; color: #687566; font-size: 12px; }
+.submission-upload__button { display: flex; flex-direction: column; align-items: center; gap: 9px; width: 100%; padding: 28px 12px; border: 1px dashed #9caf96; border-radius: 10px; background: #f7faf4; color: #174c31; cursor: pointer; }
+.submission-upload__button:hover { background: #edf4e7; }
+.submission-upload__button > span { font: 28px Georgia, serif; }
+.submission-upload__button small { color: #5e6d59; font-size: 11px; }
+.submission-upload--portrait .submission-upload__button { flex-direction: row; flex-wrap: wrap; justify-content: center; padding: 20px 12px; }
+.submission-upload--portrait .submission-upload__button small { flex-basis: 100%; text-align: center; }
+.submission-previews { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.submission-previews figure { margin: 14px 0 0; min-width: 0; }
+.submission-previews img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #edf3e9; }
+.submission-upload--portrait .submission-previews img { border-radius: 50%; }
+.submission-previews figcaption { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #5d6860; margin: 5px 0; }
+.submission-previews button { border: 0; background: transparent; color: #8d3434; padding: 5px 0; text-decoration: underline; font-size: 12px; cursor: pointer; }
+.submission-word-count { text-align: right; color: #677362; font-size: 11px; margin-top: 8px; }
+.submission-send { border-top: 1px solid #e4e6dd; padding-top: 20px; }
+.submission-send > p { font-size: 12px; line-height: 1.6; color: #5d6860; margin-bottom: 20px; }
+.submission-send .button { width: 100%; }
+.submission-card .submission-error { color: #a22a2a; font-size: 13px; }
+.submission-trap { position: absolute; left: -10000px; }
+.submission-success { text-align: center; padding: 65px 40px; }
+.submission-success > span { font-size: 36px; color: #1a613a; }
+.submission-success h2 { font: 36px/1.2 Georgia, serif; color: #0a3d2a; }
+.submission-success p { line-height: 1.8; color: #5d6860; margin-bottom: 30px; }
+.submission-review { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin: 20px 0; }
+.submission-review summary { cursor: pointer; color: var(--green-dark); font-weight: 600; }
+.submission-review__meta { color: var(--muted); font-size: 14px; line-height: 1.8; margin: 18px 0; }
+.submission-review__article { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; margin: 24px 0; }
+.submission-review__images { display: flex; gap: 16px; flex-wrap: wrap; }
+.submission-review__images img { width: 150px; height: 150px; object-fit: cover; border-radius: 8px; }
+.submission-review__images figure { margin: 0; }
+.submission-review__images figcaption { font-size: 12px; padding: 6px 0; }
+.submission-review select { margin: 12px; padding: 10px; }
+@media (max-width: 850px) { .submission-layout { gap: 30px; padding: 40px 22px 65px; } .submission-card { padding: 26px; } .submission-aside h2 { font-size: 29px; } }
+@media (max-width: 650px) { .submission-intro { padding: 30px 24px 48px; } .submission-back { margin-bottom: 30px; } .submission-intro p { font-size: 16px; } .submission-layout { display: block; padding: 25px 16px 50px; } .submission-aside { padding: 8px; } .submission-aside ol { display: none; } .submission-card { margin-top: 20px; padding: 24px 18px; } .submission-fields { grid-template-columns: 1fr; } .submission-previews { grid-template-columns: repeat(2,minmax(0,1fr)); } .submission-intro__note { line-height: 1.7; } }

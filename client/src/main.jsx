@@ -14,6 +14,7 @@ const MagazineAdminPage = lazy(() => import("./MagazineAdminPage.jsx"));
 const AdminPage = lazy(() => import("./AdminPage.jsx"));
 const MembersPage = lazy(() => import("./MembersPage.jsx"));
 const ShopPage = lazy(() => import("./ShopPage.jsx"));
+const SubmissionPage = lazy(() => import("./SubmissionPage.jsx"));
 const AboutPage = lazy(() => import("./AboutPage.jsx"));
 const QuestionnairePage = lazy(() => import("./QuestionnairePage.jsx"));
 const EventsPage = lazy(() => import("./EventsPage.jsx"));
@@ -404,6 +405,7 @@ function App() {
 }
 
 const routes = {
+  "/submission": SubmissionPage,
   "/test": TestMembershipPage,
   "/join": JoinPage,
   "/foundation": FoundationPage,

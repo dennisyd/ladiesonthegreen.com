@@ -182,6 +182,7 @@ export default function MagazinePage() {
         <div className="section-heading magazine-heading">
           <span className="section-kicker">Digital Magazine</span>
           <h1>{title}</h1>
+          <p>Have a story to share? <a href="/submission" style={{ textDecoration: "underline" }}>Submit an article to the magazine ↗</a></p>
         </div>
 
         {status !== "ready" && (
