@@ -16,7 +16,7 @@ test("article submissions persist, enforce separate photo limits, and keep contr
   const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jfZkAAAAASUVORK5CYII=", "base64");
   const form = (photoCount = 0, portraitCount = 0) => {
     const body = new FormData();
-    for (const [k, v] of Object.entries({ firstName: "Test", lastName: "Writer", email: "writer@example.com", city: "Miami", state: "Florida", title: "A day on the green", article: "First paragraph.\n\nSecond paragraph." })) body.append(k, v);
+    for (const [k, v] of Object.entries({ firstName: "Test", lastName: "Writer", email: "writer@example.com", city: "Miami", state: "Florida", permission: "yes", title: "A day on the green", article: "First paragraph.\n\nSecond paragraph." })) body.append(k, v);
     for (let i = 0; i < photoCount; i++) body.append("photos", new Blob([png], { type: "image/png" }), `photo${i}.png`);
     for (let i = 0; i < portraitCount; i++) body.append("portrait", new Blob([png], { type: "image/png" }), "portrait.png");
     return body;
@@ -61,6 +61,28 @@ test("article submissions persist, enforce separate photo limits, and keep contr
   assert.equal((await fetch(`${url}/api/admin/submissions/${id}`, { method: "DELETE", headers })).status, 404);
 });
 
+test("submission permission is required and HEIC photo availability is saved", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "lotg-permission-"));
+  const app = express(); app.use(express.json());
+  mountSubmissions(app, root, (req, res, next) => req.headers.authorization === "admin" ? next() : res.sendStatus(401));
+  const server = await new Promise((resolve) => { const s = app.listen(0, "127.0.0.1", () => resolve(s)); });
+  t.after(async () => { await new Promise((r) => server.close(r)); await fs.rm(root, { recursive: true, force: true }); });
+  const url = `http://127.0.0.1:${server.address().port}`, headers = { authorization: "admin" };
+  const body = new FormData();
+  for (const [key, value] of Object.entries({ firstName: "Test", lastName: "Writer", email: "writer@example.com", city: "Miami", state: "Florida", profession: "Artist", title: "Our next chapter", article: "My story.", photosAvailable: "yes" })) body.append(key, value);
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body })).status, 400);
+  body.append("permission", "yes");
+  const heic = Buffer.from([0, 0, 0, 24, ...Buffer.from("ftypheic"), 0, 0, 0, 0, ...Buffer.from("mif1heic")]);
+  body.append("photos", new Blob([heic], { type: "application/octet-stream" }), "story.heic");
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body })).status, 201);
+  const { submissions } = await (await fetch(`${url}/api/admin/submissions`, { headers })).json();
+  assert.equal(submissions[0].photosAvailable, true);
+  assert.equal(submissions[0].permission.granted, true);
+  assert.equal(submissions[0].permission.grantedAt, submissions[0].receivedAt);
+  assert.match(submissions[0].permission.text, /does not guarantee a feature/);
+  assert.match(submissions[0].photos[0].filename, /\.heic$/);
+});
+
 test("article file alternatives enforce 10 MB, save profession, download privately and delete with attachments", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "lotg-article-files-"));
   const app = express(); app.use(express.json());
@@ -71,7 +93,7 @@ test("article file alternatives enforce 10 MB, save profession, download private
   const pdf = Buffer.from("%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF");
   const make = (file, name = "article.pdf") => {
     const body = new FormData();
-    for (const [k, v] of Object.entries({ firstName: "Test", lastName: "Writer", email: "writer@example.com", city: "Miami", state: "Florida", title: "My story", profession: "Golf instructor" })) body.append(k, v);
+    for (const [k, v] of Object.entries({ firstName: "Test", lastName: "Writer", email: "writer@example.com", city: "Miami", state: "Florida", permission: "yes", title: "My story", profession: "Golf instructor" })) body.append(k, v);
     if (file) body.append("document", new Blob([file], { type: name.endsWith("pdf") ? "application/pdf" : "application/octet-stream" }), name);
     return body;
   };

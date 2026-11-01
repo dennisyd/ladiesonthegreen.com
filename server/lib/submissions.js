@@ -5,7 +5,8 @@ import multer from "multer";
 import { jsonStore } from "./store.js";
 import { createRateLimiter } from "./auth.js";
 
-const extension = (b) => b.subarray(0, 3).equals(Buffer.from([255, 216, 255])) ? "jpg"
+const isHeic = (b) => b.toString("ascii", 4, 8) === "ftyp" && /^(heic|heix|hevc|hevx|mif1|msf1)$/.test(b.toString("ascii", 8, 12));
+const extension = (b) => isHeic(b) ? "heic" : b.subarray(0, 3).equals(Buffer.from([255, 216, 255])) ? "jpg"
   : b.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) ? "png"
   : b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP" ? "webp" : null;
 
@@ -23,14 +24,15 @@ export function mountSubmissions(app, dataDir, requireAdmin) {
   // Contributor images live outside the publicly served uploads directory.
   const imageDir = path.join(dataDir, "submission-images");
   const allow = createRateLimiter(8, 60 * 60 * 1000);
-  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 5, fields: 9, parts: 14, fieldSize: 400000 },
-    fileFilter: (_req, file, done) => (file.fieldname === "document" ? /\.(pdf|docx?)$/i.test(file.originalname) : ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) ? done(null, true) : done(new Error("Invalid file type"))
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 5, fields: 11, parts: 16, fieldSize: 400000 },
+    fileFilter: (_req, file, done) => (file.fieldname === "document" ? /\.(pdf|docx?)$/i.test(file.originalname) : ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"].includes(file.mimetype) || /\.hei[cf]$/i.test(file.originalname)) ? done(null, true) : done(new Error("Invalid file type"))
   }).fields([{ name: "photos", maxCount: 3 }, { name: "portrait", maxCount: 1 }, { name: "document", maxCount: 1 }]);
 
   app.post("/api/submissions", (req, res) => {
     if (!allow(req.ip)) return res.status(429).json({ error: "Too many attempts. Please try again in an hour." });
     upload(req, res, async (error) => {
-      if (error) return res.status(400).json({ error: "Upload up to 3 JPG, PNG, or WebP article photos plus 1 portrait (5 MB each), and 1 Word or PDF article (10 MB maximum)." });
+      if (error) return res.status(400).json({ error: "Upload up to 3 JPG, PNG, or HEIC article photos plus 1 portrait (5 MB each), and 1 Word or PDF article (10 MB maximum)." });
+      if (req.body?.permission !== "yes") return res.status(400).json({ error: "Please give The Collective permission to review your submission and contact you about possible publication." });
       const fields = {};
       for (const [key, max] of Object.entries({ firstName: 80, lastName: 80, email: 254, city: 120, state: 80, title: 200 })) {
         const value = req.body?.[key];
@@ -51,7 +53,7 @@ export function mountSubmissions(app, dataDir, requireAdmin) {
       const photos = req.files?.photos || [], portrait = req.files?.portrait || [];
       const files = [...photos, ...portrait];
       if (files.some((f) => f.size > 5 * 1024 * 1024)) return res.status(400).json({ error: "Each photo and portrait must be no larger than 5 MB." });
-      if (files.some((f) => !extension(f.buffer))) return res.status(400).json({ error: "Please upload valid JPG, PNG, or WebP images." });
+      if (files.some((f) => !extension(f.buffer))) return res.status(400).json({ error: "Please upload valid JPG, PNG, or HEIC images." });
       const written = [];
       try {
         await fs.mkdir(imageDir, { recursive: true });
@@ -67,7 +69,8 @@ export function mountSubmissions(app, dataDir, requireAdmin) {
         const headshot = portrait[0] ? await saveImage(portrait[0]) : null;
         const articleDocument = document ? await saveImage(document, documentExtension(document)) : null;
         const id = crypto.randomUUID();
-        await store.update((data) => data.submissions.push({ id, ...fields, photos: images, portrait: headshot, document: articleDocument, status: "new", receivedAt: new Date().toISOString() }));
+        const receivedAt = new Date().toISOString();
+        await store.update((data) => data.submissions.push({ id, ...fields, photos: images, portrait: headshot, document: articleDocument, photosAvailable: req.body.photosAvailable === "yes", permission: { granted: true, grantedAt: receivedAt, text: "I give The Collective permission to review my submission and contact me about possible publication. I understand submission does not guarantee a feature." }, status: "new", receivedAt }));
         res.status(201).json({ ok: true, id });
       } catch (err) {
         await Promise.all(written.map((f) => fs.unlink(f).catch(() => {})));
