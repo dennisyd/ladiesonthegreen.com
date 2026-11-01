@@ -1,0 +1,35 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import express from "express";
+import { mountMagazineList } from "./lib/magazine-list.js";
+
+test("magazine interest list validates, persists, deduplicates, throttles and protects personal details", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "lotg-magazine-list-"));
+  const app = express(); app.use(express.json());
+  mountMagazineList(app, root, (req, res, next) => req.headers.authorization === "admin" ? next() : res.sendStatus(401));
+  const server = await new Promise((resolve) => { const s = app.listen(0, "127.0.0.1", () => resolve(s)); });
+  t.after(async () => { await new Promise((r) => server.close(r)); await fs.rm(root, { recursive: true, force: true }); });
+  const url = `http://127.0.0.1:${server.address().port}`;
+  const data = { firstName: " Martine ", lastName: " Dennis ", email: " Writer@Example.com " };
+  const post = (body) => fetch(`${url}/api/magazine-list`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  assert.equal((await fetch(`${url}/api/admin/magazine-list`)).status, 401);
+  assert.equal((await post({ ...data, firstName: "" })).status, 400);
+  assert.equal((await post({ ...data, email: "invalid" })).status, 400);
+  assert.equal((await post({ ...data, website: "spam" })).status, 400);
+  const joined = await post(data); assert.equal(joined.status, 200);
+  const confirmation = await joined.json(); assert.equal(confirmation.ok, true);
+  assert.match(confirmation.message, /No payment has been collected/);
+  assert.equal((await post({ ...data, firstName: "Changed", email: "writer@example.com" })).status, 200);
+  const response = await fetch(`${url}/api/admin/magazine-list`, { headers: { authorization: "admin" } });
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  const { subscribers } = await response.json(); assert.equal(subscribers.length, 1);
+  assert.equal(subscribers[0].firstName, "Martine"); assert.equal(subscribers[0].lastName, "Dennis");
+  assert.equal(subscribers[0].email, "writer@example.com"); assert.ok(Number.isFinite(Date.parse(subscribers[0].joinedAt)));
+  const saved = JSON.parse(await fs.readFile(path.join(root, "magazine-list.json"), "utf8"));
+  assert.deepEqual(saved.subscribers, subscribers);
+  for (let i = 0; i < 5; i++) assert.equal((await post(data)).status, 200);
+  assert.equal((await post(data)).status, 429);
+});

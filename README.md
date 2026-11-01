@@ -115,6 +115,13 @@ Run `node --test server/shop.test.js` to check product management and ordering, 
 
 Members, offers, event registrations, and announcement history are JSON files in `server/data/` (gitignored, alongside the magazine metadata). They persist across deploys but are not in git — back up `server/data/` regularly.
 
+## Magazine subscription interest list
+
+- `/subscribe` presents the planned $19.99/year subscription with four quarterly digital issues. The **JOIN THE LIST** form records first name, last name and email only; no payment information or money is collected.
+- View saved entries and their Eastern Time signup dates under **Admin → Magazine list**. Launch notifications can be sent separately; joining the list does not start an automated email campaign.
+- Entries persist in `server/data/magazine-list.json` (gitignored). Preserve and back up this file with the rest of `server/data/` during deployment. The public form validates names/email, throttles attempts, and avoids duplicate email entries. List access requires admin authentication.
+- Verification: `node --test server/magazine-list.test.js`.
+
 ## Magazine article submissions
 
 - Public form: `/submission`, linked from the magazine page. Collects first/last name, email, city/state, optional Profession, Business, or Passion, article title, and either pasted article text or one Word/PDF file. Up to three optional article photos and one separate optional contributor portrait are supported.

@@ -26,6 +26,7 @@ const { createSiteEvents } = await import("./lib/site-events.js");
 const { createQuestionnaire } = await import("./lib/questionnaire.js");
 const { createShop } = await import("./shop.js");
 const { mountSubmissions } = await import("./lib/submissions.js");
+const { mountMagazineList } = await import("./lib/magazine-list.js");
 const { membershipRate, membershipTiers } = await import("../shared/membership.js");
 
 const app = express();
@@ -284,6 +285,7 @@ app.post("/api/magazine/upload", (req, res) => {
 membership.mountRoutes(app);
 shop.mountRoutes(app);
 mountSubmissions(app, path.join(__dirname, "data"), membership.requireAdmin);
+mountMagazineList(app, path.join(__dirname, "data"), membership.requireAdmin);
 createSiteEvents(path.join(__dirname, "data"), { requireAdmin: membership.requireAdmin }).mountRoutes(app);
 createQuestionnaire(path.join(__dirname, "data"), { requireAdmin: membership.requireAdmin }).mountRoutes(app);
 
