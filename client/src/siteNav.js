@@ -6,7 +6,13 @@ import { SHOP_IN_NAV } from "../../shared/shop.js";
 export const navItems = [
   { label: "Home", href: "/" },
   { label: "Events", href: "/events" },
-  { label: "Magazine", href: "/magazine" },
+  {
+    label: "Magazine",
+    children: [
+      { label: "Read the Magazine", href: "/magazine" },
+      { label: "Submit Your Story", href: "/submission" }
+    ]
+  },
   {
     label: "Foundation",
     children: [
