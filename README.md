@@ -117,11 +117,11 @@ Members, offers, event registrations, and announcement history are JSON files in
 
 ## Magazine article submissions
 
-- Public form: `/submission`, linked from the magazine page. Collects first/last name, email, city/state, article title and text, up to five optional article photos, and one separate optional contributor portrait.
-- JPG, PNG and WebP images are limited to 5 MB each. The server enforces limits, validates image signatures, and rate limits submission attempts.
+- Public form: `/submission`, linked from the magazine page. Collects first/last name, email, city/state, optional Profession, Business, or Passion, article title, and either pasted article text or one Word/PDF file. Up to three optional article photos and one separate optional contributor portrait are supported.
+- JPG, PNG and WebP images are limited to 5 MB each; Word (.doc/.docx) and PDF articles are limited to 10 MB. The server enforces limits, checks file signatures, and rate limits submission attempts. Uploaded articles are private admin-only downloads and are removed with the submission.
 - Review entries in **Admin → Submissions**, or `/admin?tab=submissions`. Expand an article to read it, view/download images, and set its internal review status. Submission does not automatically publish content or email the contributor.
 - Articles are stored in `server/data/submissions.json`; images are stored privately in `server/data/submission-images/`. Preserve and back up `server/data/` across deployments. Images and contributor details require admin authentication.
-- Deploy both the server and client: pull changes, run `npm install` and `npm run build`, then `pm2 restart ladiesonthegreen`. Allow multipart requests of at least 35 MB in the Nginx HTTPS server block (`client_max_body_size 35m;`, or preserve a higher existing limit), then validate and reload Nginx. This permits five 5 MB photos plus one 5 MB portrait in a single submission.
+- Deploy both the server and client: pull changes, run `npm install` and `npm run build`, then `pm2 restart ladiesonthegreen`. Allow multipart requests of at least 35 MB in the Nginx HTTPS server block (`client_max_body_size 35m;`, or preserve a higher existing limit), then validate and reload Nginx. This permits three 5 MB photos plus one 5 MB portrait and one 10 MB article in a single submission.
 - Verification: `node --test server/submissions.test.js`.
 
 ## VPS deployment outline

@@ -9,6 +9,15 @@
 .submission-intro p { max-width: 590px; font-size: 18px; line-height: 1.8; color: #e4ece3; }
 .submission-intro__note { border-top: 1px solid #ffffff30; padding-top: 22px; margin-top: 30px; font-size: 13px; letter-spacing: .025em; width: fit-content; }
 .submission-intro__note span { color: #e1c66d; margin-right: 12px; }
+.submission-intro--collective { background: #fff; color: #141b16; padding: 64px 28px 52px; text-align: center; }
+.submission-intro--collective::after { display: none; }
+.submission-intro--collective .submission-intro__inner { max-width: 950px; }
+.submission-intro--collective .section-kicker { color: #a27832; }
+.submission-intro--collective h1 { color: #204b37; font-size: clamp(34px, 4.5vw, 52px); line-height: 1.2; margin: 16px 0; letter-spacing: -.025em; }
+.submission-intro--collective p { color: #222a24; font-size: 16px; line-height: 1.65; max-width: none; }
+.submission-intro--collective .submission-intro__tagline { margin: 0 0 12px; }
+.submission-intro--collective blockquote { margin: 0 auto 16px; max-width: 880px; font-style: italic; font-size: 16px; line-height: 1.6; }
+.submission-intro--collective .submission-intro__welcome { text-align: left; margin: 0; }
 .submission-layout { max-width: 1320px; margin: auto; display: grid; grid-template-columns: minmax(230px, .7fr) minmax(0, 1.5fr); gap: 65px; padding: 70px 40px 100px; align-items: start; }
 .submission-aside { padding: 20px 0; }
 .submission-aside h2 { font: 400 36px/1.2 Georgia, serif; color: #0a3d2a; margin: 20px 0; }
@@ -48,6 +57,13 @@
 .submission-previews figcaption { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #5d6860; margin: 5px 0; }
 .submission-previews button { border: 0; background: transparent; color: #8d3434; padding: 5px 0; text-decoration: underline; font-size: 12px; cursor: pointer; }
 .submission-word-count { text-align: right; color: #677362; font-size: 11px; margin-top: 8px; }
+.submission-article-options { display: flex; gap: 10px; margin: 24px 0; flex-wrap: wrap; }
+.submission-article-options button { flex: 1; padding: 12px 16px; border: 1px solid #9caf96; border-radius: 8px; background: #f7faf4; color: #174c31; font: inherit; font-size: 13px; cursor: pointer; }
+.submission-article-options button[aria-pressed="true"] { background: #0a3d2a; color: white; border-color: #0a3d2a; }
+.submission-document { background: #f7faf4; border: 1px dashed #9caf96; border-radius: 10px; padding: 22px; }
+.submission-document input[type=file] { display: block; width: 100%; margin: 16px 0; font-size: 13px; }
+.submission-document__selected { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 13px; overflow-wrap: anywhere; margin-top: 16px; }
+.submission-document__selected button { background: transparent; border: 0; color: #8d3434; text-decoration: underline; cursor: pointer; }
 .submission-send { border-top: 1px solid #e4e6dd; padding-top: 20px; }
 .submission-send > p { font-size: 12px; line-height: 1.6; color: #5d6860; margin-bottom: 20px; }
 .submission-send .button { width: 100%; }

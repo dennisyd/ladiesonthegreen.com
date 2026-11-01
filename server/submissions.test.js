@@ -24,19 +24,19 @@ test("article submissions persist, enforce separate photo limits, and keep contr
   assert.equal((await fetch(`${url}/api/admin/submissions`)).status, 401);
   const bad = form(); bad.set("email", "invalid");
   assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: bad })).status, 400);
-  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form(6) })).status, 400);
+  assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form(4) })).status, 400);
   assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form(0, 2) })).status, 400);
   const fake = form(); fake.append("photos", new Blob(["<svg onload='alert(1)'/>"], { type: "image/png" }), "fake.png");
   assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: fake })).status, 400);
   const large = form(); large.append("photos", new Blob([new Uint8Array(5 * 1024 * 1024 + 1)], { type: "image/png" }), "large.png");
   assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: large })).status, 400);
-  const response = await fetch(`${url}/api/submissions`, { method: "POST", body: form(5, 1) });
+  const response = await fetch(`${url}/api/submissions`, { method: "POST", body: form(3, 1) });
   assert.equal(response.status, 201);
   const { id } = await response.json();
   const headers = { authorization: "admin" };
   const { submissions } = await (await fetch(`${url}/api/admin/submissions`, { headers })).json();
   const item = submissions[0];
-  assert.equal(item.photos.length, 5); assert.ok(item.portrait); assert.equal(item.article, "First paragraph.\n\nSecond paragraph.");
+  assert.equal(item.photos.length, 3); assert.ok(item.portrait); assert.equal(item.article, "First paragraph.\n\nSecond paragraph.");
   const imageUrl = `${url}/api/admin/submissions/${id}/images/${item.portrait.filename}`;
   assert.equal((await fetch(imageUrl)).status, 401);
   const image = await fetch(imageUrl, { headers }); assert.equal(image.status, 200); assert.equal(image.headers.get("cache-control"), "private, no-store");
@@ -45,7 +45,7 @@ test("article submissions persist, enforce separate photo limits, and keep contr
   assert.equal((await fetch(`${url}/api/admin/submissions/${id}`, { method: "PATCH", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ status: "selected" }) })).status, 200);
   const saved = JSON.parse(await fs.readFile(path.join(root, "submissions.json"), "utf8"));
   assert.equal(saved.submissions[0].status, "selected");
-  assert.equal((await fs.readdir(path.join(root, "submission-images"))).length, 6);
+  assert.equal((await fs.readdir(path.join(root, "submission-images"))).length, 4);
   // Attempts seven and eight succeed without images; subsequent attempts are throttled.
   assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form() })).status, 201);
   assert.equal((await fetch(`${url}/api/submissions`, { method: "POST", body: form() })).status, 201);
@@ -59,4 +59,43 @@ test("article submissions persist, enforce separate photo limits, and keep contr
   assert.equal(remaining.submissions.length, 2);
   assert.ok(remaining.submissions.every((s) => s.id !== id && Number.isFinite(Date.parse(s.receivedAt))));
   assert.equal((await fetch(`${url}/api/admin/submissions/${id}`, { method: "DELETE", headers })).status, 404);
+});
+
+test("article file alternatives enforce 10 MB, save profession, download privately and delete with attachments", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "lotg-article-files-"));
+  const app = express(); app.use(express.json());
+  mountSubmissions(app, root, (req, res, next) => req.headers.authorization === "admin" ? next() : res.sendStatus(401));
+  const server = await new Promise((resolve) => { const s = app.listen(0, "127.0.0.1", () => resolve(s)); });
+  t.after(async () => { await new Promise((r) => server.close(r)); await fs.rm(root, { recursive: true, force: true }); });
+  const url = `http://127.0.0.1:${server.address().port}`, headers = { authorization: "admin" };
+  const pdf = Buffer.from("%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF");
+  const make = (file, name = "article.pdf") => {
+    const body = new FormData();
+    for (const [k, v] of Object.entries({ firstName: "Test", lastName: "Writer", email: "writer@example.com", city: "Miami", state: "Florida", title: "My story", profession: "Golf instructor" })) body.append(k, v);
+    if (file) body.append("document", new Blob([file], { type: name.endsWith("pdf") ? "application/pdf" : "application/octet-stream" }), name);
+    return body;
+  };
+  const post = (body) => fetch(`${url}/api/submissions`, { method: "POST", body });
+  assert.equal((await post(make())).status, 400);
+  assert.equal((await post(make(Buffer.from("fake document")))).status, 400);
+  assert.equal((await post(make(Buffer.alloc(10 * 1024 * 1024 + 1)))).status, 400);
+  const response = await post(make(pdf)); assert.equal(response.status, 201);
+  const { id } = await response.json();
+  const listing = await (await fetch(`${url}/api/admin/submissions`, { headers })).json();
+  assert.equal(listing.submissions[0].profession, "Golf instructor");
+  assert.equal(listing.submissions[0].article, "");
+  assert.equal(listing.submissions[0].document.name, "article.pdf");
+  const downloadUrl = `${url}/api/admin/submissions/${id}/document`;
+  assert.equal((await fetch(downloadUrl)).status, 401);
+  const download = await fetch(downloadUrl, { headers });
+  assert.equal(download.status, 200); assert.match(download.headers.get("content-disposition"), /^attachment;/);
+  assert.deepEqual(Buffer.from(await download.arrayBuffer()), pdf);
+  assert.equal((await fetch(`${url}/api/admin/submissions/${id}`, { method: "DELETE", headers })).status, 200);
+  assert.equal((await fetch(downloadUrl, { headers })).status, 404);
+  assert.equal((await fs.readdir(path.join(root, "submission-images"))).length, 0);
+  const docx = await fs.readFile(new URL("./test-fixtures/article.docx", import.meta.url));
+  assert.equal((await post(make(docx, "article.docx"))).status, 201);
+  assert.equal((await post(make(pdf, "renamed.docx"))).status, 400);
+  const exactLimit = Buffer.alloc(10 * 1024 * 1024); pdf.copy(exactLimit);
+  assert.equal((await post(make(exactLimit))).status, 201);
 });
