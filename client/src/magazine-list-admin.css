@@ -1,0 +1,13 @@
+.magazine-list-table { overflow-x: auto; }
+.magazine-list-admin input[type=checkbox] { width: 18px; height: 18px; accent-color: #0a3d2a; }
+.magazine-list-delete { padding: 8px 13px; border: 1px solid #a43131; background: #fff7f7; border-radius: 6px; color: #9a2424; cursor: pointer; }
+.magazine-list-delete:disabled { opacity: .6; cursor: wait; }
+.magazine-list-composer, .magazine-list-preview, .magazine-list-history { padding: 24px; margin: 25px 0; border: 1px solid #cdd9c9; border-radius: 12px; background: white; }
+.magazine-list-composer fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.magazine-list-composer label { display: block; font-weight: 600; margin: 18px 0; }
+.magazine-list-composer input, .magazine-list-composer textarea { display: block; width: 100%; padding: 12px; border: 1px solid #a6b69e; border-radius: 6px; margin-top: 8px; font: inherit; line-height: 1.6; }
+.magazine-list-composer textarea { resize: vertical; }
+.magazine-list-message { white-space: pre-wrap; overflow-wrap: anywhere; padding: 20px; margin: 20px 0; background: #f6f8f2; line-height: 1.8; }
+.magazine-list-preview ul { overflow-wrap: anywhere; }
+.magazine-list-history summary { cursor: pointer; font-weight: 600; }
+.magazine-list-error { color: #a12626; }

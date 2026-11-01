@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import express from "express";
+import crypto from "node:crypto";
 import { mountMagazineList } from "./lib/magazine-list.js";
 
 test("magazine interest list validates, persists, deduplicates, throttles and protects personal details", async (t) => {
@@ -32,4 +33,63 @@ test("magazine interest list validates, persists, deduplicates, throttles and pr
   assert.deepEqual(saved.subscribers, subscribers);
   for (let i = 0; i < 5; i++) assert.equal((await post(data)).status, 200);
   assert.equal((await post(data)).status, 429);
+  const id = subscribers[0].id;
+  assert.equal((await fetch(`${url}/api/admin/magazine-list/${id}`, { method: "DELETE" })).status, 401);
+  assert.equal((await fetch(`${url}/api/admin/magazine-list/${id}`, { method: "DELETE", headers: { authorization: "admin" } })).status, 200);
+  assert.equal((await fetch(`${url}/api/admin/magazine-list/${id}`, { method: "DELETE", headers: { authorization: "admin" } })).status, 404);
+  assert.equal(JSON.parse(await fs.readFile(path.join(root, "magazine-list.json"), "utf8")).subscribers.length, 0);
+});
+
+test("admin email sends privately, records failures, deduplicates sends and supports unsubscribe", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "lotg-magazine-email-"));
+  const subscribers = ["reader", "failed", "deleted"].map((name) => ({ id: crypto.randomUUID(), firstName: name, lastName: "Writer", email: `${name}@example.com`, joinedAt: new Date().toISOString() }));
+  await fs.writeFile(path.join(root, "magazine-list.json"), JSON.stringify({ subscribers }));
+  const sent = [];
+  const mail = { sendMail: async (options) => { sent.push(options); if (options.to === "failed@example.com") throw new Error("SMTP rejected recipient"); return { accepted: [options.to] }; }, close() {} };
+  const app = express(); app.use(express.json());
+  mountMagazineList(app, root, (req, res, next) => req.headers.authorization === "admin" ? next() : res.sendStatus(401), { getTransporter: () => mail, from: "editor@example.com", replyTo: "editor@example.com" });
+  const server = await new Promise((resolve) => { const s = app.listen(0, "127.0.0.1", () => resolve(s)); });
+  t.after(async () => { await new Promise((r) => server.close(r)); await fs.rm(root, { recursive: true, force: true }); });
+  const url = `http://127.0.0.1:${server.address().port}`, headers = { authorization: "admin", "Content-Type": "application/json" };
+  const body = { subject: "Our first issue is here", message: "Read the magazine at https://ladiesonthegreen.com/magazine", subscriberIds: [subscribers[0].id, subscribers[1].id], requestId: crypto.randomUUID() };
+  const send = (payload, auth = true) => fetch(`${url}/api/admin/magazine-list/email`, { method: "POST", headers: auth ? headers : { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  assert.equal((await send(body, false)).status, 401); assert.equal(sent.length, 0);
+  assert.equal((await send({ ...body, subject: "Header\r\nBcc: bad@example.com" })).status, 400);
+  assert.equal((await send({ ...body, subscriberIds: ["missing"] })).status, 400);
+  const started = await send(body); assert.equal(started.status, 202);
+  let history;
+  for (let i = 0; i < 100; i++) {
+    history = await (await fetch(`${url}/api/admin/magazine-list`, { headers })).json();
+    if (history.mailings[0]?.status === "done") break;
+    await new Promise((r) => setTimeout(r, 10));
+  }
+  assert.equal(history.emailConfigured, true);
+  assert.equal(history.mailings[0].status, "done");
+  assert.deepEqual(history.mailings[0].recipients.map((r) => r.status), ["sent", "failed"]);
+  assert.equal(sent.length, 2);
+  assert.ok(sent.every((m) => typeof m.to === "string" && !m.cc && !m.bcc));
+  assert.match(sent[0].text, /Hi reader,/); assert.match(sent[0].text, /Unsubscribe: https:\/\//);
+  assert.equal((await send(body)).status, 200); assert.equal(sent.length, 2);
+  const unsubPath = new URL(sent[0].text.split("Unsubscribe: ")[1]).pathname;
+  assert.equal((await fetch(`${url}${unsubPath}`)).status, 200);
+  assert.equal((await (await fetch(`${url}/api/admin/magazine-list`, { headers })).json()).subscribers.length, 3);
+  assert.equal((await fetch(`${url}${unsubPath}`, { method: "POST" })).status, 200);
+  assert.equal((await (await fetch(`${url}/api/admin/magazine-list`, { headers })).json()).subscribers.length, 2);
+  assert.equal((await send({ ...body, requestId: crypto.randomUUID() })).status, 400);
+});
+
+test("unconfigured email never pretends to send and interrupted history survives a restart", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "lotg-magazine-no-smtp-"));
+  const id = crypto.randomUUID();
+  await fs.writeFile(path.join(root, "magazine-list.json"), JSON.stringify({ subscribers: [{ id, email: "reader@example.com", firstName: "Reader" }], mailings: [{ id: crypto.randomUUID(), status: "sending", recipients: [] }] }));
+  const app = express(); app.use(express.json());
+  mountMagazineList(app, root, (_req, _res, next) => next(), { getTransporter: () => null, from: "editor@example.com" });
+  const server = await new Promise((resolve) => { const s = app.listen(0, "127.0.0.1", () => resolve(s)); });
+  t.after(async () => { await new Promise((r) => server.close(r)); await fs.rm(root, { recursive: true, force: true }); });
+  const url = `http://127.0.0.1:${server.address().port}`;
+  const result = await (await fetch(`${url}/api/admin/magazine-list`)).json();
+  assert.equal(result.emailConfigured, false); assert.equal(result.mailings[0].status, "interrupted");
+  const response = await fetch(`${url}/api/admin/magazine-list/email`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject: "Hello", message: "Our magazine is ready.", subscriberIds: [id], requestId: crypto.randomUUID() }) });
+  assert.equal(response.status, 503);
+  assert.equal((await (await fetch(`${url}/api/admin/magazine-list`)).json()).mailings.length, 1);
 });
