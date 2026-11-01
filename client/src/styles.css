@@ -2082,6 +2082,27 @@ textarea:focus {
   margin-bottom: 32px;
 }
 
+.magazine-page-wrap--public { padding: 0; }
+.magazine-welcome { background: #fbfaf5; }
+/* The supplied artwork includes a sample menu. Crop that strip so the real
+   site navigation above remains the only menu; keep the full magazine art. */
+.magazine-welcome__art { position: relative; max-width: 1440px; margin: 0 auto; aspect-ratio: 1024 / 517; overflow: hidden; }
+.magazine-welcome__art > img { display: block; width: 100%; height: auto; margin-top: -5.859375%; }
+.magazine-welcome__hotspot { position: absolute; top: 61.9%; height: 12.4%; border-radius: 999px; }
+.magazine-welcome__hotspot--subscribe { left: 49.6%; width: 22%; }
+.magazine-welcome__hotspot--submit { left: 72.3%; width: 24.2%; }
+.magazine-welcome__hotspot:hover { box-shadow: 0 0 0 3px #d8b34b; }
+.magazine-welcome__hotspot:focus-visible { outline: 4px solid #075f39; outline-offset: 4px; box-shadow: 0 0 0 8px white; }
+.magazine-welcome__signin { margin: 0; padding: 24px 20px 36px; text-align: center; color: var(--muted); font-size: 14px; }
+.magazine-welcome__signin a { color: var(--green); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.magazine-welcome__mobile-actions { display: none; }
+.magazine-welcome__subscribe { background: var(--green); color: white; border: 1px solid var(--gold); }
+@media (max-width: 650px) {
+  .magazine-welcome__mobile-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding: 24px 16px 0; }
+  .magazine-welcome__mobile-actions .button { min-height: 48px; flex: 1 1 160px; text-align: center; }
+  .magazine-welcome__mobile-actions .button--secondary { color: var(--green); border-color: var(--green); }
+}
+
 .magazine-viewer {
   display: grid;
   gap: 20px;

@@ -178,22 +178,30 @@ export default function MagazinePage() {
         </div>
       </header>
 
-      <main className="magazine-page-wrap">
-        <div className="section-heading magazine-heading">
+      <main className={`magazine-page-wrap${status === "members-only" ? " magazine-page-wrap--public" : ""}`}>
+        {status === "members-only" ? (
+          <section className="magazine-welcome" aria-label="Discover The Collective Magazine">
+            <h1 className="sr-only">The Collective Magazine — A lifestyle magazine for the woman next door</h1>
+            <div className="magazine-welcome__art">
+              <img src="/collective-magazine-welcome.png" alt="The Collective Magazine. Real women. Real stories. Golf, travel, wellness, business, and the everyday inspiration that connects us." fetchPriority="high" />
+              <a className="magazine-welcome__hotspot magazine-welcome__hotspot--subscribe" href="/join" aria-label="Subscribe to The Collective — view signup options" title="Subscribe"><span className="sr-only">Subscribe — Be the first to read</span></a>
+              <a className="magazine-welcome__hotspot magazine-welcome__hotspot--submit" href="/submission" aria-label="Submit Your Story" title="Submit Your Story"><span className="sr-only">Submit Your Story — Share your journey</span></a>
+            </div>
+            <div className="magazine-welcome__mobile-actions">
+              <a className="button magazine-welcome__subscribe" href="/join">Subscribe</a>
+              <a className="button button--secondary" href="/submission">Submit Your Story</a>
+            </div>
+            <p className="magazine-welcome__signin">Already a member? <a href="/members">Sign in to read the latest issue ↗</a></p>
+          </section>
+        ) : <div className="section-heading magazine-heading">
           <span className="section-kicker">Digital Magazine</span>
           <h1>{title}</h1>
           <p>Have a story to share? <a href="/submission" style={{ textDecoration: "underline" }}>Submit an article to the magazine ↗</a></p>
-        </div>
+        </div>}
 
-        {status !== "ready" && (
+        {status !== "ready" && status !== "members-only" && (
           <div className={`magazine-status magazine-status--${status}`} role="status">
-            {status === "members-only" || status === "coming-soon" ? <h2>{message}</h2> : <p>{message}</p>}
-            {status === "members-only" && (
-              <div className="magazine-access-actions">
-                <a className="button button--primary" href="/members">Member Sign In</a>
-                <a className="button button--secondary" href="/join">Become A Member</a>
-              </div>
-            )}
+            {status === "coming-soon" ? <h2>{message}</h2> : <p>{message}</p>}
           </div>
         )}
 
