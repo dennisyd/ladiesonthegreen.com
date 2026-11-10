@@ -1,13 +1,8 @@
 // Membership pricing and Stripe Payment Links, shared by the Join page (client)
 // and the server (application emails, Stripe payment tracking).
 
-// Founding Membership: $99/year through October 31, 2026 (shown against a
-// crossed-out $149), then $149/year from midnight Eastern on November 1.
-// To extend or end the offer, change the date below; the "expires" wording on the
-// Join page and in reminder emails follows it.
-// Each price has its own Stripe Payment Link (recurring yearly price). If a link
-// is empty, the Join form still saves the application, it just skips payment.
-export const FOUNDING_RATE_ENDS = new Date("2026-11-01T00:00:00-04:00");
+// Set this to false and redeploy to restore $149/year for new Social signups.
+const SOCIAL_OFFER_ACTIVE = true;
 export const foundingRate = { amount: 99, paymentUrl: "https://buy.stripe.com/aFaeVd0bV3aUf5Rbpwdby0E" };
 export const regularRate = { amount: 149, paymentUrl: "https://buy.stripe.com/3cI3cve2LeTC2j53X4dby0F" };
 export const prestigeRate = { amount: 350, paymentUrl: "https://buy.stripe.com/3cI5kD3o7aDm4rd9hodby0G" };
@@ -17,24 +12,17 @@ export const membershipTiers = {
   prestige: { name: "Founding Prestige Membership" }
 };
 
-export function membershipRate(tier = "social", now = new Date()) {
+export function membershipRate(tier = "social") {
   if (!Object.hasOwn(membershipTiers, tier)) throw new Error("Please choose a valid membership.");
   return {
-    ...(tier === "prestige" ? { ...prestigeRate, isFounding: false } : currentRate(now)),
+    ...(tier === "prestige" ? { ...prestigeRate, isFounding: false } : currentRate()),
     tier,
     name: membershipTiers[tier].name
   };
 }
 
-// Last day of the founding rate, e.g. "October 31" (the day before the switch, Eastern).
-export const FOUNDING_DEADLINE_LABEL = new Date(FOUNDING_RATE_ENDS.getTime() - 1).toLocaleDateString("en-US", {
-  month: "long",
-  day: "numeric",
-  timeZone: "America/New_York"
-});
-
-export function currentRate(now = new Date()) {
-  const isFounding = now < FOUNDING_RATE_ENDS;
+export function currentRate() {
+  const isFounding = SOCIAL_OFFER_ACTIVE;
   return { ...(isFounding ? foundingRate : regularRate), isFounding };
 }
 

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { SiteFooter, SiteHeader } from "./SiteChrome.jsx";
-import { FOUNDING_DEADLINE_LABEL, membershipRate, regularRate } from "../../shared/membership.js";
+import { membershipRate, regularRate } from "../../shared/membership.js";
 import "./test-membership.css";
 
 const image = (name) => `/test-membership/${name}.jpg`;
@@ -187,7 +187,7 @@ export default function TestMembershipPage() {
               <h3>Social Membership</h3>
               <p>For the woman ready for more golf, more connection, and more of the good life.</p>
               <div className="test-membership__tier-price">{social.isFounding && <s>${regularRate.amount}</s>}<strong>${social.amount}</strong><span>/ year</span></div>
-              {social.isFounding && <p className="test-membership__rate-note">Founding rate through {FOUNDING_DEADLINE_LABEL}; then ${regularRate.amount}/year.</p>}
+              {social.isFounding && <p className="test-membership__rate-note">Limited-time rate for new members.</p>}
               <ul>
                 <li>Golf outings, clinics, and social gatherings</li>
                 <li>Member rates and partner offers</li>

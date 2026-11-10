@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { NavLinks } from "./SiteChrome.jsx";
 import WelcomeExperience from "./WelcomeExperience.jsx";
 import MembershipOptions from "./MembershipOptions.jsx";
-import { FOUNDING_DEADLINE_LABEL, FOUNDING_RATE_ENDS, membershipRate, regularRate } from "../../shared/membership.js";
+import { membershipRate, regularRate } from "../../shared/membership.js";
 
-// Prices, the founding-rate deadline and the Stripe Payment Links live in
+// Prices and Stripe Payment Links live in
 // shared/membership.js so the server tracks payments against the same links.
 
 const memberExperience = [
@@ -23,16 +23,8 @@ const memberExperience = [
 export default function JoinPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [tier, setTier] = useState(() => new URLSearchParams(window.location.search).get("tier") === "prestige" ? "prestige" : "social");
-  const [pricingNow, setPricingNow] = useState(() => new Date());
-  const rate = membershipRate(tier, pricingNow);
+  const rate = membershipRate(tier);
   const [formState, setFormState] = useState({ status: "idle", message: "" });
-
-  useEffect(() => {
-    const delay = FOUNDING_RATE_ENDS.getTime() - Date.now();
-    if (delay <= 0) return;
-    const timer = setTimeout(() => setPricingNow(new Date()), Math.min(delay, 2147483647));
-    return () => clearTimeout(timer);
-  }, [pricingNow]);
 
   function chooseTier(value) {
     if (formState.status === "loading") return;
@@ -52,7 +44,6 @@ export default function JoinPage() {
     event.preventDefault();
     const form = event.currentTarget;
     const payload = Object.fromEntries(new FormData(form).entries());
-    // Recheck the date on submit in case this tab was left open overnight.
     const membershipPaymentUrl = membershipRate(payload.membershipTier).paymentUrl;
 
     setFormState({ status: "loading", message: "Saving your details..." });
@@ -123,7 +114,7 @@ export default function JoinPage() {
 
       <main className="join-page">
         <WelcomeExperience />
-        <MembershipOptions tier={tier} onChange={chooseTier} now={pricingNow} disabled={formState.status === "loading"} />
+        <MembershipOptions tier={tier} onChange={chooseTier} disabled={formState.status === "loading"} />
         <div className="join-page__grid">
           <section className="join-copy" aria-labelledby="join-title">
             <h2 id="join-title" className="join-copy__signup-title">Your next experience begins here.</h2>
@@ -145,7 +136,7 @@ export default function JoinPage() {
                 ${rate.amount} <span>/ year</span>
               </p>
               {rate.isFounding && (
-                <p className="join-copy__deadline">The ${rate.amount} annual deal expires {FOUNDING_DEADLINE_LABEL}. Then ${regularRate.amount}/year.</p>
+                <p className="join-copy__deadline">Limited-time rate for new Social Membership signups.</p>
               )}
               <p>
                 {tier === "prestige" ? "Enjoy an elevated level of belonging with enhanced access, VIP connections, and a more personalized Collective experience." : "Join our community for golf, friendship, wellness, travel, and experiences curated especially for LOTG members."}
@@ -173,7 +164,7 @@ export default function JoinPage() {
                 <label>
                   Membership type
                   <select name="membershipTier" value={tier} onChange={(event) => chooseTier(event.target.value)} disabled={formState.status === "loading"}>
-                    <option value="social">Social Membership — ${membershipRate("social", pricingNow).amount}/year</option>
+                    <option value="social">Social Membership — ${membershipRate("social").amount}/year</option>
                     <option value="prestige">Founding Prestige Membership — $350/year</option>
                   </select>
                 </label>

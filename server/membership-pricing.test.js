@@ -14,20 +14,18 @@ async function temporaryDirectory(t) {
   return root;
 }
 
-test("Social switches price and payment link at midnight Eastern November 1; Prestige remains $350", () => {
-  const before = new Date("2026-11-01T03:59:59.999Z");
-  const after = new Date("2026-11-01T04:00:00.000Z");
-  assert.equal(membershipRate("social", before).amount, 99);
-  assert.equal(membershipRate("social", before).paymentUrl, foundingRate.paymentUrl);
-  assert.equal(membershipRate("social", after).amount, 149);
-  assert.equal(membershipRate("social", after).paymentUrl, "https://buy.stripe.com/3cI3cve2LeTC2j53X4dby0F");
-  assert.equal(membershipRate("social", after).isFounding, false);
-  for (const date of [before, after, new Date("2027-01-01")]) {
-    const rate = membershipRate("prestige", date);
-    assert.equal(rate.amount, 350);
-    assert.equal(rate.paymentUrl, "https://buy.stripe.com/3cI5kD3o7aDm4rd9hodby0G");
-    assert.equal(rate.isFounding, false);
-  }
+test("Social uses the configured offer; both Stripe links remain recognized and Prestige remains $350", () => {
+  const social = membershipRate("social");
+  assert.deepEqual({ amount: social.amount, paymentUrl: social.paymentUrl }, social.isFounding ? foundingRate : regularRate);
+  assert.deepEqual(foundingRate, {
+    amount: 99, paymentUrl: "https://buy.stripe.com/aFaeVd0bV3aUf5Rbpwdby0E"
+  });
+  assert.equal(regularRate.amount, 149);
+  assert.equal(membershipTierForPaymentUrl(regularRate.paymentUrl), "social");
+  const rate = membershipRate("prestige");
+  assert.equal(rate.amount, 350);
+  assert.equal(rate.paymentUrl, "https://buy.stripe.com/3cI5kD3o7aDm4rd9hodby0G");
+  assert.equal(rate.isFounding, false);
   assert.throws(() => membershipRate("other"));
   assert.throws(() => membershipRate("constructor"));
   assert.equal(membershipTierForPaymentUrl("https://example.com/another-product"), null);

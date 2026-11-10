@@ -2,7 +2,7 @@ import express from "express";
 import crypto from "node:crypto";
 import path from "node:path";
 import Stripe from "stripe";
-import { FOUNDING_DEADLINE_LABEL, currentRate, regularRate, membershipRate } from "../shared/membership.js";
+import { currentRate, membershipRate } from "../shared/membership.js";
 import { clearCookie, createAuth, createRateLimiter, readCookie, safeEqual, setCookie } from "./lib/auth.js";
 import { checkMailLogin, mailConfigured, sendEmail } from "./lib/mailer.js";
 import { createMemberEvents } from "./lib/member-events.js";
@@ -162,7 +162,7 @@ export function createMembership(dataDir, { sendSignInEmail = sendEmail } = {}) 
         `Selected membership: ${rate.name} — $${rate.amount}/year.`,
         "",
         ...(rate.isFounding
-          ? [`The $${rate.amount} annual founding rate expires ${FOUNDING_DEADLINE_LABEL}. After that, membership is $${regularRate.amount}/year.`, ""]
+          ? ["This is a limited-time rate for new members.", ""]
           : []),
         `Complete your membership here: ${origin(req)}/join?tier=${rate.tier}#signup`,
         "",

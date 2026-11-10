@@ -1,5 +1,5 @@
 import React from "react";
-import { FOUNDING_DEADLINE_LABEL, membershipRate, regularRate } from "../../shared/membership.js";
+import { membershipRate, regularRate } from "../../shared/membership.js";
 
 const benefits = [
   ["Members-only golf outings, clinics, and social gatherings", "Included", "Included"],
@@ -22,9 +22,9 @@ const benefits = [
   ["Private VIP social and networking experiences", "—", "Included"]
 ];
 
-export default function MembershipOptions({ tier, onChange, now, disabled }) {
-  const social = membershipRate("social", now);
-  const prestige = membershipRate("prestige", now);
+export default function MembershipOptions({ tier, onChange, disabled }) {
+  const social = membershipRate("social");
+  const prestige = membershipRate("prestige");
   return (
     <section className="membership-options" id="membership-options" aria-labelledby="membership-options-title">
       <header className="section-heading">
@@ -44,18 +44,18 @@ export default function MembershipOptions({ tier, onChange, now, disabled }) {
             <span className="membership-option__description">
               {rate.tier === "social" ? "Golf, friendship, wellness, travel, community, and select partner offers." : "Enhanced access, VIP connections, a welcome gift, two printed magazine editions annually, and a member spotlight."}
             </span>
-            {rate.isFounding && <span className="membership-option__deadline">Founding rate through {FOUNDING_DEADLINE_LABEL}. ${regularRate.amount}/year from November 1.</span>}
+            {rate.isFounding && <span className="membership-option__deadline">Limited-time rate for new members.</span>}
             <span className="membership-option__selected">{tier === rate.tier ? "Selected" : "Select membership"}</span>
           </label>
         ))}
       </fieldset>
-      <a className="button button--gold" href="#signup">Continue with {membershipRate(tier, now).name} ↘</a>
+      <a className="button button--gold" href="#signup">Continue with {membershipRate(tier).name} ↘</a>
       <div className="membership-comparison" role="region" aria-label="Membership benefits comparison" tabIndex={0}>
         <table>
           <caption>Compare your membership benefits</caption>
           <thead><tr><th scope="col">Membership Benefits</th><th scope="col">Social Membership</th><th scope="col">Founding Prestige Membership</th></tr></thead>
           <tbody>
-            <tr><th scope="row">Annual Investment</th><td>${social.amount}{social.isFounding && <small>Through {FOUNDING_DEADLINE_LABEL}; then ${regularRate.amount}</small>}</td><td>${prestige.amount}</td></tr>
+            <tr><th scope="row">Annual Investment</th><td>${social.amount}{social.isFounding && <small>Limited-time rate</small>}</td><td>${prestige.amount}</td></tr>
             {benefits.map(([benefit, socialValue, prestigeValue]) => <tr key={benefit}><th scope="row">{benefit}</th><td>{socialValue}</td><td>{prestigeValue}</td></tr>)}
           </tbody>
         </table>
