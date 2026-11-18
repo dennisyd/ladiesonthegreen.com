@@ -17,7 +17,7 @@ export const navItems = [
   {
     label: "Foundation",
     children: [
-      { label: "Girls on the Green", href: "/girls-on-the-green" },
+      { label: "Young Ladies on the Green", href: "/girls-on-the-green" },
       { label: "Secure the Bag", href: "/foundation" }
     ]
   },

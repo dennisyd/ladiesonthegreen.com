@@ -82,10 +82,10 @@ const experiences = [
     alt: "A woman helping a young girl learn to swing a golf club",
     paragraphs: [
       "Our Collective is built on the belief that true influence is measured not only by the connections we make, but also by the lives we touch.",
-      "Through Girls on the Green initiatives, mentorship, charitable experiences, and community outreach, we create opportunities for members to share their knowledge, support future generations, and make a meaningful difference.",
+      "Through Young Ladies on the Green initiatives, mentorship, charitable experiences, and community outreach, we create opportunities for members to share their knowledge, support future generations, and make a meaningful difference.",
       "Every member is invited to contribute, participate, and lead in ways that feel personally meaningful."
     ],
-    link: { href: "/girls-on-the-green", label: "Discover Girls on the Green ↗" }
+    link: { href: "/girls-on-the-green", label: "Discover Young Ladies on the Green ↗" }
   },
   {
     id: "prestige",

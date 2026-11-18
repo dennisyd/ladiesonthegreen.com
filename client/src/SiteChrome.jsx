@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { navItems } from "./siteNav.js";
 
-// Header and footer for the simple content pages (About Us, Girls on the Green).
+// Header and footer for the simple content pages (About Us, Young Ladies on the Green).
 // `currentPath` marks that page's link in the menu.
 
 // The menu links, with dropdowns for items that have `children`. `currentPath` marks the

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { SiteFooter, SiteHeader } from "./SiteChrome.jsx";
 
-const NEXTGEN = "Girls on the Green | NextGen";
+const NEXTGEN = "Young Ladies on the Green | NextGen";
 
 const paragraphs = [
   "Founded by Martine “Dee” Dennis, Founder & CEO, Ladies on the Green® | The Collective is a private golf and lifestyle community connecting accomplished women through golf, meaningful friendships, professional networking, and elevated experiences.",

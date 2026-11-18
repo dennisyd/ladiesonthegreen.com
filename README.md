@@ -58,7 +58,7 @@ Uploaded PDFs are stored on disk at `server/uploads/magazine/` (gitignored) with
 
 ## Pages and menu
 
-The main menu is one shared list in `client/src/siteNav.js`, used by every public page, so a change there changes the menu everywhere. Besides the home page, the public pages are `/about` (About Us), `/girls-on-the-green` (Girls on the Green | NextGen), `/foundation`, `/magazine`, `/shop` and `/join`. Their wording is in `client/src/AboutPage.jsx` and `client/src/GirlsOnTheGreenPage.jsx`.
+The main menu is one shared list in `client/src/siteNav.js`, used by every public page, so a change there changes the menu everywhere. Besides the home page, the public pages are `/about` (About Us), `/girls-on-the-green` (Young Ladies on the Green | NextGen), `/foundation`, `/magazine`, `/shop` and `/join`. Their wording is in `client/src/AboutPage.jsx` and `client/src/GirlsOnTheGreenPage.jsx`.
 
 ## Members, payments, and admin
 

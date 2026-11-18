@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { SiteFooter, SiteHeader } from "./SiteChrome.jsx";
 
 const paragraphs = [
-  "Girls on the Green | NextGen is a vibrant golf and lifestyle community for young women ages 18–29, including college students and emerging professionals.",
+  "Young Ladies on the Green | NextGen is a vibrant golf and lifestyle community for young women ages 18–29, including college students and emerging professionals.",
   "We believe golf is more than a game. It is access, confidence, community, and culture.",
   "Our mission is to create a pathway for the next generation of women to discover golf, build confidence, cultivate meaningful friendships, and develop valuable personal and professional connections.",
   "At the core of our community is intergenerational mentorship, connecting young women with accomplished professionals who share their knowledge and experiences, inspire, empower, and open doors.",
@@ -27,7 +27,7 @@ export default function GirlsOnTheGreenPage() {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, interest: "Girls on the Green | NextGen", message: `${message}\n\n${details}` })
+        body: JSON.stringify({ name, email, interest: "Young Ladies on the Green | NextGen", message: `${message}\n\n${details}` })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Something went wrong.");
@@ -39,7 +39,7 @@ export default function GirlsOnTheGreenPage() {
   }
 
   useEffect(() => {
-    document.title = "Girls on the Green | NextGen | Ladies on the Green®";
+    document.title = "Young Ladies on the Green | NextGen | Ladies on the Green®";
   }, []);
 
   return (
@@ -51,14 +51,14 @@ export default function GirlsOnTheGreenPage() {
           <figure className="page-banner">
             <img
               src="/nextgen-banner.jpg"
-              alt="Girls on the Green: six young women in golf outfits walking together and laughing on a golf course"
+              alt="Young Ladies on the Green: six young women in golf outfits walking together and laughing on a golf course"
               width="1024"
               height="381"
             />
           </figure>
           <div className="page-hero__text">
             <span className="page-hero__eyebrow">For the girls</span>
-            <h1 id="nextgen-heading">Girls on the Green | NextGen</h1>
+            <h1 id="nextgen-heading">Young Ladies on the Green | NextGen</h1>
             <p className="page-hero__sub">An Initiative of Ladies on the Green®</p>
             <p className="page-hero__tagline">Learn the Game. Build Your Network. Find Your Circle.</p>
           </div>
@@ -74,7 +74,7 @@ export default function GirlsOnTheGreenPage() {
         <section className="page-cta" id="get-in-touch" aria-labelledby="gotg-contact-heading">
           <form className="join-form gotg-form" onSubmit={handleSubmit}>
             <h2 id="gotg-contact-heading">Get in touch</h2>
-            <p>Tell us a little about yourself and we will email you back about Girls on the Green | NextGen.</p>
+            <p>Tell us a little about yourself and we will email you back about Young Ladies on the Green | NextGen.</p>
             <label>
               Name
               <input name="name" type="text" autoComplete="name" required />

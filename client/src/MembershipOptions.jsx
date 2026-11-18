@@ -8,7 +8,7 @@ const benefits = [
   ["Networking with women across cities and states", "Included", "VIP curated connections"],
   ["Golf getaways and travel experiences", "Member access", "Priority access"],
   ["Lifestyle and social experiences", "Included", "Priority invitations"],
-  ["Girls on the Green® initiatives and community service", "Included", "Included"],
+  ["Young Ladies on the Green® initiatives and community service", "Included", "Included"],
   ["Golf buddies and networking opportunities", "Included", "Included"],
   ["Digital LOTG magazine", "Included", "Included"],
   ["Special offers from golf and lifestyle partners", "Included", "Enhanced VIP perks"],
