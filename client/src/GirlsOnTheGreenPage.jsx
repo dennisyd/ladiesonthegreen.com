@@ -50,10 +50,10 @@ export default function GirlsOnTheGreenPage() {
         <section className="page-hero page-hero--banner" aria-labelledby="nextgen-heading">
           <figure className="page-banner">
             <img
-              src="/nextgen-banner.jpg"
+              src="/nextgen-banner-v2.png"
               alt="Young Ladies on the Green: six young women in golf outfits walking together and laughing on a golf course"
-              width="1024"
-              height="381"
+              width="2056"
+              height="765"
             />
           </figure>
           <div className="page-hero__text">
