@@ -25,7 +25,7 @@ export default function SubscribePage() {
       <p className="subscribe-description">Our inaugural issue is coming! Discover inspiring stories, golf, fashion, travel, wellness, business, and the women who connect us.</p>
       <div className="subscribe-price"><strong>$19.99<span> / year</span></strong><span>Four Quarterly Digital Issues</span></div>
       <h2 className="subscribe-reserve">Reserve your interest today.<br />No payment required.</h2><div className="subscribe-swoosh subscribe-swoosh--short" aria-hidden="true" />
-      {status === "success" ? <div className="subscribe-success" ref={success} tabIndex={-1} role="status"><h2>You’re on the list!</h2><p>{message}</p><a href="/magazine">Back to the magazine ↗</a></div>
+      {status === "success" ? <div className="subscribe-success" ref={success} tabIndex={-1} role="status"><h2>You’re on the list!</h2><p>{message}</p><a href="/thecollective">Back to the magazine ↗</a></div>
       : <form className="subscribe-form" onSubmit={join} aria-busy={busy}><fieldset disabled={busy}><legend className="sr-only">Join The Collective Magazine list</legend>
         <div className="subscribe-name-fields"><label><span className="sr-only">First Name</span><input name="firstName" autoComplete="given-name" placeholder="First Name" maxLength={80} required /></label><label><span className="sr-only">Last Name</span><input name="lastName" autoComplete="family-name" placeholder="Last Name" maxLength={80} required /></label></div>
         <label><span className="sr-only">Email Address</span><input name="email" type="email" autoComplete="email" placeholder="Email Address" maxLength={254} required /></label>

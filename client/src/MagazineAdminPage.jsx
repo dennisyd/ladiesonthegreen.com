@@ -58,7 +58,7 @@ export default function MagazineAdminPage() {
         <h1>Magazine Upload</h1>
         <p>
           Upload a PDF to replace the stored issue for{" "}
-          <a href="/magazine">/magazine</a>. Uploading does not publish the magazine.
+          <a href="/thecollective">/thecollective</a>. Uploading does not publish the magazine.
           Members will see the coming-soon notice until the issue is confirmed final.
         </p>
 

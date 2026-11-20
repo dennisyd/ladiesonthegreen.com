@@ -7,7 +7,7 @@ import { EventCards, EventsLoading, useSiteEvents } from "./EventsPage.jsx";
 import { NavLinks } from "./SiteChrome.jsx";
 
 // Code-split: the flipbook viewer pulls in pdf.js + react-pageflip (~2MB),
-// which only the /magazine routes need, so keep them out of every other
+// which only the magazine routes need, so keep them out of every other
 // page's bundle.
 const MagazinePage = lazy(() => import("./MagazinePage.jsx"));
 const MagazineAdminPage = lazy(() => import("./MagazineAdminPage.jsx"));
@@ -411,6 +411,7 @@ const routes = {
   "/test": TestMembershipPage,
   "/join": JoinPage,
   "/foundation": FoundationPage,
+  "/thecollective": MagazinePage,
   "/magazine": MagazinePage,
   "/magazine/admin": MagazineAdminPage,
   "/admin": AdminPage,
@@ -423,6 +424,9 @@ const routes = {
   "/girls-on-the-green": GirlsOnTheGreenPage
 };
 const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+if (pathname === "/magazine") {
+  window.history.replaceState(null, "", `/thecollective${window.location.search}${window.location.hash}`);
+}
 const PageComponent = routes[pathname];
 
 const root = createRoot(document.getElementById("root"));

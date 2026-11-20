@@ -45,7 +45,7 @@ Use `SMTP_PORT=465` or `SMTP_SECURE=true` when your mail provider requires SSL.
 
 ## Digital magazine (flipbook)
 
-- `/magazine` — members-only magazine. Visitors see **MEMBERS ONLY** with a member sign-in link. Signed-in members see **INAUGURAL FALL ISSUE COMING SOON** while `MAGAZINE_IS_FINAL` in `shared/magazine.js` is false. Keep it false until the owner explicitly confirms the issue is final; uploading a PDF does not publish it. Both magazine metadata and PDF files require member authentication, and unreleased PDFs cannot be read directly.
+- `/thecollective` — members-only magazine. Visitors see **MEMBERS ONLY** with a member sign-in link. Signed-in members see **INAUGURAL FALL ISSUE COMING SOON** while `MAGAZINE_IS_FINAL` in `shared/magazine.js` is false. Keep it false until the owner explicitly confirms the issue is final; uploading a PDF does not publish it. Both magazine metadata and PDF files require member authentication, and unreleased PDFs cannot be read directly.
 - `/magazine/admin` — password-gated upload form. Uploading a PDF replaces the stored issue; only one issue is stored at a time, and the previous file is deleted automatically. Once explicitly released, members read it in the browser with the page-turning viewer.
 
 Set an admin password before starting the server, or uploads are refused:
@@ -58,7 +58,7 @@ Uploaded PDFs are stored on disk at `server/uploads/magazine/` (gitignored) with
 
 ## Pages and menu
 
-The main menu is one shared list in `client/src/siteNav.js`, used by every public page, so a change there changes the menu everywhere. Besides the home page, the public pages are `/about` (About Us), `/girls-on-the-green` (Young Ladies on the Green | NextGen), `/foundation`, `/magazine`, `/shop` and `/join`. Their wording is in `client/src/AboutPage.jsx` and `client/src/GirlsOnTheGreenPage.jsx`.
+The main menu is one shared list in `client/src/siteNav.js`, used by every public page, so a change there changes the menu everywhere. Besides the home page, the public pages are `/about` (About Us), `/girls-on-the-green` (Young Ladies on the Green | NextGen), `/foundation`, `/thecollective`, `/shop` and `/join`. Their wording is in `client/src/AboutPage.jsx` and `client/src/GirlsOnTheGreenPage.jsx`.
 
 ## Members, payments, and admin
 

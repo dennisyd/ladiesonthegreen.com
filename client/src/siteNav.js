@@ -9,7 +9,7 @@ export const navItems = [
   {
     label: "Magazine",
     children: [
-      { label: "Read the Magazine", href: "/magazine" },
+      { label: "Read the Magazine", href: "/thecollective" },
       { label: "Subscribe", href: "/subscribe" },
       { label: "Submit Your Story", href: "/submission" }
     ]

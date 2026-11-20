@@ -308,6 +308,11 @@ app.use(
 
 const clientDistPath = path.join(__dirname, "..", "client", "dist");
 
+app.get("/magazine", (req, res) => {
+  const query = req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : "";
+  res.redirect(301, `/thecollective${query}`);
+});
+
 app.use(
   express.static(clientDistPath, {
     maxAge: "1d",

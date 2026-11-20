@@ -53,7 +53,7 @@ export function mountMagazineList(app, dataDir, requireAdmin, { getTransporter =
   });
   app.post("/api/magazine-list/unsubscribe/:token", async (req, res) => {
     await store.update((data) => { data.subscribers = data.subscribers.filter((s) => s.unsubscribeToken !== req.params.token); });
-    res.set("Cache-Control", "no-store").type("html").send('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Unsubscribed</title><body style="font-family:Georgia,serif;background:#fbfaf5;color:#0a3d2a;max-width:600px;margin:70px auto;padding:24px"><h1>You’re unsubscribed.</h1><p>You will no longer receive updates from The Collective magazine list.</p><a href="/magazine">Back to the magazine</a></body></html>');
+    res.set("Cache-Control", "no-store").type("html").send('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Unsubscribed</title><body style="font-family:Georgia,serif;background:#fbfaf5;color:#0a3d2a;max-width:600px;margin:70px auto;padding:24px"><h1>You’re unsubscribed.</h1><p>You will no longer receive updates from The Collective magazine list.</p><a href="/thecollective">Back to the magazine</a></body></html>');
   });
   app.post("/api/admin/magazine-list/email", requireAdmin, async (req, res) => {
     await ready;
