@@ -167,6 +167,7 @@ export default function MagazinePage() {
   const leftThickness = Math.round(1 + stackProgress * paperDepth);
   const rightThickness = Math.round(1 + (1 - stackProgress) * paperDepth);
   const displayPage = visualPage ?? currentPage;
+  const closingBackCover = !bookSize.compact && visualPage === pages.length - 1 && currentPage < pages.length - 1;
 
   return <>
     <SiteHeader currentPath="/thecollective" autoHide />
@@ -208,11 +209,12 @@ export default function MagazinePage() {
             </div>
           </div>
           <div className="collective-reader__canvas">
+            {closingBackCover && <div className="collective-reader__closing-cover" aria-hidden="true" style={{ width: bookSize.width, height: bookSize.height }}><img src={pages[pages.length - 1]} alt="" /></div>}
             <button className="collective-reader__arrow" type="button" onClick={() => flipInDirection("prev")} disabled={currentPage === 0} aria-label="Previous page">‹</button>
             <div className={`collective-reader__stage${isTurning ? " collective-reader__stage--turning" : ""}${visualPage !== null ? " collective-reader__stage--shifting" : ""}`} style={{ width: bookSize.width * (bookSize.compact ? 1 : 2), height: bookSize.height, transform: bookSize.compact ? undefined : `translateX(${displayPage === 0 ? -bookSize.width / 2 : displayPage >= pages.length - 1 ? bookSize.width / 2 : 0}px)` }} onPointerDownCapture={(event) => { const bounds = event.currentTarget.getBoundingClientRect(); turnDirectionRef.current = event.clientX < bounds.left + bounds.width / 2 ? "prev" : "next"; }}>
               <div className={`collective-reader__paper-stack${bookSize.compact ? " collective-reader__paper-stack--compact" : ""}`} aria-hidden="true" style={{ width: bookSize.width * (bookSize.compact ? 1 : 2), height: bookSize.height }}>
                 {(isOpenSpread || (!bookSize.compact && currentPage >= pages.length - 1)) && <div className="collective-reader__paper-half collective-reader__paper-half--left" style={{ "--stack-depth": `${leftThickness}px` }}><span /></div>}
-                {(isOpenSpread || (!bookSize.compact && currentPage === 0)) && <div className="collective-reader__paper-half collective-reader__paper-half--right" style={{ "--stack-depth": `${rightThickness}px` }}><span /></div>}
+                {!closingBackCover && (isOpenSpread || (!bookSize.compact && currentPage === 0)) && <div className="collective-reader__paper-half collective-reader__paper-half--right" style={{ "--stack-depth": `${rightThickness}px` }}><span /></div>}
                 {bookSize.compact && <div className="collective-reader__paper-half collective-reader__paper-half--single" style={{ "--stack-depth": `${Math.max(leftThickness, rightThickness)}px`, "--stack-left": `${leftThickness}px`, "--stack-right": `${rightThickness}px` }}><span /><span /></div>}
               </div>
               <HTMLFlipBook key={`${bookSize.width}-${bookSize.compact}`} ref={bookRef} width={bookSize.width} height={bookSize.height} startPage={currentPage} size="fixed" showCover usePortrait={bookSize.compact} mobileScrollSupport={false} maxShadowOpacity={0.36} drawShadow flippingTime={820} className="magazine-flipbook" onFlip={(event) => setCurrentPage(event.data)} onChangeState={handleFlipState}>
