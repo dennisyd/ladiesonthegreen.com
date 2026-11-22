@@ -45,16 +45,17 @@ Use `SMTP_PORT=465` or `SMTP_SECURE=true` when your mail provider requires SSL.
 
 ## Digital magazine (flipbook)
 
-- `/thecollective` — members-only magazine. Visitors see **MEMBERS ONLY** with a member sign-in link. Signed-in members see **INAUGURAL FALL ISSUE COMING SOON** while `MAGAZINE_IS_FINAL` in `shared/magazine.js` is false. Keep it false until the owner explicitly confirms the issue is final; uploading a PDF does not publish it. Both magazine metadata and PDF files require member authentication, and unreleased PDFs cannot be read directly.
-- `/magazine/admin` — password-gated upload form. Uploading a PDF replaces the stored issue; only one issue is stored at a time, and the previous file is deleted automatically. Once explicitly released, members read it in the browser with the page-turning viewer.
+- `/thecollective` — editorial magazine page. Visitors see the magazine introduction and sign-in link. Signed-in members read the current PDF in a page-turning viewer and can open past editions from the archive.
+- `/admin?tab=magazine%20issues` — upload a PDF as a private draft, preview it, then explicitly publish it. Publishing a new issue archives the previous one automatically. The current issue can also be archived manually. Archived PDFs remain available to members. The older `/magazine/admin` address redirects to this dashboard tab.
 
-Set an admin password before starting the server, or uploads are refused:
+Set an admin password before starting the server:
 
 ```bash
-MAGAZINE_ADMIN_PASSWORD=choose_a_password
+ADMIN_PASSWORD=choose_a_password
 ```
 
-Uploaded PDFs are stored on disk at `server/uploads/magazine/` (gitignored) with metadata in `server/data/magazine.json` (gitignored) — both persist across deploys as long as you don't wipe the VPS filesystem, but they are **not** part of the git repo or the deploy pull. Back up `server/uploads/` and `server/data/` separately if the current issue matters.
+Uploaded PDFs are stored on disk at `server/uploads/magazine/` (gitignored) with metadata in `server/data/magazine.json` (gitignored). Both persist across deploys as long as the VPS filesystem is preserved. Back up `server/uploads/` and `server/data/` regularly. A PDF stored by the old upload page is migrated to a draft on first start and kept for preview.
+The upload limit is 80 MB. Configure the Nginx HTTPS server block with `client_max_body_size 90m;` (or higher), then validate and reload Nginx so large issues can reach the app.
 
 ## Pages and menu
 
@@ -131,7 +132,7 @@ Members, offers, event registrations, and announcement history are JSON files in
 - The form asks whether high-resolution photos are available and requires permission to review the article and contact the contributor. The exact permission statement and timestamp are recorded with the submission and shown in Admin. Publication terms are confirmed separately with selected contributors.
 - Review entries in **Admin → Submissions**, or `/admin?tab=submissions`. Expand an article to read it, view/download images, and set its internal review status. Submission does not automatically publish content or email the contributor.
 - Articles are stored in `server/data/submissions.json`; images are stored privately in `server/data/submission-images/`. Preserve and back up `server/data/` across deployments. Images and contributor details require admin authentication.
-- Deploy both the server and client: pull changes, run `npm install` and `npm run build`, then `pm2 restart ladiesonthegreen`. Allow multipart requests of at least 35 MB in the Nginx HTTPS server block (`client_max_body_size 35m;`, or preserve a higher existing limit), then validate and reload Nginx. This permits three 5 MB photos plus one 5 MB portrait and one 10 MB article in a single submission.
+- Deploy both the server and client: pull changes, run `npm install` and `npm run build`, then `pm2 restart ladiesonthegreen`. Allow multipart requests of at least 35 MB for submissions; magazine PDFs require 90 MB as noted above. Validate and reload Nginx after changing its limit.
 - Verification: `node --test server/submissions.test.js`.
 
 ## VPS deployment outline
@@ -156,7 +157,7 @@ Example Nginx server block:
 ```nginx
 server {
     server_name ladiesonthegreen.com www.ladiesonthegreen.com;
-    client_max_body_size 35m;
+    client_max_body_size 90m;
 
     location / {
         proxy_pass http://127.0.0.1:3000;

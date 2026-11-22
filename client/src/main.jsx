@@ -10,7 +10,6 @@ import { NavLinks } from "./SiteChrome.jsx";
 // which only the magazine routes need, so keep them out of every other
 // page's bundle.
 const MagazinePage = lazy(() => import("./MagazinePage.jsx"));
-const MagazineAdminPage = lazy(() => import("./MagazineAdminPage.jsx"));
 const AdminPage = lazy(() => import("./AdminPage.jsx"));
 const MembersPage = lazy(() => import("./MembersPage.jsx"));
 const ShopPage = lazy(() => import("./ShopPage.jsx"));
@@ -24,6 +23,11 @@ const FoundationPage = lazy(() => import("./FoundationPage.jsx"));
 const TestMembershipPage = lazy(() => import("./TestMembershipPage.jsx"));
 
 const facebookUrl = "https://www.facebook.com/groups/2400195883513090";
+
+function MagazineAdminRedirect() {
+  useEffect(() => { window.location.replace("/admin?tab=magazine%20issues"); }, []);
+  return <div className="page-loading">Opening magazine admin...</div>;
+}
 
 const heroSlides = [
   { type: "image", src: "/hero-golf-argyle-landscape.png", position: "58% top", alt: "Woman wearing a pink and green Ladies On The Green golf polo on the course" },
@@ -413,7 +417,7 @@ const routes = {
   "/foundation": FoundationPage,
   "/thecollective": MagazinePage,
   "/magazine": MagazinePage,
-  "/magazine/admin": MagazineAdminPage,
+  "/magazine/admin": MagazineAdminRedirect,
   "/admin": AdminPage,
   "/members": MembersPage,
   "/shop": ShopPage,

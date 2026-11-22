@@ -1,246 +1,201 @@
 import React, { forwardRef, useEffect, useRef, useState } from "react";
-import { NavLinks } from "./SiteChrome.jsx";
+import { SiteFooter, SiteHeader } from "./SiteChrome.jsx";
 import HTMLFlipBook from "react-pageflip";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
-const Page = forwardRef(function Page({ src, alt }, ref) {
-  return (
-    <div className="magazine-page" ref={ref}>
-      <img src={src} alt={alt} draggable="false" />
-    </div>
-  );
+
+const Page = forwardRef(function Page({ src, number }, ref) {
+  return <div className="magazine-page" ref={ref}><img src={src} alt={`Magazine page ${number}`} draggable="false" /></div>;
 });
 
+const topics = [
+  ["Golf & growth", "Lessons, rounds, and fresh perspectives from women who love the game."],
+  ["Travel & experiences", "Places to play, places to gather, and moments worth sharing."],
+  ["Wellness & style", "Ideas for feeling good on the course and everywhere else life takes you."],
+  ["Women & business", "The stories, work, and connections shaping our community."]
+];
+
 export default function MagazinePage() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const requestedIssue = new URLSearchParams(window.location.search).get("issue");
   const [status, setStatus] = useState("loading");
-  const [message, setMessage] = useState("Loading the latest issue...");
-  const [title, setTitle] = useState("Ladies On The Green");
+  const [message, setMessage] = useState("Loading the magazine...");
+  const [issue, setIssue] = useState(null);
+  const [issues, setIssues] = useState([]);
   const [pages, setPages] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageAspect, setPageAspect] = useState(520 / 720);
-  const [bookSize, setBookSize] = useState({ width: 520, height: 720 });
+  const [bookSize, setBookSize] = useState({ width: 440, height: 610, compact: false });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const bookRef = useRef(null);
   const viewerRef = useRef(null);
 
-  useEffect(() => {
-    document.title = "Digital Magazine | Ladies On The Green";
-  }, []);
+  useEffect(() => { document.title = "The Collective Magazine | Ladies On The Green"; }, []);
 
   useEffect(() => {
     let cancelled = false;
-
+    const objectUrls = [];
     async function load() {
       try {
-        const metaRes = await fetch("/api/magazine");
-        const meta = await metaRes.json();
-
-        if (cancelled) return;
+        const metaRes = await fetch(requestedIssue ? `/api/magazine/issues/${encodeURIComponent(requestedIssue)}` : "/api/magazine", { credentials: "same-origin" });
         if (metaRes.status === 401 || metaRes.status === 403) {
-          setStatus("members-only");
-          setMessage("MEMBERS ONLY");
+          if (!cancelled) setStatus("members-only");
           return;
         }
-
-        if (!metaRes.ok) {
-          throw new Error(meta.error || "No issue is available yet.");
-        }
+        const meta = await metaRes.json().catch(() => ({}));
+        if (!metaRes.ok) throw new Error(meta.error || "This issue could not be loaded.");
+        const listRes = await fetch("/api/magazine/issues", { credentials: "same-origin" });
+        if (listRes.ok) setIssues((await listRes.json()).issues || []);
         if (cancelled) return;
         if (meta.comingSoon) {
           setStatus("coming-soon");
           setMessage(meta.message);
           return;
         }
-        setTitle(meta.title);
-        setMessage("Rendering pages...");
-
-        const pdf = await pdfjsLib.getDocument(meta.url).promise;
+        setIssue(meta);
+        setMessage("Opening the PDF...");
+        const pdf = await pdfjsLib.getDocument({ url: meta.url, withCredentials: true }).promise;
         const rendered = [];
-
-        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+        for (let number = 1; number <= pdf.numPages; number += 1) {
           if (cancelled) return;
-          const page = await pdf.getPage(pageNumber);
-          const viewport = page.getViewport({ scale: 2 });
+          const page = await pdf.getPage(number);
+          const viewport = page.getViewport({ scale: 1.6 });
           const canvas = document.createElement("canvas");
           canvas.width = viewport.width;
           canvas.height = viewport.height;
           await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
-          rendered.push(canvas.toDataURL("image/jpeg", 0.86));
-          if (pageNumber === 1) {
-            setPageAspect(viewport.width / viewport.height);
-          }
-          setMessage(`Rendering pages... (${pageNumber}/${pdf.numPages})`);
+          const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.86));
+          canvas.width = 0; canvas.height = 0;
+          if (!blob) throw new Error("A page could not be displayed.");
+          const url = URL.createObjectURL(blob);
+          objectUrls.push(url);
+          rendered.push(url);
+          if (number === 1) setPageAspect(viewport.width / viewport.height);
+          if (!cancelled) setMessage(`Preparing the issue · ${number} of ${pdf.numPages} pages`);
         }
-
         if (cancelled) return;
         setPages(rendered);
         setStatus("ready");
       } catch (error) {
-        if (cancelled) return;
-        setStatus("error");
-        setMessage(error.message || "We could not load the magazine.");
+        if (!cancelled) { setStatus("error"); setMessage(error.message || "The magazine could not be loaded."); }
       }
     }
-
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; objectUrls.forEach((url) => URL.revokeObjectURL(url)); };
+  }, [requestedIssue]);
+
+  useEffect(() => {
+    if (status !== "ready") return;
+    function sizeBook() {
+      const available = viewerRef.current?.clientWidth || window.innerWidth;
+      const compact = available < 760;
+      const maxWidth = Math.max(240, Math.min(compact ? available - 72 : (available - 140) / 2, 560));
+      const height = Math.round(maxWidth / pageAspect);
+      setBookSize({ width: Math.round(maxWidth), height, compact });
+    }
+    sizeBook();
+    window.addEventListener("resize", sizeBook);
+    document.addEventListener("fullscreenchange", sizeBook);
+    return () => { window.removeEventListener("resize", sizeBook); document.removeEventListener("fullscreenchange", sizeBook); };
+  }, [status, pageAspect]);
+
+  useEffect(() => {
+    function updateFullscreen() { setIsFullscreen(document.fullscreenElement === viewerRef.current); }
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => document.removeEventListener("fullscreenchange", updateFullscreen);
   }, []);
 
   useEffect(() => {
     if (status !== "ready") return;
-
-    function recalcSize() {
-      const viewerEl = viewerRef.current;
-      if (!viewerEl) return;
-
-      // Measure the real, current chrome above/around the book (header,
-      // section padding, heading, gap, bottom padding) instead of guessing
-      // fixed numbers, so this stays correct if any of that CSS changes.
-      const fullscreen = document.fullscreenElement === viewerEl;
-      const viewerTop = viewerEl.getBoundingClientRect().top;
-      const controlsH = document.querySelector(".magazine-controls")?.getBoundingClientRect().height ?? 56;
-      const viewerStyle = getComputedStyle(viewerEl);
-      const gap = parseFloat(viewerStyle.rowGap || viewerStyle.gap) || 0;
-      const wrapEl = document.querySelector(".magazine-page-wrap");
-      // The wrap's own bottom padding only matters in normal flow; once the
-      // viewer is the fullscreen root, that ancestor's padding no longer
-      // constrains it.
-      const wrapPaddingBottom = fullscreen || !wrapEl ? 12 : parseFloat(getComputedStyle(wrapEl).paddingBottom);
-
-      const availableHeight = Math.max(
-        240,
-        window.innerHeight - viewerTop - controlsH - gap - wrapPaddingBottom - 8
-      );
-      const availableWidth = Math.min(
-        900,
-        Math.max(280, viewerEl.clientWidth - 32)
-      );
-
-      let height = availableHeight;
-      let width = height * pageAspect;
-      if (width > availableWidth) {
-        width = availableWidth;
-        height = width / pageAspect;
-      }
-
-      setBookSize({ width: Math.round(width), height: Math.round(height) });
+    function onKey(event) {
+      if (event.target instanceof HTMLElement && event.target.closest("input, textarea, select, button")) return;
+      const flip = bookRef.current?.pageFlip();
+      if (event.key === "ArrowRight") flip?.flipNext();
+      if (event.key === "ArrowLeft") flip?.flipPrev();
+      if (event.key === "Home") flip?.turnToPage(0);
+      if (event.key === "End") flip?.turnToPage(pages.length - 1);
     }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [status, pages.length]);
 
-    recalcSize();
-    window.addEventListener("resize", recalcSize);
-    document.addEventListener("fullscreenchange", recalcSize);
-    return () => {
-      window.removeEventListener("resize", recalcSize);
-      document.removeEventListener("fullscreenchange", recalcSize);
-    };
-  }, [status, pageAspect]);
+  const archive = issues.filter((item) => item.status === "archived");
+  const currentIssue = issues.find((item) => item.status === "published");
+  const pageLabel = bookSize.compact || currentPage === 0 || currentPage === pages.length - 1
+    ? `${currentPage + 1} / ${pages.length}`
+    : `${currentPage + 1}–${Math.min(currentPage + 2, pages.length)} / ${pages.length}`;
 
-  useEffect(() => {
-    function handleFullscreenChange() {
-      setIsFullscreen(document.fullscreenElement === viewerRef.current);
-    }
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, []);
-
-  function toggleFullscreen() {
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    } else {
-      viewerRef.current?.requestFullscreen().catch(() => {});
-    }
-  }
-
-  function closeMenu() {
-    setMenuOpen(false);
-  }
-
-  return (
-    <>
-      <header className="site-header" aria-label="Primary navigation">
-        <a className="brand" href="/" aria-label="Ladies On The Green home">
-          <img src="/ladiesonthegreen.png?v=2" alt="" />
-        </a>
-        <span aria-hidden="true" />
-        <button className="menu-toggle" type="button" onClick={() => setMenuOpen((open) => !open)}>
-          {menuOpen ? "Close" : "Menu"}
-        </button>
-        <nav className={menuOpen ? "is-open" : ""}>
-          <NavLinks onNavigate={closeMenu} />
-        </nav>
-        <div className="header-actions">
-          <a className="header-cta" href="/join" onClick={closeMenu}>Become A Member ↘</a>
+  return <>
+    <SiteHeader currentPath="/thecollective" />
+    <main className="collective-magazine">
+      <section className="collective-magazine__hero" aria-labelledby="collective-title">
+        <div className="collective-magazine__hero-copy">
+          <span className="section-kicker">Ladies On The Green® Presents</span>
+          <h1 id="collective-title">The <em>Collective</em> Magazine</h1>
+          <p className="collective-magazine__lede">Real women. Real stories. Golf, travel, wellness, business, and the everyday inspiration that connects us.</p>
+          {issue?.edition && <p className="collective-magazine__edition">{issue.edition}</p>}
+          {status === "members-only" && <div className="collective-magazine__hero-actions">
+            <a className="button button--gold" href="/subscribe">Subscribe</a>
+            <a className="button button--outline" href="/submission">Submit your story</a>
+          </div>}
+          {status === "members-only" && <p className="collective-magazine__member-note">Already a member? <a href="/members">Sign in to read ↗</a></p>}
         </div>
-      </header>
+        <div className={`collective-magazine__art${pages[0] ? " collective-magazine__art--issue" : ""}`} role={pages[0] ? undefined : "img"} aria-label={pages[0] ? undefined : "The Collective Magazine cover featuring women golfers"}>
+          {pages[0] && <img src={pages[0]} alt={`Cover of ${issue?.title || "The Collective Magazine"}`} />}
+        </div>
+      </section>
 
-      <main className={`magazine-page-wrap${status === "members-only" ? " magazine-page-wrap--public" : ""}`}>
-        {status === "members-only" ? (
-          <section className="magazine-welcome" aria-label="Discover The Collective Magazine">
-            <h1 className="sr-only">The Collective Magazine — A lifestyle magazine for the woman next door</h1>
-            <div className="magazine-welcome__art">
-              <img src="/collective-magazine-welcome.png" alt="The Collective Magazine. Real women. Real stories. Golf, travel, wellness, business, and the everyday inspiration that connects us." fetchPriority="high" />
-              <a className="magazine-welcome__hotspot magazine-welcome__hotspot--subscribe" href="/subscribe" aria-label="Subscribe to The Collective" title="Subscribe"><span className="sr-only">Subscribe — Be the first to read</span></a>
-              <a className="magazine-welcome__hotspot magazine-welcome__hotspot--submit" href="/submission" aria-label="Submit Your Story" title="Submit Your Story"><span className="sr-only">Submit Your Story — Share your journey</span></a>
-            </div>
-            <div className="magazine-welcome__mobile-actions">
-              <a className="button magazine-welcome__subscribe" href="/subscribe">Subscribe</a>
-              <a className="button button--secondary" href="/submission">Submit Your Story</a>
-            </div>
-            <p className="magazine-welcome__signin">Already a member? <a href="/members">Sign in to read the latest issue ↗</a></p>
-          </section>
-        ) : <div className="section-heading magazine-heading">
-          <span className="section-kicker">Digital Magazine</span>
-          <h1>{title}</h1>
-          <p>Have a story to share? <a href="/submission" style={{ textDecoration: "underline" }}>Submit an article to the magazine ↗</a></p>
+      {status !== "members-only" && <section className="collective-magazine__reader-section" aria-label="Digital issue">
+        <div className="collective-magazine__section-head">
+          <span className="section-kicker">Digital edition</span>
+          <h2>{issue?.title || "Your next great read is on its way."}</h2>
+          {issue?.status === "archived" && <p>From the archive</p>}
+        </div>
+        {status !== "ready" && <div className={`magazine-status magazine-status--${status}`} role="status">
+          {status === "coming-soon" ? <p>{message}</p> : <p>{message}</p>}
         </div>}
-
-        {status !== "ready" && status !== "members-only" && (
-          <div className={`magazine-status magazine-status--${status}`} role="status">
-            {status === "coming-soon" ? <h2>{message}</h2> : <p>{message}</p>}
+        {status === "ready" && pages.length > 0 && <div className={`collective-reader${isFullscreen ? " is-fullscreen" : ""}`} ref={viewerRef}>
+          <div className="collective-reader__topbar">
+            <div className="collective-reader__brand"><img src="/ladiesonthegreen.png?v=2" alt="" /><span>The Collective</span></div>
+            <div className="collective-reader__issue"><small>{issue.edition || "Digital issue"}</small><strong>{issue.title}</strong></div>
+            <button type="button" onClick={() => isFullscreen ? document.exitFullscreen() : viewerRef.current?.requestFullscreen()} aria-label={isFullscreen ? "Exit full screen" : "Read full screen"}>{isFullscreen ? "Exit full screen" : "Full screen"}</button>
           </div>
-        )}
-
-        {status === "ready" && pages.length > 0 && (
-          <div className={`magazine-viewer${isFullscreen ? " is-fullscreen" : ""}`} ref={viewerRef}>
-            <HTMLFlipBook
-              key={`${bookSize.width}x${bookSize.height}`}
-              ref={bookRef}
-              width={bookSize.width}
-              height={bookSize.height}
-              size="fixed"
-              maxShadowOpacity={0.4}
-              showCover={true}
-              mobileScrollSupport={true}
-              className="magazine-flipbook"
-              onFlip={(event) => setCurrentPage(event.data)}
-            >
-              {pages.map((src, index) => (
-                <Page key={src.slice(0, 32) + index} src={src} alt={`Page ${index + 1}`} />
-              ))}
-            </HTMLFlipBook>
-
-            <div className="magazine-controls">
-              <button type="button" onClick={() => bookRef.current?.pageFlip().flipPrev()}>
-                ‹ Prev
-              </button>
-              <span>
-                Page {currentPage + 1} of {pages.length}
-              </span>
-              <button type="button" onClick={() => bookRef.current?.pageFlip().flipNext()}>
-                Next ›
-              </button>
-              <button type="button" className="magazine-controls__fullscreen" onClick={toggleFullscreen}>
-                {isFullscreen ? "Exit Fullscreen ✕" : "Read Fullscreen ⛶"}
-              </button>
+          <div className="collective-reader__canvas">
+            <button className="collective-reader__arrow" type="button" onClick={() => bookRef.current?.pageFlip().flipPrev()} disabled={currentPage === 0} aria-label="Previous page">‹</button>
+            <div className="collective-reader__stage" style={{ transform: bookSize.compact ? undefined : `translateX(${currentPage === 0 ? -bookSize.width / 2 : currentPage >= pages.length - 1 ? bookSize.width / 2 : 0}px)` }}>
+              <HTMLFlipBook key={`${bookSize.width}-${bookSize.compact}`} ref={bookRef} width={bookSize.width} height={bookSize.height} startPage={currentPage} size="fixed" showCover usePortrait={bookSize.compact} mobileScrollSupport={false} maxShadowOpacity={0.45} drawShadow flippingTime={700} className="magazine-flipbook" onFlip={(event) => setCurrentPage(event.data)}>
+                {pages.map((src, index) => <Page key={index} src={src} number={index + 1} />)}
+              </HTMLFlipBook>
             </div>
+            <button className="collective-reader__arrow" type="button" onClick={() => bookRef.current?.pageFlip().flipNext()} disabled={currentPage >= pages.length - 1} aria-label="Next page">›</button>
           </div>
-        )}
-      </main>
-    </>
-  );
+          <div className="collective-reader__toolbar">
+            <span aria-live="polite">{pageLabel}</span>
+            <input type="range" min="0" max={pages.length - 1} value={currentPage} onChange={(event) => bookRef.current?.pageFlip().turnToPage(Number(event.target.value))} aria-label="Magazine page" />
+            <a href={issue.url} target="_blank" rel="noopener noreferrer">Open PDF ↗</a>
+          </div>
+        </div>}
+        {issue?.status === "archived" && currentIssue && <p className="collective-magazine__current-link"><a href="/thecollective">Read the latest issue ↗</a></p>}
+      </section>}
+
+      {status !== "members-only" && archive.length > 0 && <section className="collective-magazine__archive" aria-labelledby="collective-archive-title">
+        <div className="collective-magazine__section-head"><span className="section-kicker">The library</span><h2 id="collective-archive-title">Past editions</h2></div>
+        <div className="collective-magazine__archive-grid">
+          {archive.map((item) => <a key={item.id} href={`/thecollective?issue=${encodeURIComponent(item.id)}`} className={item.id === issue?.id ? "is-current" : ""}>
+            <span>{item.edition || "The Collective"}</span><strong>{item.title}</strong><span>Read this issue ↗</span>
+          </a>)}
+        </div>
+      </section>}
+
+      <section className="collective-magazine__topics" aria-labelledby="collective-topics-title">
+        <div className="collective-magazine__section-head"><span className="section-kicker">Inside the Collective</span><h2 id="collective-topics-title">A magazine for every part of the journey.</h2></div>
+        <div className="collective-magazine__topics-grid">
+          {topics.map(([title, description], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{description}</p></article>)}
+        </div>
+      </section>
+      <section className="collective-magazine__cta"><span className="section-kicker">Your story belongs here</span><h2>Stories grow stronger when we share them.</h2><p>Have a perspective, experience, or idea for a future issue?</p><a className="button button--gold" href="/submission">Submit your story ↗</a></section>
+    </main>
+    <SiteFooter />
+  </>;
 }

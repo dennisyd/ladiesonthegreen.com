@@ -8,8 +8,9 @@ import ShopCatalogAdmin from "./ShopCatalogAdmin.jsx";
 import QuestionnaireAdmin from "./QuestionnaireAdmin.jsx";
 import SubmissionAdmin from "./SubmissionAdmin.jsx";
 import MagazineListAdmin from "./MagazineListAdmin.jsx";
+import MagazineIssuesAdmin from "./MagazineIssuesAdmin.jsx";
 
-const tabs = ["Members", "Follow-ups", "Questionnaire", "Submissions", "Magazine list", "Site events", "Portal events", "Event tickets", "Shop", "Offers", "Announcements", "Settings"];
+const tabs = ["Members", "Follow-ups", "Questionnaire", "Submissions", "Magazine issues", "Magazine list", "Site events", "Portal events", "Event tickets", "Shop", "Offers", "Announcements", "Settings"];
 
 export default function AdminPage() {
   const [signedIn, setSignedIn] = useState(null); // null = checking
@@ -49,6 +50,7 @@ export default function AdminPage() {
         {tab === "Follow-ups" && <FollowUpsTab />}
         {tab === "Questionnaire" && <QuestionnaireAdmin />}
         {tab === "Submissions" && <SubmissionAdmin />}
+        {tab === "Magazine issues" && <MagazineIssuesAdmin />}
         {tab === "Magazine list" && <MagazineListAdmin />}
         {tab === "Site events" && <SiteEventsTab onCopied={() => setTab("Portal events")} />}
         {tab === "Portal events" && <PortalEventsTab />}

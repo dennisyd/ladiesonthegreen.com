@@ -1,13 +1,8 @@
 import express from "express";
 import helmet from "helmet";
-import { createRateLimiter, safeEqual } from "./lib/auth.js";
-import multer from "multer";
 import path from "node:path";
-import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
-import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { magazineMetadata, requireFinalMagazine } from "./lib/magazine-release.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +22,7 @@ const { createQuestionnaire } = await import("./lib/questionnaire.js");
 const { createShop } = await import("./shop.js");
 const { mountSubmissions } = await import("./lib/submissions.js");
 const { mountMagazineList } = await import("./lib/magazine-list.js");
+const { createMagazineIssues } = await import("./lib/magazine-issues.js");
 const { membershipRate, membershipTiers } = await import("../shared/membership.js");
 
 const app = express();
@@ -202,85 +198,14 @@ app.post("/api/membership", async (req, res) => {
   });
 });
 
-// --- Digital magazine (PDF flipbook) ---
-const uploadsDir = path.join(__dirname, "uploads", "magazine");
-const magazineMetaPath = path.join(__dirname, "data", "magazine.json");
-const magazineAdminPassword = process.env.MAGAZINE_ADMIN_PASSWORD;
-const allowMagazineUpload = createRateLimiter(8, 15 * 60 * 1000);
-
-await fs.mkdir(uploadsDir, { recursive: true });
-await fs.mkdir(path.dirname(magazineMetaPath), { recursive: true });
-
-async function readMagazineMeta() {
-  try {
-    return JSON.parse(await fs.readFile(magazineMetaPath, "utf8"));
-  } catch {
-    return null;
-  }
-}
-
-async function writeMagazineMeta(meta) {
-  await fs.writeFile(magazineMetaPath, JSON.stringify(meta, null, 2));
-}
-
-const magazineUpload = multer({
-  storage: multer.diskStorage({
-    destination: uploadsDir,
-    filename(_req, file, cb) {
-      cb(null, `${Date.now()}-${crypto.randomUUID()}.pdf`);
-    }
-  }),
-  limits: { fileSize: 80 * 1024 * 1024 },
-  fileFilter(_req, file, cb) {
-    cb(null, file.mimetype === "application/pdf");
-  }
+// Magazine issues are managed in the main admin dashboard. New PDFs stay in
+// draft until an admin explicitly publishes them; older editions are retained.
+const magazineIssues = createMagazineIssues(path.join(__dirname, "data"), {
+  requireAdmin: membership.requireAdmin,
+  requireMember: membership.requireMember
 });
-
-app.get("/api/magazine", membership.requireMember, magazineMetadata(readMagazineMeta));
-
-app.post("/api/magazine/upload", (req, res) => {
-  magazineUpload.single("file")(req, res, async (err) => {
-    if (err) {
-      return res.status(400).json({ ok: false, error: err.message || "Upload failed." });
-    }
-
-    if (!magazineAdminPassword) {
-      if (req.file) await fs.unlink(req.file.path).catch(() => {});
-      return res.status(500).json({
-        ok: false,
-        error: "Uploading is not configured yet. Set MAGAZINE_ADMIN_PASSWORD on the server."
-      });
-    }
-
-    if (!allowMagazineUpload(req.ip)) {
-      return res.status(429).json({ ok: false, error: "Too many attempts. Please wait a few minutes." });
-    }
-    if (!safeEqual(req.body.password ?? "", magazineAdminPassword)) {
-      if (req.file) await fs.unlink(req.file.path).catch(() => {});
-      return res.status(401).json({ ok: false, error: "Incorrect password." });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ ok: false, error: "Please choose a PDF file." });
-    }
-
-    const previous = await readMagazineMeta();
-    const meta = {
-      filename: req.file.filename,
-      title: (req.body.title || "").trim() || "Ladies On The Green",
-      originalName: req.file.originalname,
-      sizeBytes: req.file.size,
-      uploadedAt: new Date().toISOString()
-    };
-    await writeMagazineMeta(meta);
-
-    if (previous?.filename && previous.filename !== meta.filename) {
-      await fs.unlink(path.join(uploadsDir, previous.filename)).catch(() => {});
-    }
-
-    res.json({ ok: true, ...meta, url: `/uploads/magazine/${meta.filename}` });
-  });
-});
+await magazineIssues.ready;
+magazineIssues.mountRoutes(app);
 
 membership.mountRoutes(app);
 shop.mountRoutes(app);
@@ -293,15 +218,15 @@ app.use("/api", (_req, res) => {
   res.status(404).json({ ok: false, error: "Not found." });
 });
 
-// Apply access checks before the general uploads directory can serve a PDF.
-app.use("/uploads/magazine", membership.requireMember, requireFinalMagazine);
-
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "uploads"), {
     maxAge: "1h",
-    setHeaders(res) {
+    setHeaders(res, filePath) {
       res.setHeader("Content-Disposition", "inline");
+      if (filePath.startsWith(path.join(__dirname, "uploads", "magazine") + path.sep)) {
+        res.setHeader("Cache-Control", "private, no-store");
+      }
     }
   })
 );
