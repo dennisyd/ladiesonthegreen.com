@@ -136,7 +136,7 @@ export default function MagazinePage() {
   return <>
     <SiteHeader currentPath="/thecollective" />
     <main className="collective-magazine">
-      <section className="collective-magazine__hero" aria-labelledby="collective-title">
+      <section className={`collective-magazine__hero${status === "ready" || status === "loading" ? " collective-magazine__hero--suppressed" : ""}`} aria-labelledby="collective-title">
         <div className="collective-magazine__hero-copy">
           <span className="section-kicker">Ladies On The Green® Presents</span>
           <h1 id="collective-title">The <em>Collective</em> Magazine</h1>
@@ -156,7 +156,7 @@ export default function MagazinePage() {
       {status !== "members-only" && <section className="collective-magazine__reader-section" aria-label="Digital issue">
         <div className="collective-magazine__section-head">
           <span className="section-kicker">Digital edition</span>
-          <h2>{issue?.title || "Your next great read is on its way."}</h2>
+          {status === "ready" ? <h1>{issue?.title || "The Collective Magazine"}</h1> : <h2>{issue?.title || "Your next great read is on its way."}</h2>}
           {issue?.status === "archived" && <p>From the archive</p>}
         </div>
         {status !== "ready" && <div className={`magazine-status magazine-status--${status}`} role="status">
