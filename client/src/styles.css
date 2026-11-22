@@ -2126,6 +2126,7 @@ textarea:focus {
   content: "";
   pointer-events: none;
   position: absolute;
+  transition: opacity 0.14s ease;
   z-index: 2;
 }
 
@@ -4931,6 +4932,8 @@ textarea:focus {
   transition: transform 0.3s ease;
 }
 .collective-reader__stage .magazine-flipbook { position: relative; z-index: 1; }
+.collective-reader__stage--turning .magazine-page::before,
+.collective-reader__stage--turning .magazine-page::after { opacity: 0; }
 .collective-reader__paper-stack {
   pointer-events: none;
   position: absolute;
@@ -4996,9 +4999,11 @@ textarea:focus {
   position: absolute;
   top: 0;
   transform: translateX(-50%);
+  transition: opacity 0.14s ease;
   width: 58px;
   z-index: 3;
 }
+.collective-reader__stage--turning .collective-reader__gutter { opacity: 0; }
 .collective-reader__toolbar {
   align-items: center;
   background: #102b20;
