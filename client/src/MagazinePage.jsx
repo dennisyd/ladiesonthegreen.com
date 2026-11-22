@@ -7,7 +7,7 @@ import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const Page = forwardRef(function Page({ src, number }, ref) {
-  return <div className="magazine-page" ref={ref}><img src={src} alt={`Magazine page ${number}`} draggable="false" /></div>;
+  return <div className={`magazine-page magazine-page--${number % 2 === 0 ? "left" : "right"}`} ref={ref}><img src={src} alt={`Magazine page ${number}`} draggable="false" /></div>;
 });
 
 const topics = [
@@ -90,7 +90,9 @@ export default function MagazinePage() {
     function sizeBook() {
       const available = viewerRef.current?.clientWidth || window.innerWidth;
       const compact = available < 760;
-      const maxWidth = Math.max(240, Math.min(compact ? available - 72 : (available - 140) / 2, 560));
+      const fullscreen = document.fullscreenElement === viewerRef.current;
+      const heightCap = fullscreen ? Math.max(300, window.innerHeight - 198) * pageAspect : 560;
+      const maxWidth = Math.max(240, Math.min(compact ? available - 72 : (available - 140) / 2, 560, heightCap));
       const height = Math.round(maxWidth / pageAspect);
       setBookSize({ width: Math.round(maxWidth), height, compact });
     }
@@ -125,6 +127,11 @@ export default function MagazinePage() {
   const pageLabel = bookSize.compact || currentPage === 0 || currentPage === pages.length - 1
     ? `${currentPage + 1} / ${pages.length}`
     : `${currentPage + 1}–${Math.min(currentPage + 2, pages.length)} / ${pages.length}`;
+  const isOpenSpread = !bookSize.compact && currentPage > 0 && currentPage < pages.length - 1;
+  const stackProgress = currentPage / Math.max(1, pages.length - 1);
+  const paperDepth = Math.min(18, Math.max(5, Math.ceil(pages.length / 2)));
+  const leftThickness = Math.round(2 + stackProgress * paperDepth);
+  const rightThickness = Math.round(2 + (1 - stackProgress) * paperDepth);
 
   return <>
     <SiteHeader currentPath="/thecollective" />
@@ -163,10 +170,17 @@ export default function MagazinePage() {
           </div>
           <div className="collective-reader__canvas">
             <button className="collective-reader__arrow" type="button" onClick={() => bookRef.current?.pageFlip().flipPrev()} disabled={currentPage === 0} aria-label="Previous page">‹</button>
-            <div className="collective-reader__stage" style={{ transform: bookSize.compact ? undefined : `translateX(${currentPage === 0 ? -bookSize.width / 2 : currentPage >= pages.length - 1 ? bookSize.width / 2 : 0}px)` }}>
-              <HTMLFlipBook key={`${bookSize.width}-${bookSize.compact}`} ref={bookRef} width={bookSize.width} height={bookSize.height} startPage={currentPage} size="fixed" showCover usePortrait={bookSize.compact} mobileScrollSupport={false} maxShadowOpacity={0.45} drawShadow flippingTime={700} className="magazine-flipbook" onFlip={(event) => setCurrentPage(event.data)}>
+            <div className="collective-reader__stage" style={{ width: bookSize.width * (bookSize.compact ? 1 : 2), height: bookSize.height, transform: bookSize.compact ? undefined : `translateX(${currentPage === 0 ? -bookSize.width / 2 : currentPage >= pages.length - 1 ? bookSize.width / 2 : 0}px)` }}>
+              <div className="collective-reader__paper-stack" aria-hidden="true" style={{ left: !bookSize.compact && currentPage === 0 ? bookSize.width : 0, width: bookSize.width * (isOpenSpread ? 2 : 1), height: bookSize.height, "--stack-left": `${leftThickness}px`, "--stack-right": `${rightThickness}px`, "--stack-top": `${Math.round(6 + paperDepth * 0.8)}px` }}>
+                <span className="collective-reader__paper-top" />
+                <span className="collective-reader__paper-bottom" />
+                <span className="collective-reader__paper-left" />
+                <span className="collective-reader__paper-right" />
+              </div>
+              <HTMLFlipBook key={`${bookSize.width}-${bookSize.compact}`} ref={bookRef} width={bookSize.width} height={bookSize.height} startPage={currentPage} size="fixed" showCover usePortrait={bookSize.compact} mobileScrollSupport={false} maxShadowOpacity={0.58} drawShadow flippingTime={780} className="magazine-flipbook" onFlip={(event) => setCurrentPage(event.data)}>
                 {pages.map((src, index) => <Page key={index} src={src} number={index + 1} />)}
               </HTMLFlipBook>
+              {isOpenSpread && <span className="collective-reader__gutter" aria-hidden="true" />}
             </div>
             <button className="collective-reader__arrow" type="button" onClick={() => bookRef.current?.pageFlip().flipNext()} disabled={currentPage >= pages.length - 1} aria-label="Next page">›</button>
           </div>
