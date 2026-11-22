@@ -4946,7 +4946,6 @@ textarea:focus {
 .collective-reader__paper-half::before,
 .collective-reader__paper-half::after {
   background: repeating-linear-gradient(to bottom, #f8f4e9 0 1px, #cfc3ae 1px 2px, #eee7d8 2px 3px);
-  border: 1px solid #bdb09d;
   content: "";
   height: var(--stack-depth);
   left: 0;
@@ -4954,15 +4953,25 @@ textarea:focus {
   right: 0;
 }
 .collective-reader__paper-half::before {
-  border-bottom: 0;
-  border-radius: 2px 2px 0 0;
   top: calc(-1 * var(--stack-depth));
 }
 .collective-reader__paper-half::after {
-  border-radius: 0 0 4px 4px;
-  border-top: 0;
   bottom: calc(-1 * var(--stack-depth));
 }
+.collective-reader__paper-half--left::before {
+  clip-path: polygon(0 0, 64% 0, 75% 5%, 85% 20%, 93% 46%, 98% 72%, 100% calc(100% - 1px), 100% 100%, 0 100%);
+}
+.collective-reader__paper-half--right::before {
+  clip-path: polygon(0 calc(100% - 1px), 2% 72%, 7% 46%, 15% 20%, 25% 5%, 36% 0, 100% 0, 100% 100%, 0 100%);
+}
+.collective-reader__paper-half--left::after {
+  clip-path: polygon(0 0, 100% 0, 100% 1px, 98% 28%, 93% 54%, 85% 80%, 75% 95%, 64% 100%, 0 100%);
+}
+.collective-reader__paper-half--right::after {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 36% 100%, 25% 95%, 15% 80%, 7% 54%, 2% 28%, 0 1px);
+}
+.collective-reader__paper-half--single::before,
+.collective-reader__paper-half--single::after { clip-path: none; }
 .collective-reader__paper-half span {
   background: repeating-linear-gradient(to right, #d0c4ae 0 1px, #f4eddf 1px 3px);
   bottom: calc(-1 * var(--stack-depth));
