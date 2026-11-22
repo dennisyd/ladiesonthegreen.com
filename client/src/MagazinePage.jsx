@@ -187,7 +187,6 @@ export default function MagazinePage() {
           <div className="collective-reader__toolbar">
             <span aria-live="polite">{pageLabel}</span>
             <input type="range" min="0" max={pages.length - 1} value={currentPage} onChange={(event) => bookRef.current?.pageFlip().turnToPage(Number(event.target.value))} aria-label="Magazine page" />
-            <a href={issue.url} target="_blank" rel="noopener noreferrer">Open PDF ↗</a>
           </div>
         </div>}
         {issue?.status === "archived" && currentIssue && <p className="collective-magazine__current-link"><a href="/thecollective">Read the latest issue ↗</a></p>}

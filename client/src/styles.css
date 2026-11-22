@@ -5010,13 +5010,12 @@ textarea:focus {
   border-top: 1px solid rgba(255,255,255,0.13);
   display: grid;
   gap: 18px;
-  grid-template-columns: auto minmax(80px, 1fr) auto;
+  grid-template-columns: auto minmax(80px, 1fr);
   min-height: 68px;
   padding: 10px 24px;
 }
 .collective-reader__toolbar span { font-variant-numeric: tabular-nums; font-weight: 800; min-width: 78px; }
 .collective-reader__toolbar input { accent-color: #d4b875; width: 100%; }
-.collective-reader__toolbar a { color: #fff; font-size: 0.88rem; font-weight: 800; text-decoration: underline; }
 .collective-reader:fullscreen,
 .collective-reader.is-fullscreen { border-radius: 0; display: flex; flex-direction: column; height: 100vh; width: 100vw; }
 .collective-reader.is-fullscreen .collective-reader__canvas { flex: 1; }
@@ -5077,7 +5076,6 @@ textarea:focus {
   .collective-reader__canvas { min-height: 380px; padding: 18px 3px; }
   .collective-reader__canvas .collective-reader__arrow { border: 0; flex-basis: 30px; font-size: 1.8rem; }
   .collective-reader__toolbar { gap: 10px; grid-template-columns: auto 1fr; padding: 10px 14px; }
-  .collective-reader__toolbar a { grid-column: 1 / -1; text-align: center; }
 }
 @media (prefers-reduced-motion: reduce) {
   .collective-reader__stage { transition: none; }
