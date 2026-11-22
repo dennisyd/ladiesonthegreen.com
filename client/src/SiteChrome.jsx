@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { navItems } from "./siteNav.js";
 
 // Header and footer for the simple content pages (About Us, Young Ladies on the Green).
@@ -48,11 +48,41 @@ export function NavLinks({ items = navItems, currentPath, onNavigate }) {
   );
 }
 
-export function SiteHeader({ currentPath }) {
+export function SiteHeader({ currentPath, autoHide = false }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const headerRef = useRef(null);
+
+  useEffect(() => {
+    if (!autoHide) return;
+    let lastY = window.scrollY;
+    let travel = 0;
+    function onScroll() {
+      const y = window.scrollY;
+      const delta = y - lastY;
+      lastY = y;
+      if (y < 80 || menuOpen || headerRef.current?.contains(document.activeElement)) {
+        travel = 0;
+        setHidden(false);
+        return;
+      }
+      if (Math.abs(delta) < 2) return;
+      if (Math.sign(delta) !== Math.sign(travel)) travel = 0;
+      travel += delta;
+      if (travel > 28 && y > (headerRef.current?.offsetHeight || 128) + 20) {
+        setHidden(true);
+        travel = 0;
+      } else if (travel < -18) {
+        setHidden(false);
+        travel = 0;
+      }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [autoHide, menuOpen]);
 
   return (
-    <header className="site-header" aria-label="Primary navigation">
+    <header ref={headerRef} className={`site-header${autoHide ? " site-header--auto-hide" : ""}${hidden ? " site-header--hidden" : ""}`} aria-label="Primary navigation" onFocusCapture={() => setHidden(false)}>
       <a className="brand" href="/" aria-label="Ladies On The Green home">
         <img src="/ladiesonthegreen.png?v=2" alt="" />
       </a>

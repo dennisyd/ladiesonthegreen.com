@@ -99,6 +99,8 @@ img {
   top: 0;
   z-index: 20;
 }
+.site-header--auto-hide { transition: transform 0.28s ease; }
+.site-header--hidden { pointer-events: none; transform: translateY(calc(-100% - 1px)); }
 
 .brand {
   align-items: center;
@@ -5078,5 +5080,6 @@ textarea:focus {
   .collective-reader__toolbar { gap: 10px; grid-template-columns: auto 1fr; padding: 10px 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .site-header--auto-hide { transition: none; }
   .collective-reader__stage { transition: none; }
 }

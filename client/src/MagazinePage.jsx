@@ -135,7 +135,7 @@ export default function MagazinePage() {
   const rightThickness = Math.round(1 + (1 - stackProgress) * paperDepth);
 
   return <>
-    <SiteHeader currentPath="/thecollective" />
+    <SiteHeader currentPath="/thecollective" autoHide />
     <main className="collective-magazine">
       <section className={`collective-magazine__hero${status === "ready" || status === "loading" ? " collective-magazine__hero--suppressed" : ""}`} aria-labelledby="collective-title">
         <div className="collective-magazine__hero-copy">
