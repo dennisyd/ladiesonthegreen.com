@@ -1,0 +1,8 @@
+Page-turn sound
+
+Source: "Turning a page.ogg" by planish (John Rose)
+https://commons.wikimedia.org/wiki/File:Turning_a_page.ogg
+Public domain. Recorded page turn in a hard-cover book.
+
+The website uses a 1.02-second excerpt, trimmed from the source and gently faded
+to match the magazine's page-turn animation.

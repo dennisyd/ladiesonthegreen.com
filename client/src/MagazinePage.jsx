@@ -29,8 +29,41 @@ export default function MagazinePage() {
   const [bookSize, setBookSize] = useState({ width: 440, height: 610, compact: false });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isTurning, setIsTurning] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [visualPage, setVisualPage] = useState(null);
   const bookRef = useRef(null);
   const viewerRef = useRef(null);
+  const turnSoundRef = useRef(null);
+  const turnDirectionRef = useRef(null);
+
+  function flipInDirection(direction) {
+    turnDirectionRef.current = direction;
+    const flip = bookRef.current?.pageFlip();
+    if (direction === "next") flip?.flipNext();
+    else flip?.flipPrev();
+  }
+
+  function handleFlipState(event) {
+    const turning = event.data === "flipping" || event.data === "user_fold";
+    setIsTurning(turning);
+    if (event.data === "flipping") {
+      const direction = turnDirectionRef.current || (currentPage === 0 ? "next" : currentPage === pages.length - 1 ? "prev" : null);
+      if (direction && !bookSize.compact) {
+        const target = direction === "next"
+          ? currentPage === 0 ? 1 : Math.min(pages.length - 1, currentPage + 2)
+          : currentPage === 1 ? 0 : Math.max(0, currentPage - 2);
+        setVisualPage(target);
+      }
+      if (soundEnabled && turnSoundRef.current) {
+        turnSoundRef.current.currentTime = 0;
+        turnSoundRef.current.play().catch(() => {});
+      }
+    }
+    if (event.data === "read") {
+      turnDirectionRef.current = null;
+      setVisualPage(null);
+    }
+  }
 
   useEffect(() => { document.title = "The Collective Magazine | Ladies On The Green"; }, []);
 
@@ -114,14 +147,14 @@ export default function MagazinePage() {
     function onKey(event) {
       if (event.target instanceof HTMLElement && event.target.closest("input, textarea, select, button")) return;
       const flip = bookRef.current?.pageFlip();
-      if (event.key === "ArrowRight") flip?.flipNext();
-      if (event.key === "ArrowLeft") flip?.flipPrev();
+      if (event.key === "ArrowRight") flipInDirection("next");
+      if (event.key === "ArrowLeft") flipInDirection("prev");
       if (event.key === "Home") flip?.turnToPage(0);
       if (event.key === "End") flip?.turnToPage(pages.length - 1);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [status, pages.length]);
+  }, [status, pages.length, currentPage, soundEnabled, bookSize.compact]);
 
   const archive = issues.filter((item) => item.status === "archived");
   const currentIssue = issues.find((item) => item.status === "published");
@@ -133,6 +166,7 @@ export default function MagazinePage() {
   const paperDepth = Math.min(22, Math.max(8, Math.ceil(pages.length / 2) * 1.5));
   const leftThickness = Math.round(1 + stackProgress * paperDepth);
   const rightThickness = Math.round(1 + (1 - stackProgress) * paperDepth);
+  const displayPage = visualPage ?? currentPage;
 
   return <>
     <SiteHeader currentPath="/thecollective" autoHide />
@@ -164,25 +198,29 @@ export default function MagazinePage() {
           {status === "coming-soon" ? <p>{message}</p> : <p>{message}</p>}
         </div>}
         {status === "ready" && pages.length > 0 && <div className={`collective-reader${isFullscreen ? " is-fullscreen" : ""}`} ref={viewerRef}>
+          <audio ref={turnSoundRef} src="/audio/page-turn.mp3" preload="auto" />
           <div className="collective-reader__topbar">
             <div className="collective-reader__brand"><img src="/ladiesonthegreen.png?v=2" alt="" /><span>The Collective</span></div>
             <div className="collective-reader__issue"><small>{issue.edition || "Digital issue"}</small><strong>{issue.title}</strong></div>
-            <button type="button" onClick={() => isFullscreen ? document.exitFullscreen() : viewerRef.current?.requestFullscreen()} aria-label={isFullscreen ? "Exit full screen" : "Read full screen"}>{isFullscreen ? "Exit full screen" : "Full screen"}</button>
+            <div className="collective-reader__actions">
+              <button type="button" onClick={() => setSoundEnabled((enabled) => !enabled)} aria-label={soundEnabled ? "Mute page-turn sound" : "Unmute page-turn sound"}>{soundEnabled ? "Sound on" : "Sound off"}</button>
+              <button type="button" onClick={() => isFullscreen ? document.exitFullscreen() : viewerRef.current?.requestFullscreen()} aria-label={isFullscreen ? "Exit full screen" : "Read full screen"}>{isFullscreen ? "Exit full screen" : "Full screen"}</button>
+            </div>
           </div>
           <div className="collective-reader__canvas">
-            <button className="collective-reader__arrow" type="button" onClick={() => bookRef.current?.pageFlip().flipPrev()} disabled={currentPage === 0} aria-label="Previous page">‹</button>
-            <div className={`collective-reader__stage${isTurning ? " collective-reader__stage--turning" : ""}`} style={{ width: bookSize.width * (bookSize.compact ? 1 : 2), height: bookSize.height, transform: bookSize.compact ? undefined : `translateX(${currentPage === 0 ? -bookSize.width / 2 : currentPage >= pages.length - 1 ? bookSize.width / 2 : 0}px)` }}>
+            <button className="collective-reader__arrow" type="button" onClick={() => flipInDirection("prev")} disabled={currentPage === 0} aria-label="Previous page">‹</button>
+            <div className={`collective-reader__stage${isTurning ? " collective-reader__stage--turning" : ""}${visualPage !== null ? " collective-reader__stage--shifting" : ""}`} style={{ width: bookSize.width * (bookSize.compact ? 1 : 2), height: bookSize.height, transform: bookSize.compact ? undefined : `translateX(${displayPage === 0 ? -bookSize.width / 2 : displayPage >= pages.length - 1 ? bookSize.width / 2 : 0}px)` }} onPointerDownCapture={(event) => { const bounds = event.currentTarget.getBoundingClientRect(); turnDirectionRef.current = event.clientX < bounds.left + bounds.width / 2 ? "prev" : "next"; }}>
               <div className={`collective-reader__paper-stack${bookSize.compact ? " collective-reader__paper-stack--compact" : ""}`} aria-hidden="true" style={{ width: bookSize.width * (bookSize.compact ? 1 : 2), height: bookSize.height }}>
                 {(isOpenSpread || (!bookSize.compact && currentPage >= pages.length - 1)) && <div className="collective-reader__paper-half collective-reader__paper-half--left" style={{ "--stack-depth": `${leftThickness}px` }}><span /></div>}
                 {(isOpenSpread || (!bookSize.compact && currentPage === 0)) && <div className="collective-reader__paper-half collective-reader__paper-half--right" style={{ "--stack-depth": `${rightThickness}px` }}><span /></div>}
                 {bookSize.compact && <div className="collective-reader__paper-half collective-reader__paper-half--single" style={{ "--stack-depth": `${Math.max(leftThickness, rightThickness)}px`, "--stack-left": `${leftThickness}px`, "--stack-right": `${rightThickness}px` }}><span /><span /></div>}
               </div>
-              <HTMLFlipBook key={`${bookSize.width}-${bookSize.compact}`} ref={bookRef} width={bookSize.width} height={bookSize.height} startPage={currentPage} size="fixed" showCover usePortrait={bookSize.compact} mobileScrollSupport={false} maxShadowOpacity={0.36} drawShadow flippingTime={820} className="magazine-flipbook" onFlip={(event) => setCurrentPage(event.data)} onChangeState={(event) => setIsTurning(event.data === "flipping" || event.data === "user_fold")}>
+              <HTMLFlipBook key={`${bookSize.width}-${bookSize.compact}`} ref={bookRef} width={bookSize.width} height={bookSize.height} startPage={currentPage} size="fixed" showCover usePortrait={bookSize.compact} mobileScrollSupport={false} maxShadowOpacity={0.36} drawShadow flippingTime={820} className="magazine-flipbook" onFlip={(event) => setCurrentPage(event.data)} onChangeState={handleFlipState}>
                 {pages.map((src, index) => <Page key={index} src={src} number={index + 1} />)}
               </HTMLFlipBook>
               {isOpenSpread && <span className="collective-reader__gutter" aria-hidden="true" />}
             </div>
-            <button className="collective-reader__arrow" type="button" onClick={() => bookRef.current?.pageFlip().flipNext()} disabled={currentPage >= pages.length - 1} aria-label="Next page">›</button>
+            <button className="collective-reader__arrow" type="button" onClick={() => flipInDirection("next")} disabled={currentPage >= pages.length - 1} aria-label="Next page">›</button>
           </div>
           <div className="collective-reader__toolbar">
             <span aria-live="polite">{pageLabel}</span>
