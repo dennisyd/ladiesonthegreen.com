@@ -4,9 +4,18 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import express from "express";
-import { createMagazineSubscriptions } from "./lib/magazine-subscriptions.js";
+import { createMagazineSubscriptions, subscriptionAccess } from "./lib/magazine-subscriptions.js";
 
-test("paid magazine access waits exactly 24 hours, persists on retry, and requires subscriber authentication", async (t) => {
+test("existing purchases use their original payment time instead of their stored 24-hour unlock time", () => {
+  const paid = Date.parse("2026-11-23T12:00:00Z");
+  const record = { status: "active", paidAt: new Date(paid).toISOString(), availableAt: new Date(paid + 86400000).toISOString(), expiresAt: new Date(paid + 365*86400000).toISOString() };
+  assert.equal(subscriptionAccess(record, paid + 30*60000), "waiting");
+  assert.equal(subscriptionAccess(record, paid + 3600000 - 1), "waiting");
+  assert.equal(subscriptionAccess(record, paid + 3600000), "ready");
+  assert.equal(subscriptionAccess(record, paid + 2*3600000), "ready");
+});
+
+test("paid magazine access waits exactly one hour, persists on retry, and requires subscriber authentication", async (t) => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "lotg-magazine-paid-"));
   t.after(() => fs.rm(dir, { recursive: true, force: true }));
   let now = Date.parse("2026-11-23T12:00:00Z");
@@ -46,7 +55,7 @@ test("paid magazine access waits exactly 24 hours, persists on retry, and requir
   const confirmed = await post("confirm", { checkoutId: session.id });
   const cookie = confirmed.headers.get("set-cookie").split(";")[0];
   assert.equal((await confirmed.json()).access, "waiting");
-  now += 86400000 - 1;
+  now += 3600000 - 1;
   await feature.handleEvent({ type: "checkout.session.completed", created: now/1000, data: { object: session } });
   for (const url of ["/api/magazine", "/uploads/magazine/issue.pdf"]) assert.equal((await fetch(base + url, { headers: { cookie } })).status, 425);
   assert.equal((await fetch(base + "/api/magazine", { headers: { "x-member": "yes" } })).status, 200);
@@ -54,7 +63,7 @@ test("paid magazine access waits exactly 24 hours, persists on retry, and requir
   for (const url of ["/api/magazine", "/uploads/magazine/issue.pdf"]) assert.equal((await fetch(base + url, { headers: { cookie } })).status, 200);
   const saved = JSON.parse(await fs.readFile(path.join(dir, "magazine-subscriptions.json"), "utf8"));
   assert.equal(saved.subscribers.length, 1);
-  assert.equal(saved.subscribers[0].availableAt, new Date(paid + 86400000).toISOString());
+  assert.equal(saved.subscribers[0].availableAt, new Date(paid + 3600000).toISOString());
   const challenge = await (await post("login", { email: "reader@example.com" })).json();
   assert.equal((await post("verify", { challengeId: challenge.challengeId, code: "bad" })).status, 400);
   const code = email.text.match(/\b\d{6}\b/)[0];

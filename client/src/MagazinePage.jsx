@@ -79,7 +79,7 @@ export default function MagazinePage() {
         }
         const meta = await metaRes.json().catch(() => ({}));
         if (metaRes.status === 425) {
-          if (!cancelled) { setStatus("waiting"); setMessage(`Your magazine access begins ${new Date(meta.availableAt).toLocaleString()}. Access starts 24 hours after successful payment.`); }
+          if (!cancelled) { setStatus("waiting"); setMessage(`Your magazine access begins ${new Date(meta.availableAt).toLocaleString()}. Access starts one hour after successful payment.`); }
           return;
         }
         if (!metaRes.ok) throw new Error(meta.error || "This issue could not be loaded.");

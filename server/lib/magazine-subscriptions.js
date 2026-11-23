@@ -5,13 +5,15 @@ import { createAuth, createRateLimiter, readCookie, setCookie } from "./auth.js"
 import { createMemberCodes } from "./member-codes.js";
 import { sendEmail } from "./mailer.js";
 
-const DAY = 24 * 60 * 60 * 1000;
+const ACCESS_DELAY = 60 * 60 * 1000;
+// Recompute from the original payment so existing orders use the new delay too.
+const availableAt = (record) => new Date(Date.parse(record.paidAt) + ACCESS_DELAY).toISOString();
 const COOKIE = "lotg_magazine";
 const TTL = 30 * 24 * 60 * 60;
 const id = (value) => typeof value === "string" ? value : value?.id;
 export function subscriptionAccess(record, now = Date.now()) {
   if (!record || !["active", "trialing"].includes(record.status) || Date.parse(record.expiresAt) <= now || !Number.isFinite(Date.parse(record.expiresAt))) return "expired";
-  return Date.parse(record.availableAt) <= now ? "ready" : "waiting";
+  return Date.parse(availableAt(record)) <= now ? "ready" : "waiting";
 }
 
 export function createMagazineSubscriptions(dataDir, { stripe, requireMember, send = sendEmail, now = Date.now }) {
@@ -20,7 +22,7 @@ export function createMagazineSubscriptions(dataDir, { stripe, requireMember, se
   const codes = createMemberCodes(path.join(dataDir, "magazine-auth"), auth.digest, now);
   const allow = createRateLimiter(20, 15 * 60 * 1000);
   const base = () => (process.env.SITE_URL || "https://ladiesonthegreen.com").replace(/\/$/, "");
-  const view = (record) => ({ ok: true, access: subscriptionAccess(record, now()), availableAt: record.availableAt, expiresAt: record.expiresAt });
+  const view = (record) => ({ ok: true, access: subscriptionAccess(record, now()), availableAt: availableAt(record), expiresAt: record.expiresAt });
   async function current(req) {
     const token = auth.verify(readCookie(req, COOKIE), "magazine");
     return token && (await store.read()).subscribers.find((item) => item.id === token.sid);
@@ -40,7 +42,7 @@ export function createMagazineSubscriptions(dataDir, { stripe, requireMember, se
       const existing = data.subscribers.find((item) => item.checkoutId === session.id);
       if (existing) return existing; // Retries never restart the waiting period.
       const record = { id: crypto.randomUUID(), email, checkoutId: session.id, subscriptionId: sub.id,
-        paidAt: new Date(paidAt).toISOString(), availableAt: new Date(paidAt + DAY).toISOString(),
+        paidAt: new Date(paidAt).toISOString(), availableAt: new Date(paidAt + ACCESS_DELAY).toISOString(),
         expiresAt: new Date(end * 1000).toISOString(), status: sub.status };
       data.subscribers.push(record);
       return record;
@@ -79,7 +81,7 @@ export function createMagazineSubscriptions(dataDir, { stripe, requireMember, se
     res.set("Cache-Control", "private, no-store");
     const access = subscriptionAccess(record, now());
     if (access !== "ready") return res.status(access === "waiting" ? 425 : 403).json({ ...view(record), ok: false,
-      error: access === "waiting" ? `Your magazine access begins 24 hours after payment, on ${record.availableAt}.` : "Your magazine subscription is not active." });
+      error: access === "waiting" ? `Your magazine access begins one hour after payment, on ${availableAt(record)}.` : "Your magazine subscription is not active." });
     next();
   }
   function mountRoutes(app) {

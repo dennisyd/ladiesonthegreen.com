@@ -42,7 +42,7 @@ export default function PaidMagazineSubscription() {
       <h1 id="subscribe-title">Subscribe to The Collective</h1><div className="subscribe-swoosh" aria-hidden="true" />
       <p className="subscribe-description">Our magazine is here! Discover inspiring stories, golf, fashion, travel, wellness, business, and the women who connect us.</p>
       <div className="subscribe-price"><strong>$19.99<span> / year</span></strong><span>Three Digital Issues Per Year<br />Fall/Winter, Spring, and Summer</span></div>
-      <p className="subscribe-reserve">Digital access begins 24 hours after successful payment.</p>
+      <p className="subscribe-reserve">Digital access begins one hour after successful payment.</p>
       {subscriber ? <div className="subscribe-success" role="status">
         <h2>{subscriber.access === "ready" ? "Your magazine is ready" : subscriber.access === "waiting" ? "Thank you for subscribing!" : "Your subscription is inactive"}</h2>
         {subscriber.access === "waiting" && <p>Your access begins {new Date(subscriber.availableAt).toLocaleString(undefined, { dateStyle: "long", timeStyle: "short" })}. Return here after that time to read.</p>}
@@ -64,7 +64,7 @@ export default function PaidMagazineSubscription() {
         </fieldset></form>
       </>}
       {message && <p role="status">{message}</p>}
-      <p className="subscribe-reassurance">Secure payment through Stripe. Your 24-hour waiting period starts after payment succeeds.</p>
+      <p className="subscribe-reassurance">Secure payment through Stripe. Your one-hour waiting period starts after payment succeeds.</p>
       <p className="subscribe-privacy">Club member? Your membership includes digital access. <a href="/members">Sign in here ↗</a></p>
     </div></section></main><SiteFooter /></>;
 }
