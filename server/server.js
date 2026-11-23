@@ -23,6 +23,7 @@ const { createShop } = await import("./shop.js");
 const { mountSubmissions } = await import("./lib/submissions.js");
 const { mountMagazineList } = await import("./lib/magazine-list.js");
 const { createMagazineIssues } = await import("./lib/magazine-issues.js");
+const { createMagazineSubscriptions } = await import("./lib/magazine-subscriptions.js");
 const { membershipRate, membershipTiers } = await import("../shared/membership.js");
 
 const app = express();
@@ -34,6 +35,10 @@ const shop = createShop(path.join(__dirname, "data"), {
   requireAdmin: membership.requireAdmin
 });
 membership.addWebhookHandler(shop.handleEvent);
+const magazineSubscriptions = createMagazineSubscriptions(path.join(__dirname, "data"), {
+  stripe: membership.stripe, requireMember: membership.requireMember
+});
+membership.addWebhookHandler(magazineSubscriptions.handleEvent);
 
 app.disable("x-powered-by");
 
@@ -202,12 +207,13 @@ app.post("/api/membership", async (req, res) => {
 // draft until an admin explicitly publishes them; older editions are retained.
 const magazineIssues = createMagazineIssues(path.join(__dirname, "data"), {
   requireAdmin: membership.requireAdmin,
-  requireMember: membership.requireMember
+  requireMember: magazineSubscriptions.requireAccess
 });
 await magazineIssues.ready;
 magazineIssues.mountRoutes(app);
 
 membership.mountRoutes(app);
+magazineSubscriptions.mountRoutes(app);
 shop.mountRoutes(app);
 mountSubmissions(app, path.join(__dirname, "data"), membership.requireAdmin);
 mountMagazineList(app, path.join(__dirname, "data"), membership.requireAdmin);

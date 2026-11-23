@@ -78,6 +78,10 @@ export default function MagazinePage() {
           return;
         }
         const meta = await metaRes.json().catch(() => ({}));
+        if (metaRes.status === 425) {
+          if (!cancelled) { setStatus("waiting"); setMessage(`Your magazine access begins ${new Date(meta.availableAt).toLocaleString()}. Access starts 24 hours after successful payment.`); }
+          return;
+        }
         if (!metaRes.ok) throw new Error(meta.error || "This issue could not be loaded.");
         const listRes = await fetch("/api/magazine/issues", { credentials: "same-origin" });
         if (listRes.ok) setIssues((await listRes.json()).issues || []);
@@ -182,7 +186,7 @@ export default function MagazinePage() {
             <a className="button button--gold" href="/subscribe">Subscribe</a>
             <a className="button button--outline" href="/submission">Submit your story</a>
           </div>}
-          {status === "members-only" && <p className="collective-magazine__member-note">Already a member? <a href="/members">Sign in to read ↗</a></p>}
+          {status === "members-only" && <p className="collective-magazine__member-note">Already subscribed? <a href="/subscribe">Subscriber sign-in ↗</a><br />Club member? <a href="/members">Sign in to read ↗</a></p>}
         </div>
         <div className={`collective-magazine__art${pages[0] ? " collective-magazine__art--issue" : ""}`} role={pages[0] ? undefined : "img"} aria-label={pages[0] ? undefined : "The Collective Magazine cover featuring women golfers"}>
           {pages[0] && <img src={pages[0]} alt={`Cover of ${issue?.title || "The Collective Magazine"}`} />}
@@ -197,6 +201,7 @@ export default function MagazinePage() {
         </div>
         {status !== "ready" && <div className={`magazine-status magazine-status--${status}`} role="status">
           {status === "coming-soon" ? <p>{message}</p> : <p>{message}</p>}
+          {status === "waiting" && <a href="/subscribe">View your subscription ↗</a>}
         </div>}
         {status === "ready" && pages.length > 0 && <div className={`collective-reader${isFullscreen ? " is-fullscreen" : ""}`} ref={viewerRef}>
           <audio ref={turnSoundRef} src="/audio/page-turn.mp3" preload="auto" />

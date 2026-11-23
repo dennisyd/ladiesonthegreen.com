@@ -1,39 +1,70 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SiteHeader, SiteFooter } from "./SiteChrome.jsx";
 import { api } from "./api.js";
 import "./subscribe.css";
 
-export default function SubscribePage() {
-  const [status, setStatus] = useState(""), [message, setMessage] = useState("");
-  const success = useRef(null);
-  useEffect(() => { document.title = "Join the List | The Collective Magazine"; }, []);
-  useEffect(() => { if (status === "success") success.current?.focus(); }, [status]);
-  async function join(event) {
+export default function PaidMagazineSubscription() {
+  const [busy, setBusy] = useState(false), [message, setMessage] = useState("");
+  const [subscriber, setSubscriber] = useState(null), [challengeId, setChallengeId] = useState("");
+  useEffect(() => {
+    document.title = "Subscribe | The Collective Magazine";
+    const checkoutId = new URLSearchParams(window.location.search).get("checkout");
+    if (checkoutId) {
+      setBusy(true);
+      api("/api/magazine-subscription/confirm", { method: "POST", body: { checkoutId } })
+        .then((data) => { setSubscriber(data); window.history.replaceState(null, "", "/subscribe"); })
+        .catch((error) => setMessage(error.message)).finally(() => setBusy(false));
+    } else api("/api/magazine-subscription/me").then(setSubscriber).catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (subscriber?.access !== "waiting") return;
+    const timer = setInterval(() => api("/api/magazine-subscription/me").then(setSubscriber).catch(() => {}), 60000);
+    return () => clearInterval(timer);
+  }, [subscriber?.access]);
+  async function submit(event, action) {
     event.preventDefault();
     const body = Object.fromEntries(new FormData(event.currentTarget));
-    setStatus("sending"); setMessage("");
-    try { const data = await api("/api/magazine-list", { method: "POST", body }); setMessage(data.message); setStatus("success"); }
-    catch (err) { setStatus("error"); setMessage(err.message); }
+    if (action === "verify") body.challengeId = challengeId;
+    setBusy(true); setMessage("");
+    try {
+      const data = await api(`/api/magazine-subscription/${action}`, { method: "POST", body });
+      if (data.url) window.location.assign(data.url);
+      else if (data.challengeId) { setChallengeId(data.challengeId); setMessage(data.message); }
+      else setSubscriber(data);
+    } catch (error) { setMessage(error.message); }
+    finally { setBusy(false); }
   }
-  const busy = status === "sending";
   return <><SiteHeader currentPath="/subscribe" /><main className="subscribe-page"><section className="subscribe-card" aria-labelledby="subscribe-title">
     <div className="subscribe-ribbon subscribe-ribbon--top" aria-hidden="true" /><div className="subscribe-ribbon subscribe-ribbon--bottom" aria-hidden="true" />
-    <div className="subscribe-content"><p className="subscribe-presented"><span>Ladies On The Green<sup>®</sup> Presents</span></p>
+    <div className="subscribe-content"><p className="subscribe-presented">Ladies On The Green® Presents</p>
       <div className="subscribe-masthead">The Collective</div><div className="subscribe-magazine"><span>Magazine</span></div>
       <p className="subscribe-tagline">The Woman Next Door. The Golfer Next Door.</p>
-      <h1 id="subscribe-title">Be Among the First to Read</h1><div className="subscribe-swoosh" aria-hidden="true" />
-      <p className="subscribe-description">Our inaugural issue is coming! Discover inspiring stories, golf, fashion, travel, wellness, business, and the women who connect us.</p>
+      <h1 id="subscribe-title">Subscribe to The Collective</h1><div className="subscribe-swoosh" aria-hidden="true" />
+      <p className="subscribe-description">Our magazine is here! Discover inspiring stories, golf, fashion, travel, wellness, business, and the women who connect us.</p>
       <div className="subscribe-price"><strong>$19.99<span> / year</span></strong><span>Three Digital Issues Per Year<br />Fall/Winter, Spring, and Summer</span></div>
-      <h2 className="subscribe-reserve">Reserve your interest today.<br />No payment required.</h2><div className="subscribe-swoosh subscribe-swoosh--short" aria-hidden="true" />
-      {status === "success" ? <div className="subscribe-success" ref={success} tabIndex={-1} role="status"><h2>You’re on the list!</h2><p>{message}</p><a href="/thecollective">Back to the magazine ↗</a></div>
-      : <form className="subscribe-form" onSubmit={join} aria-busy={busy}><fieldset disabled={busy}><legend className="sr-only">Join The Collective Magazine list</legend>
-        <div className="subscribe-name-fields"><label><span className="sr-only">First Name</span><input name="firstName" autoComplete="given-name" placeholder="First Name" maxLength={80} required /></label><label><span className="sr-only">Last Name</span><input name="lastName" autoComplete="family-name" placeholder="Last Name" maxLength={80} required /></label></div>
-        <label><span className="sr-only">Email Address</span><input name="email" type="email" autoComplete="email" placeholder="Email Address" maxLength={254} required /></label>
-        <label className="subscribe-trap" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" /></label>
-        <button className="subscribe-join" type="submit">{busy ? "JOINING…" : "JOIN THE LIST"}</button>
-      </fieldset>{status === "error" && <p className="subscribe-error" role="alert">{message}</p>}</form>}
-      <p className="subscribe-reassurance"><svg aria-hidden="true" viewBox="0 0 24 28" width="30" height="36"><path d="M6 12V8a6 6 0 0 1 12 0v4" fill="none" stroke="currentColor" strokeWidth="3" /><rect x="2" y="11" width="20" height="16" rx="3" fill="currentColor" /><circle cx="12" cy="18" r="2" fill="#fffefa" /><path d="M12 19v3" stroke="#fffefa" strokeWidth="2" /></svg><span>You will not be charged. No payment information is required.</span></p>
-      <p className="subscribe-privacy">Join the list for magazine launch and subscription updates.</p>
-    </div>
-  </section></main><SiteFooter /></>;
+      <p className="subscribe-reserve">Digital access begins 24 hours after successful payment.</p>
+      {subscriber ? <div className="subscribe-success" role="status">
+        <h2>{subscriber.access === "ready" ? "Your magazine is ready" : subscriber.access === "waiting" ? "Thank you for subscribing!" : "Your subscription is inactive"}</h2>
+        {subscriber.access === "waiting" && <p>Your access begins {new Date(subscriber.availableAt).toLocaleString(undefined, { dateStyle: "long", timeStyle: "short" })}. Return here after that time to read.</p>}
+        {subscriber.access === "ready" && <a className="button button--gold" href="/thecollective">Read the magazine ↗</a>}
+        <form onSubmit={(event) => submit(event, "billing")}><button className="subscribe-join" disabled={busy}>Manage subscription</button></form>
+      </div> : <>
+        <form className="subscribe-form" onSubmit={(event) => submit(event, "checkout")} aria-busy={busy}><fieldset disabled={busy}><legend className="sr-only">Purchase an annual magazine subscription</legend>
+          <label><span className="sr-only">Email Address</span><input name="email" type="email" autoComplete="email" placeholder="Your email address" maxLength={254} required /></label>
+          <p>Renews annually at $19.99 until canceled. Cancel through Manage subscription. Use this email to sign in after checkout.</p>
+          <button className="subscribe-join" type="submit">{busy ? "PLEASE WAIT…" : "SUBSCRIBE — $19.99 / YEAR"}</button>
+        </fieldset></form>
+        <h2>Already subscribed?</h2>
+        <form className="subscribe-form" onSubmit={(event) => submit(event, challengeId ? "verify" : "login")}><fieldset disabled={busy}>
+          <legend className="sr-only">Magazine subscriber sign-in</legend>
+          {challengeId ? <label>Sign-in code<input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required /></label>
+            : <label>Checkout email<input name="email" type="email" autoComplete="email" required maxLength={254} /></label>}
+          <button className="subscribe-join" type="submit">{challengeId ? "SIGN IN" : "EMAIL ME A SIGN-IN CODE"}</button>
+          {challengeId && <button type="button" onClick={() => { setChallengeId(""); setMessage(""); }}>Request a new code</button>}
+        </fieldset></form>
+      </>}
+      {message && <p role="status">{message}</p>}
+      <p className="subscribe-reassurance">Secure payment through Stripe. Your 24-hour waiting period starts after payment succeeds.</p>
+      <p className="subscribe-privacy">Club member? Your membership includes digital access. <a href="/members">Sign in here ↗</a></p>
+    </div></section></main><SiteFooter /></>;
 }
