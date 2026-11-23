@@ -23,7 +23,7 @@ export default function SubscribePage() {
       <p className="subscribe-tagline">The Woman Next Door. The Golfer Next Door.</p>
       <h1 id="subscribe-title">Be Among the First to Read</h1><div className="subscribe-swoosh" aria-hidden="true" />
       <p className="subscribe-description">Our inaugural issue is coming! Discover inspiring stories, golf, fashion, travel, wellness, business, and the women who connect us.</p>
-      <div className="subscribe-price"><strong>$19.99<span> / year</span></strong><span>Four Quarterly Digital Issues</span></div>
+      <div className="subscribe-price"><strong>$19.99<span> / year</span></strong><span>Three Digital Issues Per Year<br />Fall/Winter, Spring, and Summer</span></div>
       <h2 className="subscribe-reserve">Reserve your interest today.<br />No payment required.</h2><div className="subscribe-swoosh subscribe-swoosh--short" aria-hidden="true" />
       {status === "success" ? <div className="subscribe-success" ref={success} tabIndex={-1} role="status"><h2>You’re on the list!</h2><p>{message}</p><a href="/thecollective">Back to the magazine ↗</a></div>
       : <form className="subscribe-form" onSubmit={join} aria-busy={busy}><fieldset disabled={busy}><legend className="sr-only">Join The Collective Magazine list</legend>

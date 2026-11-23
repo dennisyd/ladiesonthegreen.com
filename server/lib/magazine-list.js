@@ -24,7 +24,7 @@ export function mountMagazineList(app, dataDir, requireAdmin, { getTransporter =
     try {
       await store.update((data) => {
         if (data.subscribers.some((s) => s.email === normalizedEmail)) return;
-        data.subscribers.push({ id: crypto.randomUUID(), firstName: firstName.trim(), lastName: lastName.trim(), email: normalizedEmail, joinedAt: new Date().toISOString(), unsubscribeToken: crypto.randomBytes(24).toString("hex"), source: "subscribe", interest: "The Collective Magazine launch — $19.99/year, four quarterly digital issues; no payment collected" });
+        data.subscribers.push({ id: crypto.randomUUID(), firstName: firstName.trim(), lastName: lastName.trim(), email: normalizedEmail, joinedAt: new Date().toISOString(), unsubscribeToken: crypto.randomBytes(24).toString("hex"), source: "subscribe", interest: "The Collective Magazine launch — $19.99/year, three digital issues per year: Fall/Winter, Spring, and Summer; no payment collected" });
       });
       res.json({ ok: true, message: "You’re on the list! We’ll email you when subscriptions open. No payment has been collected." });
     } catch (error) {

@@ -118,7 +118,7 @@ Members, offers, event registrations, and announcement history are JSON files in
 
 ## Magazine subscription interest list
 
-- `/subscribe` presents the planned $19.99/year subscription with four quarterly digital issues. The **JOIN THE LIST** form records first name, last name and email only; no payment information or money is collected.
+- `/subscribe` presents the planned $19.99/year subscription with three digital issues per year: Fall/Winter, Spring, and Summer. The **JOIN THE LIST** form records first name, last name and email only; no payment information or money is collected.
 - View saved entries and their Eastern Time signup dates under **Admin → Magazine list**. Each subscriber has a confirmed Delete action. Select one or more people (or Select all), compose an announcement, preview recipients and text, then confirm Send. Joining the list does not automatically start an email campaign.
 - Emails use the existing SMTP settings and go individually to each selected subscriber, with a personalized greeting and unsubscribe link. Send history records per-recipient sent/failed/skipped results; progress refreshes while a batch runs. Missing SMTP blocks sending. Interrupted batches are not automatically resent after a restart; review history before sending another announcement. A successful send means the mail server accepted the message, not a guaranteed inbox delivery.
 - Unsubscribe links open a confirmation page, so email-link scanners do not remove people just by opening the link. Confirming unsubscribe or deleting a subscriber excludes them from later sends. Send history remains available.

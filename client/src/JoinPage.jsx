@@ -10,7 +10,7 @@ import { membershipRate, regularRate } from "../../shared/membership.js";
 const memberExperience = [
   "Members-only golf, racquet, social, wellness, and charitable experiences",
   "Exclusive member privileges, preferred offers, and partner benefits",
-  "Complimentary quarterly digital access to The Collective, the Ladies on the Green® golf and lifestyle magazine",
+  "Complimentary digital access to The Collective, the Ladies on the Green® golf and lifestyle magazine, published three times per year: Fall/Winter, Spring, and Summer",
   "Golf lessons, practice sessions, and intimate small-group instruction",
   "Opportunities to play premier courses and discover new golf destinations",
   "Curated golf travel to iconic destinations, including our signature annual golf trip",

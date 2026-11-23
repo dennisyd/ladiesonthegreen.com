@@ -176,7 +176,7 @@ export default function MagazinePage() {
         <div className="collective-magazine__hero-copy">
           <span className="section-kicker">Ladies On The Green® Presents</span>
           <h1 id="collective-title">The <em>Collective</em> Magazine</h1>
-          <p className="collective-magazine__lede">Real women. Real stories. Golf, travel, wellness, business, and the everyday inspiration that connects us.</p>
+          <p className="collective-magazine__lede">Real women. Real stories. Golf, travel, wellness, business, and the everyday inspiration that connects us. Published three times per year: Fall/Winter, Spring, and Summer.</p>
           {issue?.edition && <p className="collective-magazine__edition">{issue.edition}</p>}
           {status === "members-only" && <div className="collective-magazine__hero-actions">
             <a className="button button--gold" href="/subscribe">Subscribe</a>

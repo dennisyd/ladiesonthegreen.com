@@ -98,7 +98,7 @@ const experiences = [
     paragraphs: [
       "For women who desire a more exclusive experience, Founding Prestige membership offers enhanced access to the Collective.",
       "Enjoy priority registration for select golf clinics and experiences, invitations to intimate VIP gatherings, curated member introductions, special partner privileges, and exclusive opportunities to connect with the founder and fellow members.",
-      "Founding Prestige members also receive a signature welcome gift, two printed editions of our quarterly magazine delivered annually, and a featured member spotlight.",
+      "Founding Prestige members also receive a signature welcome gift, two printed editions of our magazine delivered annually, and a featured member spotlight. The Collective is published three times per year: Fall/Winter, Spring, and Summer.",
       "It’s a more personalized way to experience the relationships, opportunities, and distinctive lifestyle of Ladies on the Green®."
     ]
   }
