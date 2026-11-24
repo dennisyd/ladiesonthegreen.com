@@ -5,6 +5,52 @@ const when = (value) => value ? new Date(value).toLocaleDateString("en-US", {
   month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York"
 }) : "";
 
+function ReplacePage({ issue, disabled, setBusy, setError, setNotice, reload }) {
+  const [page, setPage] = useState("");
+  const [file, setFile] = useState(null);
+
+  async function submit(event) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    if (!file) return setError("Choose the new page (PDF, PNG or JPG).");
+    const live = issue.status === "published";
+    const warning = live ? " This issue is live, so members will see the change immediately." : "";
+    if (!window.confirm(`Replace page ${page} of “${issue.title}” with ${file.name}?${warning} The previous version is kept.`)) return;
+    setBusy(true); setError(""); setNotice("");
+    try {
+      const form = new FormData();
+      form.set("page", String(page));
+      form.set("file", file);
+      const response = await fetch(`/api/admin/magazine-issues/${issue.id}/replace-page`, {
+        method: "POST", body: form, credentials: "same-origin"
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "The page could not be replaced.");
+      setNotice(`Page ${data.page} of ${data.pageCount} in “${issue.title}” was replaced${data.fit === "scaled-to-fit" ? " (the new page was a different shape, so it was scaled to fit)" : ""}. Preview the PDF to check it.`);
+      setPage(""); setFile(null);
+      formElement.reset();
+      await reload();
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <details className="magazine-issues-admin__replace">
+      <summary className="admin-link">Replace a page</summary>
+      <form onSubmit={submit}>
+        <label>Page number to replace
+          <input type="number" min="1" step="1" value={page} onChange={(event) => setPage(event.target.value)} required />
+        </label>
+        <label>New page (PDF, PNG or JPG, up to 25 MB)
+          <input type="file" accept="application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg" onChange={(event) => setFile(event.target.files?.[0] || null)} required />
+        </label>
+        <p className="admin-sub">The page is used exactly as you send it, scaled to fit. Its printed page number is not changed, so make sure it already shows the right number.</p>
+        <button className="button button--gold" type="submit" disabled={disabled}>Replace page</button>
+      </form>
+    </details>
+  );
+}
+
 export default function MagazineIssuesAdmin() {
   const [issues, setIssues] = useState(null);
   const [title, setTitle] = useState("");
@@ -107,6 +153,8 @@ export default function MagazineIssuesAdmin() {
                   {issue.status !== "published" && <button className="admin-link" type="button" disabled={busy} onClick={() => changeStatus(issue, "publish")}>Publish</button>}
                   {issue.status === "published" && <button className="admin-link" type="button" disabled={busy} onClick={() => changeStatus(issue, "archive")}>Archive</button>}
                 </div>
+                <ReplacePage issue={issue} disabled={busy} setBusy={setBusy} setError={setError} setNotice={setNotice} reload={reload} />
+                {issue.pageEdits?.length > 0 && <small>Last page change: page {issue.pageEdits.at(-1).page}, {when(issue.pageEdits.at(-1).at)}</small>}
               </article>
             ))}
           </div>
